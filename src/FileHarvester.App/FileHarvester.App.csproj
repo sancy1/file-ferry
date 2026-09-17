@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!-- Icon embedded in the .exe. Windows reads this for:
+         Explorer, taskbar, Alt+Tab, Start menu, title bar corner. -->
+    <ApplicationIcon>Assets\file-ferry-logo.ico</ApplicationIcon>
+
+    <!-- Use compiled bindings for zero-overhead XAML updates. -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+
+    <AssemblyName>FileHarvester.App</AssemblyName>
+    <RootNamespace>FileHarvester.App</RootNamespace>
+
+    <Product>File-Ferry</Product>
+    <AssemblyTitle>File-Ferry</AssemblyTitle>
+    <Description>Harvest, bundle, and re-deliver file contents - anywhere, in any format.</Description>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Company>Alexander Sanchez Cyril</Company>
+    <Copyright>Copyright (c) 2026 Alexander Sanchez Cyril</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Embed the logo files as Avalonia resources so the Image control
+         can display them at runtime via avares:// URIs. -->
+    <AvaloniaResource Include="Assets\file-ferry-logo.png" />
+    <AvaloniaResource Include="Assets\file-ferry-logo.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FileHarvester.Core\FileHarvester.Core.csproj" />
+    <ProjectReference Include="..\FileHarvester.Platform\FileHarvester.Platform.csproj" />
+  </ItemGroup>
+
+</Project>

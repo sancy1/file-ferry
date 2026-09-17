@@ -1,0 +1,51 @@
+﻿<!--
+FILE:     Directory.Packages.props
+PURPOSE:  Central Package Management (CPM) - one place for every NuGet
+          version used anywhere in the solution.
+RELATION: Automatically imported by the .NET SDK. Each .csproj keeps its
+          <PackageReference Include="..." /> but drops the Version attribute.
+-->
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Avalonia UI stack -->
+    <PackageVersion Include="Avalonia" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.2" />
+    <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
+
+    <!-- Test stack -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+
+    <!-- Portfolio.Resilience 0.8.0 -->
+    <PackageVersion Include="Portfolio.Resilience" Version="0.8.0" />
+    <PackageVersion Include="Portfolio.Resilience.Analyzers" Version="0.8.0" />
+
+    <!-- Test helpers -->
+    <PackageVersion Include="FluentAssertions" Version="7.0.0" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
+
+    <!-- Format writers -->
+    <!-- DocumentFormat.OpenXml pinned to >= 3.1.1 because ClosedXML 0.104.2
+         requires at least that version; we were downgrading it before. -->
+    <PackageVersion Include="DocumentFormat.OpenXml" Version="3.1.1" />
+    <PackageVersion Include="QuestPDF" Version="2024.12.3" />
+    <PackageVersion Include="ClosedXML" Version="0.104.2" />
+
+    <!-- Transitive security fix: DocumentFormat.OpenXml 3.1.x pulls in
+         System.IO.Packaging 8.0.0, which has a known high-severity
+         vulnerability (GHSA-f32c-w444-8ppv, GHSA-qj66-m88j-hmgj).
+         Pinning a patched version here overrides the transitive one. -->
+    <PackageVersion Include="System.IO.Packaging" Version="9.0.0" />
+
+    <!-- Dependency injection -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+  </ItemGroup>
+</Project>

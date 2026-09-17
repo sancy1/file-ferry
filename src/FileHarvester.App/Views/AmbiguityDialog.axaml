@@ -1,0 +1,106 @@
+﻿<!--
+FILE:     src/FileHarvester.App/Views/AmbiguityDialog.axaml
+PURPOSE:  Modal picker. Lists every match for a bare filename with
+          checkboxes, path, size, and modified date. User confirms which
+          matches to include.
+RELATION: Bound to AmbiguityDialogViewModel. Opened from MainWindow
+          when a Resolved Files row is double-clicked and is Ambiguous.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        mc:Ignorable="d"
+        d:DesignWidth="820" d:DesignHeight="560"
+        x:Class="FileHarvester.App.Views.AmbiguityDialog"
+        x:DataType="vm:AmbiguityDialogViewModel"
+        Title="Choose matches"
+        Width="820" Height="560"
+        MinWidth="600" MinHeight="360"
+        WindowStartupLocation="CenterOwner"
+        Icon="/Assets/file-ferry-logo.png">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <!-- HEADER -->
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,12">
+            <TextBlock FontSize="16" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}">
+                <Run Text="Multiple matches for &#8220;" />
+                <Run Text="{Binding Query}" FontFamily="Consolas,Menlo,monospace" />
+                <Run Text="&#8221;" />
+            </TextBlock>
+            <TextBlock Text="{Binding StatusText}"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextSecondary}" />
+        </StackPanel>
+
+        <!-- LIST -->
+        <Border Grid.Row="1"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Rows}" Margin="8,4">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:AmbiguityRowViewModel">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                                  Margin="0,6">
+                                <CheckBox Grid.Column="0"
+                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                          VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Path}"
+                                           FontFamily="Consolas,Menlo,monospace"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextPrimary}"
+                                           TextTrimming="CharacterEllipsis"
+                                           Margin="8,0,12,0"
+                                           VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding SizeText}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextSecondary}"
+                                           Margin="0,0,12,0"
+                                           Width="70"
+                                           TextAlignment="Right"
+                                           VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Column="3"
+                                           Text="{Binding ModifiedText}"
+                                           FontFamily="Consolas,Menlo,monospace"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextSecondary}"
+                                           Width="130"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- FOOTER: presets + actions -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto"
+              Margin="0,12,0,0">
+
+            <Button Grid.Column="0" Name="SelectAllButton"
+                    Content="Select All" FontSize="12" Padding="12,4" Margin="0,0,6,0" />
+            <Button Grid.Column="1" Name="SelectNoneButton"
+                    Content="Select None" FontSize="12" Padding="12,4" Margin="0,0,6,0" />
+            <Button Grid.Column="2" Name="SelectNewestButton"
+                    Content="Newest 5" FontSize="12" Padding="12,4" Margin="0,0,6,0" />
+            <Button Grid.Column="3" Name="SelectLargestButton"
+                    Content="Largest 5" FontSize="12" Padding="12,4" />
+
+            <Button Grid.Column="5" Name="CancelButton"
+                    Content="Cancel" FontSize="12" Padding="16,4" Margin="0,0,6,0" />
+            <Button Grid.Column="6" Name="ConfirmButton"
+                    Content="Include Selected" FontSize="12" FontWeight="SemiBold"
+                    Padding="16,4" />
+        </Grid>
+    </Grid>
+</Window>

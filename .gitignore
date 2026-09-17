@@ -1,0 +1,22 @@
+﻿bin/
+obj/
+artifacts/*
+!artifacts/.gitkeep
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+TestResults/
+*.trx
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Debug output from development sessions ----
+crash.txt
+run-output.txt
+*.tmp.txt

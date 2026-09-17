@@ -1,0 +1,129 @@
+﻿<!--
+FILE:     src/FileHarvester.App/Views/HarvestResultDialog.axaml
+PURPOSE:  Result modal after a harvest completes. Shows success with the
+          output path and Open Folder button, or failure with the reason.
+RELATION: Opened by MainWindow when OutputOptionsPanel.HarvestCompleted
+          fires. Bound to HarvestResultDialogViewModel.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        mc:Ignorable="d"
+        d:DesignWidth="560" d:DesignHeight="280"
+        x:Class="FileHarvester.App.Views.HarvestResultDialog"
+        x:DataType="vm:HarvestResultDialogViewModel"
+        Title="Harvest complete"
+        Width="560" Height="280"
+        MinWidth="420" MinHeight="240"
+        WindowStartupLocation="CenterOwner"
+        Icon="/Assets/file-ferry-logo.png">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+
+        <!-- HEADER -->
+        <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,16">
+            <TextBlock Text="{Binding Headline}"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Text="{Binding SubText}"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextSecondary}"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- DETAILS -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource SurfaceSubtle}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                IsVisible="{Binding IsSuccess}">
+                        <TextBlock Text="Destination:"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   Width="100" />
+                        <TextBlock Text="{Binding DestinationFolder}"
+                                   FontFamily="Consolas,Menlo,monospace"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextPrimary}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                IsVisible="{Binding IsSuccess}">
+                        <TextBlock Text="File:"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   Width="100" />
+                        <TextBlock Text="{Binding OutputPath}"
+                                   FontFamily="Consolas,Menlo,monospace"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextPrimary}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                IsVisible="{Binding IsSuccess}">
+                        <TextBlock Text="Files:"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   Width="100" />
+                        <TextBlock Text="{Binding FileCountText}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                IsVisible="{Binding IsSuccess}">
+                        <TextBlock Text="Bytes written:"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   Width="100" />
+                        <TextBlock Text="{Binding BytesWrittenText}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                IsVisible="{Binding !IsSuccess}">
+                        <TextBlock Text="Error:"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   Width="100" />
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   FontSize="12"
+                                   Foreground="#EF4444"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- FOOTER -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto"
+              Margin="0,16,0,0">
+
+            <Button Grid.Column="0"
+                    Name="OpenFolderButton"
+                    Content="Open Folder"
+                    FontSize="12"
+                    Padding="16,6"
+                    IsVisible="{Binding IsSuccess}" />
+
+            <Button Grid.Column="3"
+                    Name="CloseButton"
+                    Content="Close"
+                    FontSize="12"
+                    FontWeight="SemiBold"
+                    Padding="16,6"
+                    HorizontalAlignment="Right" />
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,192 @@
+﻿<!--
+FILE:     src/FileHarvester.App/Views/LogDrawer.axaml
+PURPOSE:  The Log drawer overlay. Two tabs: Events (live log stream) and
+          Diagnostics (latency + circuit tables). Opens over the body,
+          hidden by default.
+RELATION: Bound to LogDrawerViewModel. Overlays the body grid in
+          MainWindow.axaml.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             xmlns:views="using:FileHarvester.App.Views"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="FileHarvester.App.Views.LogDrawer"
+             x:DataType="vm:LogDrawerViewModel"
+             IsVisible="{Binding IsOpen}">
+
+    <Panel Background="#AA000000">
+        <Border Background="{DynamicResource SurfaceRaised}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Margin="60"
+                BoxShadow="0 20 60 0 #66000000">
+
+            <Grid RowDefinitions="52,*,52">
+
+                <!-- HEADER -->
+                <Border Grid.Row="0"
+                        Background="{DynamicResource SurfaceSubtle}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="0,0,0,1"
+                        CornerRadius="8,8,0,0"
+                        Padding="16,0">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                        <TextBlock Grid.Column="0"
+                                   Text="Pipeline"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"
+                                   VerticalAlignment="Center" />
+
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource BorderSubtle}"
+                                CornerRadius="10"
+                                Padding="10,3"
+                                Margin="12,0,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center">
+                            <TextBlock FontSize="11"
+                                       Foreground="{DynamicResource TextPrimary}"
+                                       Text="{Binding EventCount, StringFormat='{}{0} events'}" />
+                        </Border>
+
+                        <Button Grid.Column="2"
+                                Name="OpenLogFileButton"
+                                Content="Open Log File"
+                                FontSize="12"
+                                Padding="12,4"
+                                Margin="0,0,6,0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{DynamicResource TextPrimary}"
+                                VerticalAlignment="Center"
+                                Command="{Binding OpenLogFileCommand}" />
+
+                        <Button Grid.Column="3"
+                                Name="ClearLogButton"
+                                Content="Clear"
+                                FontSize="12"
+                                Padding="12,4"
+                                Margin="0,0,6,0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{DynamicResource TextPrimary}"
+                                VerticalAlignment="Center"
+                                Command="{Binding ClearCommand}" />
+
+                        <Button Grid.Column="4"
+                                Name="CloseLogButton"
+                                Content="Close"
+                                FontSize="12"
+                                Padding="14,4"
+                                VerticalAlignment="Center"
+                                Command="{Binding CloseCommand}" />
+                    </Grid>
+                </Border>
+
+                <!-- TAB CONTROL -->
+                <TabControl Grid.Row="1"
+                            SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}"
+                            Margin="0">
+
+                    <!-- TAB 1: EVENTS -->
+                    <TabItem Header="Events">
+                        <Grid>
+
+                            <StackPanel VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        Spacing="6"
+                                        IsVisible="{Binding !EventCount}">
+                                <TextBlock Text="No events yet"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource TextSecondary}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="Pipeline activity will appear here as you work."
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextSecondary}"
+                                           Opacity="0.7"
+                                           HorizontalAlignment="Center" />
+                            </StackPanel>
+
+                            <ScrollViewer Name="LogScrollViewer"
+                                          IsVisible="{Binding EventCount}"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding Entries}" Margin="8,4">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:LogEntryViewModel">
+                                            <Grid ColumnDefinitions="4,Auto,Auto,Auto,Auto,*"
+                                                  Margin="0,3">
+                                                <Border Grid.Column="0"
+                                                        Background="{Binding AccentBrush}"
+                                                        Width="4"
+                                                        Margin="0,1,10,1" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Timestamp}"
+                                                           FontFamily="Consolas,Menlo,monospace"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource TextSecondary}"
+                                                           Margin="0,0,12,0"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding EventTypeText}"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextPrimary}"
+                                                           Margin="0,0,12,0"
+                                                           Width="150"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="3"
+                                                           Text="{Binding PolicyName}"
+                                                           FontFamily="Consolas,Menlo,monospace"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource TextSecondary}"
+                                                           Margin="0,0,12,0"
+                                                           Width="130"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="4"
+                                                           Text="{Binding CorrelationId}"
+                                                           FontFamily="Consolas,Menlo,monospace"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource TextSecondary}"
+                                                           Margin="0,0,12,0"
+                                                           Width="80"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="5"
+                                                           Text="{Binding Message}"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource TextSecondary}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </TabItem>
+
+                    <!-- TAB 2: DIAGNOSTICS -->
+                    <TabItem Header="Diagnostics">
+                        <views:DiagnosticsView DataContext="{Binding Diagnostics}" />
+                    </TabItem>
+                </TabControl>
+
+                <!-- FOOTER (reserved for future use) -->
+                <Border Grid.Row="2"
+                        Background="{DynamicResource SurfaceSubtle}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="0,1,0,0"
+                        CornerRadius="0,0,8,8" />
+            </Grid>
+        </Border>
+    </Panel>
+</UserControl>

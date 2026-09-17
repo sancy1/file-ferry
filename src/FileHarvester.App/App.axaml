@@ -1,0 +1,21 @@
+﻿<!--
+FILE:     src/FileHarvester.App/App.axaml
+PURPOSE:  Application-level XAML. Registers the Fluent theme and the app's
+          custom resource dictionaries (colors, spacing, control styles).
+RELATION: Loaded by App.axaml.cs. Every view in the app inherits the
+          styles defined here. Custom style resources live under Styles/.
+-->
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="FileHarvester.App.App"
+             RequestedThemeVariant="Default">
+
+    <Application.Styles>
+        <!-- Fluent theme: light and dark variants follow the OS. -->
+        <FluentTheme />
+
+        <!-- Custom styles layered on top of Fluent. -->
+        <StyleInclude Source="avares://FileHarvester.App/Styles/AppStyles.axaml" />
+    </Application.Styles>
+
+</Application>

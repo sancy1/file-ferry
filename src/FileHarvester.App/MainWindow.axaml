@@ -1,0 +1,122 @@
+﻿<!--
+FILE:     src/FileHarvester.App/MainWindow.axaml
+PURPOSE:  The main window. Two title bars: the Windows native one
+          (minimize/maximize/close) and our custom branding bar below it
+          (logo, theme toggle, Log button). No duplicate controls.
+RELATION: Bound to MainWindowViewModel.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        xmlns:views="using:FileHarvester.App.Views"
+        mc:Ignorable="d"
+        d:DesignWidth="1200" d:DesignHeight="720"
+        x:Class="FileHarvester.App.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding WindowTitle}"
+        Icon="/Assets/file-ferry-logo.png"
+        Width="1200" Height="720"
+        MinWidth="500" MinHeight="500">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+
+    <!-- Custom bar / body + overlay / status bar -->
+    <Grid RowDefinitions="48,*,28">
+
+        <!-- ROW 0: OUR CUSTOM BAR (native Windows bar sits above it) -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource ChromeBrush}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+
+                <!-- LEFT: logo + app name -->
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="16,0,0,0"
+                            Spacing="10">
+                    <Image Source="{Binding LogoUri}"
+                           Width="24" Height="24"
+                           Stretch="Uniform"
+                           IsVisible="{Binding HasLogo}"
+                           VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding AppName}"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- MIDDLE: spacer -->
+                <Border Grid.Column="1" Background="Transparent" />
+
+                <!-- RIGHT: Log + theme toggle only -->
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Spacing="4"
+                            Margin="0,0,12,0">
+
+                    <Button Name="OpenLogButton"
+                            Content="Log"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="View pipeline log"
+                            Command="{Binding LogDrawer.OpenCommand}" />
+
+                    <Button Name="ThemeToggleButton"
+                            Content="🌗"
+                            FontSize="14"
+                            Width="36" Height="32"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ToolTip.Tip="Toggle light / dark theme" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- BODY + OVERLAY -->
+        <Grid Grid.Row="1">
+            <Grid Margin="12">
+                <Grid ColumnDefinitions="2*,2*,1.4*" ColumnSpacing="12">
+                    <views:InputPanel Grid.Column="0"
+                                      DataContext="{Binding InputPanel}" />
+                    <views:ResolvedFilesPanel Grid.Column="1"
+                                              DataContext="{Binding ResolvedFilesPanel}" />
+                    <views:OutputOptionsPanel Grid.Column="2"
+                                              DataContext="{Binding OutputOptionsPanel}" />
+                </Grid>
+            </Grid>
+
+            <views:LogDrawer DataContext="{Binding LogDrawer}" />
+        </Grid>
+
+        <!-- STATUS BAR -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource ChromeBrush}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Text="Ready"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextSecondary}"
+                           VerticalAlignment="Center"
+                           Margin="12,0,0,0" />
+                <TextBlock Grid.Column="1" Text="File-Ferry 0.1.0"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextSecondary}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,12,0" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

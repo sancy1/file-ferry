@@ -1,0 +1,84 @@
+﻿<!--
+FILE:     src/FileHarvester.App/Styles/AppStyles.axaml
+PURPOSE:  Design system for File-Ferry. Colors, spacing, corner radii,
+          and reusable control styles. All color resources use
+          ThemeVariant scopes so both light and dark themes are legible.
+RELATION: Included by App.axaml. Consumed by MainWindow.axaml and every
+          view added in Phase 3.1 through 3.5.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ResourceDictionary>
+
+            <!-- Spacing: consistent 4px grid -->
+            <x:Double x:Key="SpacingXs">4</x:Double>
+            <x:Double x:Key="SpacingSm">8</x:Double>
+            <x:Double x:Key="SpacingMd">12</x:Double>
+            <x:Double x:Key="SpacingLg">16</x:Double>
+            <x:Double x:Key="SpacingXl">24</x:Double>
+
+            <!-- Corner radius: Fluent-inspired -->
+            <CornerRadius x:Key="RadiusSm">4</CornerRadius>
+            <CornerRadius x:Key="RadiusMd">8</CornerRadius>
+            <CornerRadius x:Key="RadiusLg">12</CornerRadius>
+
+            <!-- Status pill colors -->
+            <SolidColorBrush x:Key="PillPendingBg" Color="#3F3F46" />
+            <SolidColorBrush x:Key="PillPendingFg" Color="#F4F4F5" />
+            <SolidColorBrush x:Key="PillFoundBg"   Color="#065F46" />
+            <SolidColorBrush x:Key="PillFoundFg"   Color="#D1FAE5" />
+            <SolidColorBrush x:Key="PillAmberBg"   Color="#92400E" />
+            <SolidColorBrush x:Key="PillAmberFg"   Color="#FEF3C7" />
+            <SolidColorBrush x:Key="PillRedBg"     Color="#991B1B" />
+            <SolidColorBrush x:Key="PillRedFg"     Color="#FEE2E2" />
+
+            <!-- Theme-aware brushes: one dictionary per variant -->
+            <ResourceDictionary.ThemeDictionaries>
+
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="ChromeBrush"   Color="#F3F4F6" />
+                    <SolidColorBrush x:Key="SurfaceSubtle" Color="#FAFAFA" />
+                    <SolidColorBrush x:Key="SurfaceRaised" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="BorderSubtle"  Color="#E5E7EB" />
+                    <SolidColorBrush x:Key="TextPrimary"   Color="#111827" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#4B5563" />
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="ChromeBrush"   Color="#1E1E1E" />
+                    <SolidColorBrush x:Key="SurfaceSubtle" Color="#252526" />
+                    <SolidColorBrush x:Key="SurfaceRaised" Color="#2D2D30" />
+                    <SolidColorBrush x:Key="BorderSubtle"  Color="#3F3F46" />
+                    <SolidColorBrush x:Key="TextPrimary"   Color="#F3F4F6" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#A1A1AA" />
+                </ResourceDictionary>
+
+            </ResourceDictionary.ThemeDictionaries>
+
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <!-- Status pill: rounded label. -->
+    <Style Selector="Border.statusPill">
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding"      Value="8,2" />
+        <Setter Property="Background"   Value="{DynamicResource PillPendingBg}" />
+    </Style>
+
+    <Style Selector="Border.statusPill > TextBlock">
+        <Setter Property="FontSize"   Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource PillPendingFg}" />
+    </Style>
+
+    <!-- Section headings. -->
+    <Style Selector="TextBlock.sectionHeading">
+        <Setter Property="FontSize"   Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Opacity"    Value="0.75" />
+        <Setter Property="Margin"     Value="0,0,0,8" />
+    </Style>
+
+</Styles>

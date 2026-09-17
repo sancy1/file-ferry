@@ -1,0 +1,241 @@
+﻿<!--
+FILE:     src/FileHarvester.App/Views/DiagnosticsView.axaml
+PURPOSE:  The Diagnostics tab. Latency table, circuit-state table, and
+          a bottom bar with correlation ID, refresh time, and export.
+RELATION: Bound to DiagnosticsViewModel. Hosted as a tab inside
+          Views/LogDrawer.axaml.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="900" d:DesignHeight="500"
+             x:Class="FileHarvester.App.Views.DiagnosticsView"
+             x:DataType="vm:DiagnosticsViewModel">
+
+    <Grid RowDefinitions="*,*,Auto" Margin="16">
+
+        <!-- LATENCY TABLE -->
+        <Grid Grid.Row="0" RowDefinitions="Auto,Auto,*" Margin="0,0,0,16">
+
+            <TextBlock Grid.Row="0"
+                       Text="Latency (per policy)"
+                       FontSize="13"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}"
+                       Margin="0,0,0,8" />
+
+            <!-- Header row -->
+            <Grid Grid.Row="1"
+                  ColumnDefinitions="2*,1.2*,1.2*,1*,1*,1*,1*"
+                  Margin="0,0,0,4">
+                <TextBlock Grid.Column="0" Text="Policy"      FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                <TextBlock Grid.Column="1" Text="Calls"       FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                <TextBlock Grid.Column="2" Text="Error %"     FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                <TextBlock Grid.Column="3" Text="p50"         FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                <TextBlock Grid.Column="4" Text="p95"         FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                <TextBlock Grid.Column="5" Text="p99"         FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                <TextBlock Grid.Column="6" Text="In flight"   FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" />
+            </Grid>
+
+            <ScrollViewer Grid.Row="2"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+
+                    <TextBlock Text="No metrics yet — resolve some files to populate."
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Opacity="0.7"
+                               IsVisible="{Binding !Metrics.Count}"
+                               Margin="0,8,0,0" />
+
+                    <ItemsControl ItemsSource="{Binding Metrics}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PolicyMetricRowViewModel">
+                                <Grid ColumnDefinitions="2*,1.2*,1.2*,1*,1*,1*,1*"
+                                      Margin="0,4">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding PolicyName}"
+                                               FontSize="12"
+                                               FontFamily="Consolas,Menlo,monospace"
+                                               Foreground="{DynamicResource TextPrimary}" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding CallsText}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Right"
+                                               Margin="0,0,12,0" />
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding ErrorRateText}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Right"
+                                               Margin="0,0,12,0" />
+                                    <TextBlock Grid.Column="3"
+                                               Text="{Binding P50Text}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Right"
+                                               Margin="0,0,12,0" />
+                                    <TextBlock Grid.Column="4"
+                                               Text="{Binding P95Text}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Right"
+                                               Margin="0,0,12,0" />
+                                    <TextBlock Grid.Column="5"
+                                               Text="{Binding P99Text}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Right"
+                                               Margin="0,0,12,0" />
+                                    <TextBlock Grid.Column="6"
+                                               Text="{Binding InFlightText}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- CIRCUIT TABLE -->
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*">
+
+            <TextBlock Grid.Row="0"
+                       Text="Circuit States (per policy)"
+                       FontSize="13"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}"
+                       Margin="0,0,0,8" />
+
+            <Grid Grid.Row="1"
+                  ColumnDefinitions="2*,1.2*,1*,1.2*,1.2*"
+                  Margin="0,0,0,4">
+                <TextBlock Grid.Column="0" Text="Policy"       FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                <TextBlock Grid.Column="1" Text="State"        FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                <TextBlock Grid.Column="2" Text="Failures"     FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                <TextBlock Grid.Column="3" Text="Opened At"    FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                <TextBlock Grid.Column="4" Text="Next Probe"   FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" />
+            </Grid>
+
+            <ScrollViewer Grid.Row="2"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+
+                    <TextBlock Text="No circuits registered yet."
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Opacity="0.7"
+                               IsVisible="{Binding !Circuits.Count}"
+                               Margin="0,8,0,0" />
+
+                    <ItemsControl ItemsSource="{Binding Circuits}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CircuitRowViewModel">
+                                <Grid ColumnDefinitions="2*,1.2*,1*,1.2*,1.2*"
+                                      Margin="0,4">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding PolicyName}"
+                                               FontSize="12"
+                                               FontFamily="Consolas,Menlo,monospace"
+                                               Foreground="{DynamicResource TextPrimary}" />
+
+                                    <Border Grid.Column="1"
+                                            Background="{Binding StateBrush}"
+                                            CornerRadius="10"
+                                            Padding="10,2"
+                                            HorizontalAlignment="Right"
+                                            Margin="0,0,12,0">
+                                        <TextBlock Text="{Binding StateText}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="White" />
+                                    </Border>
+
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding FailuresText}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Right"
+                                               Margin="0,0,12,0" />
+                                    <TextBlock Grid.Column="3"
+                                               Text="{Binding OpenedAtText}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Right"
+                                               Margin="0,0,12,0" />
+                                    <TextBlock Grid.Column="4"
+                                               Text="{Binding NextProbeText}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- BOTTOM BAR -->
+        <Grid Grid.Row="2"
+              ColumnDefinitions="*,Auto,Auto,Auto,*"
+              Margin="0,16,0,0">
+
+            <StackPanel Grid.Column="0"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        Spacing="8">
+                <TextBlock Text="Correlation:"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextSecondary}"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding CorrelationIdText}"
+                           FontSize="11"
+                           FontFamily="Consolas,Menlo,monospace"
+                           Foreground="{DynamicResource TextPrimary}"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           MaxWidth="300" />
+                
+            </StackPanel>
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding LastRefreshText}"
+                       FontSize="11"
+                       Foreground="{DynamicResource TextSecondary}"
+                       VerticalAlignment="Center"
+                       Margin="0,0,12,0" />
+
+            <Button Grid.Column="2"
+                    Content="Refresh"
+                    FontSize="12"
+                    Padding="12,4"
+                    Margin="0,0,6,0"
+                    Command="{Binding RefreshCommand}" />
+
+            <Button Grid.Column="3"
+                    Content="Export Diagnostics"
+                    FontSize="12"
+                    Padding="12,4"
+                    Command="{Binding ExportCommand}" />
+
+            <TextBlock Grid.Column="4"
+                       Text="{Binding ExportStatusText}"
+                       FontSize="11"
+                       Foreground="{DynamicResource TextSecondary}"
+                       VerticalAlignment="Center"
+                       Margin="12,0,0,0"
+                       TextTrimming="CharacterEllipsis"
+                       MaxWidth="300" />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,163 @@
+﻿<!--
+FILE:     src/FileHarvester.App/Views/OutputOptionsPanel.axaml
+PURPOSE:  The Output Options panel. Mode, format, file name, delimiter,
+          options, destination, Harvest button.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="400" d:DesignHeight="700"
+             x:Class="FileHarvester.App.Views.OutputOptionsPanel"
+             x:DataType="vm:OutputOptionsViewModel">
+
+    <Border Name="RootBorder"
+            Background="{DynamicResource SurfaceRaised}"
+            BorderBrush="{DynamicResource BorderSubtle}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource RadiusMd}"
+            Padding="16">
+
+        <Grid RowDefinitions="Auto,*,Auto">
+
+            <TextBlock Grid.Row="0"
+                       Text="Output Options"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}"
+                       Margin="0,0,0,12" />
+
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="0,0,8,0">
+                <StackPanel Spacing="16">
+
+                    <!-- MODE -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Output Mode" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <RadioButton GroupName="OutputMode"
+                                     Content="Separate Files"
+                                     IsChecked="{Binding IsSeparateMode, Mode=TwoWay}" />
+                        <RadioButton GroupName="OutputMode"
+                                     Content="Single Merged File"
+                                     IsChecked="{Binding IsMergedMode, Mode=TwoWay}" />
+                        <TextBlock Text="{Binding ModeDescription}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <!-- FORMAT -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Format" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <ComboBox Name="FormatCombo"
+                                  ItemsSource="{Binding Formats}"
+                                  SelectedItem="{Binding SelectedFormat, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FormatOptionViewModel">
+                                    <TextBlock Text="{Binding DisplayText}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- FILE NAME (merged only) -->
+                    <StackPanel Spacing="6" IsVisible="{Binding IsMergedMode}">
+                        <TextBlock Text="File Name" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBox Name="OutputFileNameBox"
+                                 Text="{Binding OutputFileName, Mode=TwoWay}"
+                                 PlaceholderText="bundle" />
+                        <TextBlock FontSize="10"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   TextWrapping="Wrap">
+                            <Run Text="Will be saved as " />
+                            <Run Text="{Binding FilePreviewText}" FontFamily="Consolas,Menlo,monospace" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    
+
+                    <!-- OPTIONS -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Options" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+
+                        <TextBlock Text="By default the output is the raw file content. Enable the toggles below to add structure."
+                                   FontSize="10"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,4" />
+
+                        <CheckBox Content="Include file headers"
+                                  IsChecked="{Binding IncludeHeaders, Mode=TwoWay}" />
+
+                        <CheckBox Content="Wrap content in code fences (Markdown only)"
+                                  IsChecked="{Binding IncludeCodeFences, Mode=TwoWay}"
+                                  IsVisible="{Binding IsMergedMode}" />
+
+                        <CheckBox Content="Insert two blank lines between files"
+                                  IsChecked="{Binding TwoBlankLines, Mode=TwoWay}"
+                                  IsVisible="{Binding IsMergedMode}" />
+
+                        <CheckBox Content="Include table of contents"
+                                  IsChecked="{Binding IncludeTableOfContents, Mode=TwoWay}" />
+
+                        <CheckBox Content="Include SHA-256 manifest"
+                                  IsChecked="{Binding IncludeManifest, Mode=TwoWay}" />
+
+                        <CheckBox Content="Preserve folder structure"
+                                  IsChecked="{Binding PreserveFolderStructure, Mode=TwoWay}"
+                                  IsVisible="{Binding IsSeparateMode}" />
+                    </StackPanel>
+
+                    <!-- DESTINATION -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Save To" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding DestinationPath, Mode=TwoWay}"
+                                     Margin="0,0,6,0"
+                                     PlaceholderText="Leave empty to save in Downloads" />
+                            <Button Grid.Column="1"
+                                    Name="BrowseDestinationButton"
+                                    Content="Browse…"
+                                    Padding="12,4" />
+                        </Grid>
+                    </StackPanel>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2"
+                        Spacing="8"
+                        Margin="0,16,0,0">
+
+                <Button Name="HarvestButton"
+                        Content="Harvest Now"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Padding="16,10"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Command="{Binding HarvestCommand}" />
+
+                <TextBlock Text="{Binding StatusText}"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextSecondary}"
+                           TextWrapping="Wrap"
+                           TextTrimming="CharacterEllipsis"
+                           MaxHeight="36" />
+            </StackPanel>
+
+        </Grid>
+    </Border>
+</UserControl>

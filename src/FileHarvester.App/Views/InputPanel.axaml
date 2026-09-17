@@ -1,0 +1,142 @@
+﻿<!--
+FILE:     src/FileHarvester.App/Views/InputPanel.axaml
+PURPOSE:  The Input Intake panel. Paste box, file and folder pickers,
+          file list, status line. No search mode toggle - the resolver
+          is universal.
+RELATION: Bound to InputPanelViewModel. Embedded in MainWindow.axaml.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             xmlns:core="using:FileHarvester.Core.Domain"
+             mc:Ignorable="d"
+             d:DesignWidth="500" d:DesignHeight="600"
+             x:Class="FileHarvester.App.Views.InputPanel"
+             x:DataType="vm:InputPanelViewModel">
+
+    <Border Name="RootBorder"
+            Background="{DynamicResource SurfaceRaised}"
+            BorderBrush="{DynamicResource BorderSubtle}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource RadiusMd}"
+            Padding="16"
+            DragDrop.AllowDrop="True">
+
+        <Grid RowDefinitions="Auto,Auto,2*,Auto,3*,Auto">
+
+            <!-- HEADER -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
+                <TextBlock Grid.Column="0"
+                           Text="Input Intake"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimary}"
+                           VerticalAlignment="Center" />
+
+                <Border Grid.Column="1"
+                        Background="{DynamicResource BorderSubtle}"
+                        CornerRadius="10"
+                        Padding="10,3"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center">
+                    <TextBlock FontSize="12"
+                               Foreground="{DynamicResource TextPrimary}"
+                               Text="{Binding FileCount, StringFormat='{}{0} files'}" />
+                </Border>
+
+                <Button Grid.Column="2"
+                        Name="ClearAllButton"
+                        Content="Clear All"
+                        FontSize="12"
+                        Padding="10,4"
+                        VerticalAlignment="Center"
+                        Command="{Binding ClearAllCommand}" />
+            </Grid>
+
+            <!-- PASTE LABEL -->
+            <TextBlock Grid.Row="1"
+                       Text="Paste paths, filenames, or base names (one per line)"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextSecondary}"
+                       Margin="0,0,0,6" />
+
+            <!-- PASTE BOX -->
+            <TextBox Grid.Row="2"
+                     Name="PasteBox"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     MinHeight="140"
+                     PlaceholderText="C:\Users\HP\Documents\file.txt&#x0a;note&#x0a;README"
+                     Text="{Binding PasteText, Mode=TwoWay}"
+                     Margin="0,0,0,12"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto" />
+
+            <!-- ACTION BUTTONS -->
+            <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,Auto,*" Margin="0,0,0,12">
+                <Button Grid.Column="0" Name="ParsePasteButton" Content="Parse Paste" Padding="12,6" Margin="0,0,8,0" />
+                <Button Grid.Column="1" Name="AddFilesButton" Content="Add Files…" Padding="12,6" Margin="0,0,8,0" />
+                <Button Grid.Column="2" Name="AddFolderButton" Content="Add Folder…" Padding="12,6" />
+            </Grid>
+
+            <!-- FILE LIST -->
+            <Grid Grid.Row="4" MinHeight="100">
+
+                <StackPanel VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Spacing="6"
+                            IsVisible="{Binding !HasFiles}">
+                    <TextBlock Text="📁" FontSize="32" HorizontalAlignment="Center" Opacity="0.4" />
+                    <TextBlock Text="Drop files or folders here"
+                               FontSize="13"
+                               Foreground="{DynamicResource TextSecondary}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="or use the buttons above"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Opacity="0.7"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <ListBox Name="FileListBox"
+                         ItemsSource="{Binding Files}"
+                         IsVisible="{Binding HasFiles}"
+                         Background="Transparent"
+                         BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="core:FileRequest">
+                            <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,2">
+                                <TextBlock Grid.Column="0" Text="📄" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding RawInput}"
+                                           FontSize="12"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource TextPrimary}"
+                                           VerticalAlignment="Center" />
+                                <Button Grid.Column="2"
+                                        Content="✕"
+                                        FontSize="11"
+                                        Width="24" Height="24"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        ToolTip.Tip="Remove"
+                                        Command="{Binding $parent[UserControl].((vm:InputPanelViewModel)DataContext).RemoveFileCommand}"
+                                        CommandParameter="{Binding}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <!-- STATUS LINE -->
+            <TextBlock Grid.Row="5"
+                       Text="{Binding StatusText}"
+                       FontSize="11"
+                       Foreground="{DynamicResource TextSecondary}"
+                       Margin="0,8,0,0"
+                       TextTrimming="CharacterEllipsis" />
+        </Grid>
+    </Border>
+</UserControl>

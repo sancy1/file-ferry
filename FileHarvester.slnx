@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FileHarvester.App/FileHarvester.App.csproj" />
+    <Project Path="src/FileHarvester.Core/FileHarvester.Core.csproj" />
+    <Project Path="src/FileHarvester.Platform/FileHarvester.Platform.csproj" />
+    <Project Path="src/FileHarvester.Tests/FileHarvester.Tests.csproj" />
+  </Folder>
+</Solution>
