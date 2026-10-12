@@ -1027,26 +1027,55 @@ public sealed class SchemaLenceViewModel : ViewModelBase
         }
 
         var result = new StringBuilder();
-        result.AppendLine(FormattableString.Invariant(
-            $"# {Structure.DatabaseItem.Namespace}.{Structure.DatabaseItem.Name}"));
+        var objectName = Structure.DatabaseItem.Namespace + "."
+            + Structure.DatabaseItem.Name;
+        var title = "📋 " + Structure.DatabaseItem.Kind.ToString().ToUpperInvariant()
+            + ": " + objectName;
+        var titleRule = new string('─', Math.Max(44, title.Length));
+        result.AppendLine(titleRule);
+        result.AppendLine(title);
+        result.AppendLine(titleRule);
         result.AppendLine();
-        result.AppendLine(FormattableString.Invariant($"Object type: {Structure.DatabaseItem.Kind}"));
-        result.AppendLine(FormattableString.Invariant(
-            $"Description: {Structure.DatabaseItem.Description ?? "No description available."}"));
-        result.AppendLine(FormattableString.Invariant(
-            $"Estimated rows: {(Structure.DatabaseItem.EstimatedRows is { } rows ? "~" + rows.ToString(System.Globalization.CultureInfo.InvariantCulture) : "unavailable")}"));
-        result.AppendLine(FormattableString.Invariant(
-            $"Size: {Structure.DatabaseItem.SizeBytes?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "unavailable"} bytes"));
-        result.AppendLine(FormattableString.Invariant(
-            $"Row-level security enabled: {Structure.RowLevelSecurityEnabled}"));
-        result.AppendLine("Exact row count visible to this role: " + ExactRowCountText);
-        result.AppendLine();
-        result.AppendLine("## Columns");
-        foreach (var column in Structure.Columns)
+
+        AppendReportSection(result, "📝 Description", new[]
         {
-            result.AppendLine(FormattableString.Invariant(
-                $"- {column.Name}: {column.DataType}; nullable={column.IsNullable}; default={column.DefaultExpression ?? "none"}; identity={column.IdentityKind ?? "none"}; generated={column.GeneratedKind ?? "none"}; description={column.Description ?? "none"}"));
-        }
+            Structure.DatabaseItem.Description ?? "No metadata description found.",
+        });
+
+        result.AppendLine();
+        result.AppendLine("📚 Object Details:");
+        result.AppendLine(FormattableString.Invariant(
+            $"  Type: {Structure.DatabaseItem.Kind}"));
+        result.AppendLine(FormattableString.Invariant(
+            $"  Estimated rows: {FormatEstimatedRows(Structure.DatabaseItem.EstimatedRows)}"));
+        result.AppendLine(FormattableString.Invariant(
+            $"  Size: {FormatSize(Structure.DatabaseItem.SizeBytes)}"));
+        result.AppendLine(FormattableString.Invariant(
+            $"  Row-level security: {(Structure.RowLevelSecurityEnabled ? "enabled" : "disabled")}"));
+
+        var relationships = Structure.Constraints
+            .Where(item => item.Kind.Equals("FOREIGN KEY", StringComparison.OrdinalIgnoreCase))
+            .Select(FormatRelationship);
+        AppendReportSection(result, "🔄 Relationships", relationships);
+
+        var integrityEntries = Structure.Constraints
+            .Where(item => !item.Kind.Equals("FOREIGN KEY", StringComparison.OrdinalIgnoreCase))
+            .Select(FormatIntegrityConstraint)
+            .Concat(Structure.Indexes
+                .Where(item => item.IsUnique)
+                .Select(item => $"🔒 Unique index {item.Name}: {item.Definition}"));
+        AppendReportSection(result, "🛡️ Integrity & Uniqueness", integrityEntries);
+
+        AppendReportSection(result, "⚡ Triggers (Auto-Logic)", Structure.Triggers.Select(item =>
+            $"⚙️ {item.Name} ({item.Timing}; {item.Events}; "
+            + (item.IsEnabled ? "enabled" : "disabled") + "): " + item.Definition));
+        AppendReportSection(result, "── Indexes", Structure.Indexes.Select(item =>
+            $"📇 {item.Name}{(item.IsUnique ? " (unique)" : string.Empty)}: {item.Definition}"));
+
+        result.AppendLine();
+        result.AppendLine("🧱 Columns:");
+        result.AppendLine(FormatColumnTable(Structure.Columns));
+
         var allowedValues = Structure.Columns
             .Where(column => column.AllowedValues is { Count: > 0 })
             .Select(column => $"- {column.Name}: {JsonSerializer.Serialize(column.AllowedValues)}")
@@ -1055,10 +1084,10 @@ public sealed class SchemaLenceViewModel : ViewModelBase
                 .Select(item => $"- {item.Name}: {item.Definition}"))
             .ToArray();
         result.AppendLine();
-        result.AppendLine("## Allowed values");
+        result.AppendLine("🎛 Allowed Values:");
         if (allowedValues.Length == 0)
         {
-            result.AppendLine("No CHECK constraints or enum values are defined for this object.");
+            result.AppendLine("- No specific value constraints (CHECK/ENUM) defined.");
         }
         else
         {
@@ -1067,8 +1096,9 @@ public sealed class SchemaLenceViewModel : ViewModelBase
                 result.AppendLine(allowedValue);
             }
         }
+
         result.AppendLine();
-        result.AppendLine("## Example row");
+        result.AppendLine("📄 Example Row:");
         if (Page is { Rows.Count: > 0 } samplePage)
         {
             var sample = samplePage.Columns
@@ -1082,26 +1112,149 @@ public sealed class SchemaLenceViewModel : ViewModelBase
         {
             result.AppendLine("No readable example row is available. Check SELECT permissions.");
         }
-        AppendReportSection(result, "Constraints and relationships", Structure.Constraints.Select(item =>
-            $"- {item.Kind} {item.Name}: {item.Definition}"
-            + (item.ReferencedObject is null ? string.Empty : $" -> {item.ReferencedObject}")));
-        AppendReportSection(result, "Indexes", Structure.Indexes.Select(item =>
-            $"- {item.Name} (unique={item.IsUnique}): {item.Definition}"));
-        AppendReportSection(result, "Triggers", Structure.Triggers.Select(item =>
-            $"- {item.Name} ({item.Timing}; {item.Events}; enabled={item.IsEnabled}): {item.Definition}"));
-        AppendReportSection(result, "Vector columns", Structure.VectorColumns.Select(item =>
-            $"- {item.ColumnName}: {item.TypeName}; dimensions={item.Dimensions?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "not exposed"}"));
+
         result.AppendLine();
-        result.AppendLine(Structure.MetadataNote);
+        result.AppendLine(FormattableString.Invariant(
+            $"📊 Row Count: {FormatRowCount(Structure.DatabaseItem.EstimatedRows)}"));
+        result.AppendLine(FormattableString.Invariant(
+            $"   Exact count visible to this role: {ExactRowCountText}"));
+
+        AppendReportSection(result, "Vector columns", Structure.VectorColumns.Select(item =>
+            $"🧬 {item.ColumnName}: {item.TypeName}; dimensions="
+            + (item.Dimensions?.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                ?? "not exposed")));
+        result.AppendLine();
+        result.AppendLine("ℹ️ " + Structure.MetadataNote);
         if (Structure.Definition is not null)
         {
             result.AppendLine();
-            result.AppendLine("## Definition");
+            result.AppendLine("📜 Definition:");
             result.AppendLine("```sql");
             result.AppendLine(Structure.Definition);
             result.AppendLine("```");
         }
         return result.ToString();
+    }
+
+    private static string FormatColumnTable(IReadOnlyList<DatabaseColumn> columns)
+    {
+        string[] headings = { "Column", "Type", "Nullable", "Default", "Identity", "Generated", "Description" };
+        var rows = columns.Select(column => new[]
+        {
+            column.Name,
+            column.DataType,
+            column.IsNullable ? "YES" : "NO",
+            column.DefaultExpression ?? "—",
+            column.IdentityKind ?? "—",
+            column.GeneratedKind ?? "—",
+            column.Description ?? "—",
+        }).ToArray();
+        var widths = Enumerable.Range(0, headings.Length)
+            .Select(index => Math.Max(
+                headings[index].Length,
+                rows.Select(row => FormatTableCell(row[index]).Length)
+                    .DefaultIfEmpty(0)
+                    .Max()))
+            .ToArray();
+
+        var builder = new StringBuilder();
+        AppendTableRow(builder, headings, widths);
+        AppendTableRow(builder, widths.Select(width => new string('─', width)).ToArray(), widths);
+        foreach (var row in rows)
+        {
+            AppendTableRow(builder, row, widths);
+        }
+        return builder.ToString().TrimEnd();
+    }
+
+    private static void AppendTableRow(
+        StringBuilder builder,
+        string[] values,
+        int[] widths)
+    {
+        builder.Append("| ");
+        for (var index = 0; index < values.Length; index++)
+        {
+            if (index > 0)
+            {
+                builder.Append(" | ");
+            }
+            builder.Append(FormatTableCell(values[index]).PadRight(widths[index]));
+        }
+        builder.AppendLine(" |");
+    }
+
+    private static string FormatTableCell(string value) =>
+        value.Replace("|", "\\|", StringComparison.Ordinal)
+            .Replace('\r', ' ')
+            .Replace('\n', ' ')
+            .Replace('\t', ' ');
+
+    private string FormatRelationship(DatabaseConstraint constraint)
+    {
+        var definition = constraint.Definition;
+        var sourceOpen = definition.IndexOf('(');
+        var sourceClose = sourceOpen < 0 ? -1 : definition.IndexOf(')', sourceOpen + 1);
+        var referencesIndex = definition.IndexOf("REFERENCES", StringComparison.OrdinalIgnoreCase);
+        var targetOpen = referencesIndex < 0 ? -1 : definition.IndexOf('(', referencesIndex);
+        var targetClose = targetOpen < 0 ? -1 : definition.IndexOf(')', targetOpen + 1);
+        if (sourceOpen >= 0 && sourceClose > sourceOpen
+            && targetOpen >= 0 && targetClose > targetOpen
+            && constraint.ReferencedObject is not null)
+        {
+            var sourceColumns = definition[(sourceOpen + 1)..sourceClose].Trim();
+            var targetColumns = definition[(targetOpen + 1)..targetClose].Trim();
+            return $"🔗 {Structure!.DatabaseItem.Namespace}.{Structure.DatabaseItem.Name}.{sourceColumns}"
+                + $" → {constraint.ReferencedObject}.{targetColumns}";
+        }
+
+        return $"🔗 {constraint.Name}: {definition}";
+    }
+
+    private static string FormatIntegrityConstraint(DatabaseConstraint constraint)
+    {
+        var icon = constraint.Kind.ToUpperInvariant() switch
+        {
+            "PRIMARY KEY" => "🔑",
+            "UNIQUE" => "🔒",
+            "CHECK" => "☑️",
+            "EXCLUSION" => "🚫",
+            _ => "•",
+        };
+        return $"{icon} {constraint.Kind}: {constraint.Name} — {constraint.Definition}";
+    }
+
+    private static string FormatEstimatedRows(long? estimatedRows) =>
+        estimatedRows is { } rows
+            ? "~" + rows.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)
+            : "unavailable";
+
+    private static string FormatSize(long? sizeBytes)
+    {
+        if (sizeBytes is not { } bytes)
+        {
+            return "unavailable";
+        }
+
+        string[] units = { "B", "KB", "MB", "GB", "TB" };
+        var value = (double)bytes;
+        var unit = 0;
+        while (value >= 1024 && unit < units.Length - 1)
+        {
+            value /= 1024;
+            unit++;
+        }
+        return $"{value:0.##} {units[unit]}";
+    }
+
+    private string FormatRowCount(long? estimatedRows)
+    {
+        if (ExactRowCount is { } exactCount)
+        {
+            return exactCount.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)
+                + " exact, visible to this role";
+        }
+        return FormatEstimatedRows(estimatedRows) + " estimated";
     }
 
     private static void AppendReportSection(
@@ -1110,7 +1263,7 @@ public sealed class SchemaLenceViewModel : ViewModelBase
         IEnumerable<string> lines)
     {
         builder.AppendLine();
-        builder.AppendLine("## " + title);
+        builder.AppendLine(title + ":");
         var list = lines.ToArray();
         if (list.Length == 0)
         {

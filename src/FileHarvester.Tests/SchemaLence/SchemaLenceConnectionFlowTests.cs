@@ -226,12 +226,33 @@ public sealed class SchemaLenceConnectionFlowTests
                 CreateObject(),
                 new[]
                 {
-                    new DatabaseColumn(1, "id", "integer", false, null, null, null, null),
-                    new DatabaseColumn(2, "city_name", "text", false, null, null, null, null),
+                    new DatabaseColumn(1, "id", "integer", false, "nextval('weather_id_seq')", null, "a", "Primary key"),
+                    new DatabaseColumn(2, "city_name", "text", true, null, null, null, "City | display name"),
                 },
-                Array.Empty<DatabaseConstraint>(),
-                Array.Empty<DatabaseIndex>(),
-                Array.Empty<DatabaseTrigger>(),
+                new[]
+                {
+                    new DatabaseConstraint("weather_pkey", "PRIMARY KEY", "PRIMARY KEY (id)"),
+                    new DatabaseConstraint(
+                        "weather_user_id_fkey",
+                        "FOREIGN KEY",
+                        "FOREIGN KEY (user_id) REFERENCES users(id)",
+                        "public.users"),
+                    new DatabaseConstraint("weather_city_check", "CHECK", "CHECK (city_name <> '')"),
+                },
+                new[]
+                {
+                    new DatabaseIndex("weather_pkey", true, "CREATE UNIQUE INDEX weather_pkey ON public.weather (id)"),
+                    new DatabaseIndex("idx_weather_city", false, "CREATE INDEX idx_weather_city ON public.weather (city_name)"),
+                },
+                new[]
+                {
+                    new DatabaseTrigger(
+                        "trg_weather_updated",
+                        "BEFORE",
+                        "UPDATE",
+                        true,
+                        "EXECUTE FUNCTION set_updated_at()"),
+                },
                 Array.Empty<VectorColumnInfo>(),
                 false,
                 null,
@@ -274,13 +295,29 @@ public sealed class SchemaLenceConnectionFlowTests
         viewModel.Rows[0][1].Should().Be("Nairobi");
         viewModel.Rows[0][2].Should().BeNull();
         viewModel.StructureReport.Should().Contain("\"city_name\": \"Nairobi\"");
-        viewModel.StructureReport.Should().Contain("Exact row count visible to this role: Not counted");
+        viewModel.StructureReport.Should().Contain("📋 TABLE: public.weather");
+        viewModel.StructureReport.Should().Contain("📝 Description:");
+        viewModel.StructureReport.Should().Contain("No metadata description found.");
+        viewModel.StructureReport.Should().Contain("🔄 Relationships:");
+        viewModel.StructureReport.Should().Contain("🔗 public.weather.user_id → public.users.id");
+        viewModel.StructureReport.Should().Contain("🛡️ Integrity & Uniqueness:");
+        viewModel.StructureReport.Should().Contain("🔑 PRIMARY KEY: weather_pkey");
+        viewModel.StructureReport.Should().Contain("⚡ Triggers (Auto-Logic):");
+        viewModel.StructureReport.Should().Contain("⚙️ trg_weather_updated (BEFORE; UPDATE; enabled)");
+        viewModel.StructureReport.Should().Contain("📇 idx_weather_city");
+        viewModel.StructureReport.Should().Contain("| Column    | Type    | Nullable | Default");
+        viewModel.StructureReport.Should().Contain("| ───────── | ─────── | ──────── |");
+        viewModel.StructureReport.Should().Contain("City \\| display name");
+        viewModel.StructureReport.Should().Contain("🎛 Allowed Values:");
+        viewModel.StructureReport.Should().Contain("📄 Example Row:");
+        viewModel.StructureReport.Should().Contain("📊 Row Count: ~4 estimated");
+        viewModel.StructureReport.Should().Contain("Exact count visible to this role: Not counted");
 
         viewModel.CountRowsCommand.Execute(null);
         await ((AsyncRelayCommand<object>)viewModel.CountRowsCommand).ExecutionTask;
 
         viewModel.ExactRowCount.Should().Be(12);
-        viewModel.StructureReport.Should().Contain("Exact row count visible to this role: 12");
+        viewModel.StructureReport.Should().Contain("Exact count visible to this role: 12");
     }
 
     [Fact]

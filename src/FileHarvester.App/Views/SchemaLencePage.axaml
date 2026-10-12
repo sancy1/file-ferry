@@ -274,6 +274,7 @@
                                  IsReadOnly="True"
                                  AcceptsReturn="True"
                                  TextWrapping="NoWrap"
+                                 FontFamily="Consolas,Menlo,monospace"
                                  FontSize="12"
                                  PlaceholderText="Select a database object to inspect its structure."
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"

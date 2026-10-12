@@ -22,6 +22,8 @@ All notable changes to File-Ferry are documented in this file.
   resilience policies, and release documentation.
 - Database backups run without the short timeout intended for ordinary local
   file writes and remain cancellable.
+- Reformatted SchemaLence Structure / Definition reports with a readable,
+  aligned columns table and clearly separated, icon-led metadata sections.
 
 ### Fixed - Overwrite Confirmation
 - New `IOverwriteConfirmer` interface and `AlwaysCancelOverwriteConfirmer`
