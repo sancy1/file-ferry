@@ -283,7 +283,23 @@ MIT License — see [`LICENSE`](LICENSE).
 <p align="center">
   <img
     src="docs/screenshots/Screenshot.png"
-    alt="File-Ferry Screenshot"
+    alt="SchemaLence structure report"
+    width="900"
+  >
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/Screenshot1.png"
+    alt="SchemaLence data grid"
+    width="900"
+  >
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/Screenshot2.png"
+    alt="File-Ferry cloud connections"
     width="900"
   >
 </p>
