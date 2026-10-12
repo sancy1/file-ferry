@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // FILE:     src\FileHarvester.Core/Writers/ZipFormatWriter.cs
 // PURPOSE:  ZIP archive output. Clean by default: just the source files,
 //           byte-for-byte. manifest.json and bundle.md appear only when the
@@ -130,7 +130,7 @@ public sealed class ZipFormatWriter : IFormatWriter
 
     private static string BuildArchiveName(int index, string originalPath)
     {
-        var fileName = Path.GetFileName(originalPath);
+        var fileName = CloudPath.GetFileName(originalPath);
 
         foreach (var c in Path.GetInvalidFileNameChars())
         {

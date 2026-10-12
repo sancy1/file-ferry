@@ -1,72 +1,130 @@
-﻿# File-Ferry
+# File-Ferry
 
 > Harvest files from anywhere on your PC. Copy them byte-for-byte. Deliver them in any format you choose.
 
-File-Ferry is a modern, cross-platform-ready desktop application that accepts a list of file paths or bare filenames, resolves them across your entire machine, reads their contents with byte-level fidelity, and writes them out — either as **separate per-file documents** or as **one merged bundle** — in the format and destination of your choice.
+File-Ferry is a Windows desktop toolkit for working with local files, cloud storage, text, paths, and PostgreSQL data. Its original file-harvesting workflow is joined by Cloud, SchemaLence, Link Joiner, and Extract workspaces.
 
 Built on **.NET 10**, **Avalonia UI 12**, and **Portfolio.Resilience 0.8.0**.
 
 ---
 
-## Features
+## Workspaces and Features
 
-- **Three input methods** — Paste paths or filenames, use the native file picker, or use the folder picker.
-- **Universal search** — Type `note` and the app finds `note.txt`, `note.pdf`, `note.png`, `notes.md`, and other matching files anywhere on the PC.
-- **Ambiguity picker** — When a bare name matches multiple files, choose which ones to include using presets such as **Newest 5**, **Largest 5**, **Select All**, and **Select None**.
-- **Nine output formats** — `.txt` · `.md` · `.json` · `.html` · `.docx` · `.pdf` · `.xlsx` · `.csv` · `.zip`
-- **Two output modes** — **Separate Files** (one file per source) or **Single Merged** (one combined file).
-- **Clean output by default** — Content is preserved exactly as it is, with no decorations unless you explicitly enable them.
-- **Custom file naming** — For merged output, name the file yourself. For separate output, specify a filename prefix.
-- **Resilience pipeline** — Every file read and write runs through retry, circuit breaker, timeout, and fallback policies from Portfolio.Resilience.
-- **Live log drawer** — Every pipeline event streams into a collapsible overlay with color-coded status.
-- **Diagnostics tab** — Monitor live p50/p95/p99 latency, error rates, in-flight counts, and circuit states per policy.
-- **Light and dark themes** — Automatic system-aware theme or manual theme toggle.
-- **Windows 11-native feel** — Mica backdrop, rounded corners, and Fluent-inspired design.
+### Harvest — find, collect, and deliver files
+
+- Add files by pasting paths or names, using the file picker, or choosing a
+  folder.
+- Resolve bare filenames across the PC; when a name has multiple matches,
+  select the files you want with **Newest 5**, **Largest 5**, **Select All**,
+  or **Select None** presets.
+- Write to nine formats: `.txt`, `.md`, `.json`, `.html`, `.docx`, `.pdf`,
+  `.xlsx`, `.csv`, and `.zip`.
+- Choose **Separate Files** or **Single Merged** output, customize names, and
+  opt into headers, manifests, and other formatting where available.
+- Review and confirm before replacing an existing output file.
+
+### Cloud — connect storage and work with remote files
+
+- Configure built-in profiles for AWS S3, Cloudflare R2, Backblaze B2,
+  Wasabi, DigitalOcean Spaces, MinIO, Azure Blob Storage, Google Cloud
+  Storage, Google Drive, Microsoft OneDrive, and Dropbox.
+- Use provider-specific credentials or OAuth setup. Credentials are kept in
+  the operating system credential store where supported; the app does not
+  save cloud secrets in plain-text profile files.
+- Select and download Google Drive files from the Cloud workspace. Google
+  Docs, Sheets, and Slides are exported as PDF, XLSX, and PPTX respectively.
+- **Testing status:** Google Drive is the only cloud provider whose download
+  flow has been tested end-to-end, including single- and multi-file downloads.
+  The other providers are not yet verified for the same download workflow;
+  testing and completing those flows is planned for a future release.
+- See the [user guide](docs/user-guide.md) for setup, permissions, and current
+  provider workflow details. Cloud provider capabilities and account setup
+  requirements differ.
+
+### SchemaLence — inspect PostgreSQL safely
+
+- Connect to PostgreSQL and browse accessible schemas, tables, and views.
+- Inspect table definitions, constraints, indexes, triggers, and supported
+  pgvector metadata.
+- Preview role-visible rows in a read-only data grid and export table or view
+  rows to Excel (`.xlsx`).
+- Create a PostgreSQL custom-format backup (`.dump`) with `pg_dump`. Restore
+  it with PostgreSQL's `pg_restore`; cluster roles and global settings are
+  not included.
+- The workspace does not provide arbitrary SQL execution or database
+  editing. Backup requires PostgreSQL client tools, including `pg_dump`, on
+  the app machine.
+
+### Link Joiner — combine bases and paths
+
+- Join one or more base folders to lists of relative paths in independent
+  sections.
+- Validate unsafe or ambiguous relative paths, optionally normalize
+  separators or remove duplicates, then copy, save, or send results to
+  Harvest.
+
+### Extract — find useful text locally
+
+- Extract links, file paths, email addresses, and phone-like strings from
+  pasted text.
+- Filter, copy, or save matches. Extraction runs locally and does not verify,
+  open, or transmit the matched values.
+
+### App-wide tools
+
+- Light/dark appearance, a responsive Avalonia interface, live operation
+  logging, and resilience diagnostics.
+- Cancellable long-running exports and backups, with temporary-file cleanup
+  so partial outputs are not presented as completed files.
 
 ---
 
 ## Quickstart
 
-### For Users — Download and Run
+### For Users — Download and Run on Windows
 
-1. Download `FileFerry.exe` (approximately 72 MB).
-2. Double-click the executable.
-3. Paste a file path, click **Add Files…**, or add files using the folder picker.
-4. Click **Parse Paste** to add paths to the list.
-5. Click **Resolve** to locate every file.
-6. Choose a format and destination in the **Output Options** panel.
-7. Click **Harvest Now**.
-8. Click **Open Folder** to view the output.
+1. Download the latest Windows x64 ZIP from
+   [GitHub Releases](https://github.com/sancy1/file-ferry/releases/latest).
+2. Extract the ZIP, keeping `FileFerry.exe` and the `LatoFont` folder together.
+3. Run `FileFerry.exe`; no installer or separately installed .NET runtime is
+   required.
+4. Choose a workspace from the top bar: **Harvest**, **Cloud**, **Link
+   Joiner**, **Extract**, or **SchemaLence**.
 
-> **No installer required. No .NET runtime required. The application is self-contained.**
+> **The published download is a self-contained Windows x64 build.** Cloud
+> services may require your own provider account, credentials, or OAuth app
+> configuration. SchemaLence connects to a PostgreSQL server you provide; it
+> does not include a database server.
 
 ### For Developers — Build from Source
 
 ```powershell
-git clone <repository-url>
+git clone https://github.com/sancy1/file-ferry.git
 cd file-ferry
 dotnet restore FileHarvester.slnx
 dotnet build FileHarvester.slnx
-dotnet run --project src\FileHarvester.App
+dotnet run --project src\FileHarvester.App\FileHarvester.App.csproj
 ```
 
-### Publish a Single-File Windows Executable
+### Publish a Windows x64 Executable
 
 ```powershell
 dotnet publish src\FileHarvester.App -c Release -r win-x64 --self-contained `
     -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:EnableCompressionInSingleFile=true `
-    -o artifacts\FileFerry-win-x64
+    -o artifacts\FileFerry-v1.1.0-win-x64
 ```
 
-The published executable will be located at:
+Rename `FileHarvester.App.exe` to `FileFerry.exe` for the release package.
+If the runtime package contains `LatoFont`, include it beside the executable.
+The published app requires Windows x64; database backup additionally requires
+the PostgreSQL client tool `pg_dump` to be installed and available on `PATH`.
 
-```text
-artifacts\FileFerry-win-x64\FileHarvester.App.exe
-```
-
-Rename it to `FileFerry.exe` if desired.
+The first public release was `v1.0.0`. This repository is preparing the
+follow-up `v1.1.0`, which adds the workspaces and capabilities documented
+above. Check [GitHub Releases](https://github.com/sancy1/file-ferry/releases)
+for the currently published version and its release notes.
 
 ---
 
@@ -88,10 +146,12 @@ Rename it to `FileFerry.exe` if desired.
 ## Architecture
 
 ```text
-FileHarvester.App       (Avalonia UI — presentation)
-FileHarvester.Core      (domain logic — OS-agnostic, UI-agnostic)
-FileHarvester.Platform  (OS-specific adapters behind interfaces)
-FileHarvester.Tests     (xUnit — all layers)
+FileHarvester.App       (Avalonia UI — Harvest, Cloud, and utility workspaces)
+FileHarvester.Core      (file workflows, cloud contracts, shared domain logic)
+FileHarvester.Platform  (file-system and cloud-provider adapters)
+SchemaLence.Core        (database contracts and metadata models)
+SchemaLence.Platform    (PostgreSQL provider and local persistence)
+FileHarvester.Tests     (xUnit — app, core, and platform behavior)
 ```
 
 ### Data Flow
@@ -122,15 +182,25 @@ IOutputSink
 files on disk
 ```
 
-Every filesystem call and search operation runs through **Portfolio.Resilience** policies.
+Network and file operations use named **Portfolio.Resilience** policies for
+retry, circuit breaking, timeout, and rate limiting where appropriate.
+Operations such as database backups have their own cancellation-aware
+lifecycle rather than the short timeout used for ordinary local writes.
 
 ### Resilience Policies
 
-| Policy         | Configuration                                                                                              |
-| -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `file-read`    | Retry 4× with exponential backoff; circuit opens after 10 transient failures; 3-second per-attempt timeout |
-| `path-search`  | Retry 2×; circuit opens after 3 failures; 180-second timeout                                               |
-| `bundle-write` | Retry 3×; circuit opens after 5 failures; 60-second timeout                                                |
+| Policy                 | Used for                                              |
+| ---------------------- | ----------------------------------------------------- |
+| `file-read`            | Local file checks and reads                          |
+| `path-search`          | PC-wide filename search                              |
+| `bundle-write`         | Ordinary local output writes                         |
+| `cloud-read` / `write` | Remote object reads and writes                       |
+| `cloud-search`         | Remote search and listing                            |
+| `cloud-auth`           | OAuth and credential validation                      |
+| `credential-store-write` | Secure credential persistence                      |
+
+See [`docs/resilience-usage.md`](docs/resilience-usage.md) for the current
+policy configuration.
 
 ---
 
@@ -147,14 +217,16 @@ file-ferry/
 ├── README.md
 ├── CHANGELOG.md
 ├── LICENSE
-├── artifacts/                    Build output (git-ignored)
-├── docs/                         Architecture, resilience usage, user guide
+├── artifacts/                    Build output and release packages (git-ignored)
+├── docs/                         User, architecture, and verification guides
 ├── src/
-│   ├── FileHarvester.App/       Avalonia UI shell
-│   ├── FileHarvester.Core/      Domain logic + format writers
-│   ├── FileHarvester.Platform/  OS-specific search adapters
-│   └── FileHarvester.Tests/     xUnit test suite
-└── external/                    Reserved for future extension
+│   ├── FileHarvester.App/        Avalonia UI and workspaces
+│   ├── FileHarvester.Core/       File and cloud domain logic
+│   ├── FileHarvester.Platform/   File and cloud adapters
+│   ├── SchemaLence.Core/         Database contracts
+│   ├── SchemaLence.Platform/     PostgreSQL and local store
+│   └── FileHarvester.Tests/      xUnit test suite
+└── FileHarvester.slnx            Solution
 ```
 
 ---
@@ -169,47 +241,27 @@ dotnet test FileHarvester.slnx
 
 Current coverage includes:
 
-- Domain logic
-- File resolver
-- Content reader
-- Bundle composer
-- Format writers
-- Path search
-- Pipeline integration
+- Harvest and output behavior
+- Cloud providers, credentials, and downloads
+- SchemaLence PostgreSQL and Excel export
+- Link Joiner and Extract
+- UI view models, documentation contracts, and resilience behavior
 
-The coverage baseline is recorded in `docs/architecture.md`.
+The tests are in [`src/FileHarvester.Tests/`](src/FileHarvester.Tests/).
 
 ---
 
-## Roadmap
+## Release Notes
 
-### v1.0 — Current Release
+The first public release, [`v1.0.0`](https://github.com/sancy1/file-ferry/releases/tag/v1.0.0),
+focused on local file harvesting. The in-progress `v1.1.0` update expands
+File-Ferry with cloud connections and Google Drive downloads, PostgreSQL
+inspection and export, Link Joiner, Extract, overwrite confirmation, and
+related reliability and UI improvements.
 
-- Nine output formats
-- Single-merged and separate-files modes
-- PC-wide search with ambiguity picker
-- Light/dark themes
-- Diagnostics tab
-- Windows single-file executable
-
-### v1.1 — Cloud Integration _(Planned)_
-
-- AWS S3
-- Google Cloud Storage
-- Azure Blob Storage
-- Google Drive
-- OAuth credential management
-- Cross-provider transfer:
-  - PC ↔ Cloud
-  - Cloud ↔ Cloud
-
-- See `docs/architecture.md` for the reserved cloud-readiness rules.
-
-### v1.2 — Extended Search and Polish
-
-- Windows Search Index integration for faster PC-wide search
-- Search history and saved lists
-- Custom skip lists per user
+See [`CHANGELOG.md`](CHANGELOG.md) and the
+[release page](https://github.com/sancy1/file-ferry/releases) for the
+versioned change history.
 
 ---
 

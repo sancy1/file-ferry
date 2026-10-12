@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // FILE:     src\FileHarvester.Core/Domain/ComposedDocument.cs
 // PURPOSE:  Assembled output ready for a format writer. Carries the ordered
 //           list of file contents plus every user choice that affects
@@ -20,7 +20,7 @@ public sealed record ComposedDocument(
     bool IncludeHeaders = false,
     bool IncludeCodeFences = false)
 {
-    public const string DefaultDelimiter = "----- {path} -----";
+    public const string DefaultDelimiter = "===== {path} =====";
 
     public static ComposedDocument ForSingleMerged(
         IReadOnlyList<FileContent> files) =>

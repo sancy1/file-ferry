@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        x:Class="FileHarvester.App.Views.GoogleDriveSelectionReviewDialog"
+        x:DataType="vm:GoogleDriveSelectionReviewViewModel"
+        Title="Review Google Drive selection"
+        Width="600" Height="480"
+        MinWidth="460" MinHeight="340"
+        WindowStartupLocation="CenterOwner"
+        Icon="/Assets/file-ferry-logo.png">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="18">
+        <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,12">
+            <TextBlock Text="Review selected files"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Text="{Binding DownloadableFileCount, StringFormat='{}{0} file(s) ready to download. Choose separate files or one ZIP archive.'}"
+                       FontSize="12"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextSecondary}" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding Files}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:CompileBindings="False">
+                        <Border Background="{DynamicResource SurfaceSubtle}"
+                                BorderBrush="{DynamicResource BorderSubtle}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource RadiusMd}"
+                                Padding="10"
+                                Margin="0,0,0,6">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{Binding FileName}"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text="{Binding Error}"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Margin="0,12,0,0">
+            <Button Name="CancelButton" Content="Cancel" MinWidth="90" />
+            <Button Name="SeparateButton" Content="Save separately" MinWidth="120" />
+            <Button Name="ZipButton"
+                    Content="Save as ZIP"
+                    IsVisible="{Binding CanDownloadAsZip}"
+                    MinWidth="100" />
+        </StackPanel>
+    </Grid>
+</Window>

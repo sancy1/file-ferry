@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 FILE:     Directory.Packages.props
 PURPOSE:  Central Package Management (CPM) - one place for every NuGet
           version used anywhere in the solution.
@@ -17,6 +17,7 @@ RELATION: Automatically imported by the .NET SDK. Each .csproj keeps its
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.2" />
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.2" />
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
+    <PackageVersion Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
 
     <!-- Test stack -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -47,5 +48,20 @@ RELATION: Automatically imported by the .NET SDK. Each .csproj keeps its
 
     <!-- Dependency injection -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
   </ItemGroup>
+  <!-- Cloud SDKs (Group C) -->
+  <ItemGroup>
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.104.1" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.30.0" />
+    <PackageVersion Include="Azure.Identity" Version="1.21.0" />
+    <PackageVersion Include="Google.Cloud.Storage.V1" Version="5.0.0" />
+    <PackageVersion Include="Google.Apis.Drive.v3" Version="1.77.0.4276" />
+    <PackageVersion Include="Microsoft.Graph" Version="6.7.0" />
+    <PackageVersion Include="Microsoft.Identity.Client" Version="4.90.1" />
+    <PackageVersion Include="Dropbox.Api" Version="7.4.0" />
+    <PackageVersion Include="Meziantou.Framework.Win32.CredentialManager" Version="3.0.4" />
+  </ItemGroup>
+
 </Project>

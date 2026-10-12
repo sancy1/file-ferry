@@ -1,8 +1,9 @@
-﻿<!--
+<!--
 FILE:     src/FileHarvester.App/MainWindow.axaml
 PURPOSE:  The main window. Two title bars: the Windows native one
           (minimize/maximize/close) and our custom branding bar below it
-          (logo, theme toggle, Log button). No duplicate controls.
+          (logo, Cloud, Log, theme toggle). The body hosts one page
+          through a ContentControl: the harvest page or the cloud page.
 RELATION: Bound to MainWindowViewModel.
 -->
 <Window xmlns="https://github.com/avaloniaui"
@@ -55,14 +56,80 @@ RELATION: Bound to MainWindowViewModel.
                 <!-- MIDDLE: spacer -->
                 <Border Grid.Column="1" Background="Transparent" />
 
-                <!-- RIGHT: Log + theme toggle only -->
+                <!-- RIGHT: workspace navigation, Log, and theme toggle -->
                 <StackPanel Grid.Column="2"
                             Orientation="Horizontal"
                             VerticalAlignment="Center"
                             Spacing="4"
                             Margin="0,0,12,0">
 
+                    <Button Name="OpenHarvestButton"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding IsHarvestActive}"
+                            Content="Harvest File"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Back to the harvest workspace"
+                            Command="{Binding OpenHarvestCommand}" />
+
+                    <Button Name="OpenCloudButton"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding IsCloudActive}"
+                            Content="Cloud"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Cloud connections"
+                            Command="{Binding OpenCloudCommand}" />
+
+                    <Button Name="OpenLinkJoinerButton"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding IsLinkJoinerActive}"
+                            Content="Link Joiner"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Join a base location to multiple paths"
+                            Command="{Binding OpenLinkJoinerCommand}" />
+
+                    <Button Name="OpenExtractButton"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding IsExtractActive}"
+                            Content="Extract"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Extract links, paths, emails, and phone-like text"
+                            Command="{Binding OpenExtractCommand}" />
+
+                    <Button Name="OpenSchemaLenceButton"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding IsSchemaLenceActive}"
+                            Content="SchemaLence"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Read-only database explorer and backup workspace"
+                            Command="{Binding OpenSchemaLenceCommand}" />
+
                     <Button Name="OpenLogButton"
+                            Classes="titleBarButton"
                             Content="Log"
                             FontSize="12"
                             Padding="12,4"
@@ -86,16 +153,7 @@ RELATION: Bound to MainWindowViewModel.
 
         <!-- BODY + OVERLAY -->
         <Grid Grid.Row="1">
-            <Grid Margin="12">
-                <Grid ColumnDefinitions="2*,2*,1.4*" ColumnSpacing="12">
-                    <views:InputPanel Grid.Column="0"
-                                      DataContext="{Binding InputPanel}" />
-                    <views:ResolvedFilesPanel Grid.Column="1"
-                                              DataContext="{Binding ResolvedFilesPanel}" />
-                    <views:OutputOptionsPanel Grid.Column="2"
-                                              DataContext="{Binding OutputOptionsPanel}" />
-                </Grid>
-            </Grid>
+            <ContentControl Name="PageHost" />
 
             <views:LogDrawer DataContext="{Binding LogDrawer}" />
         </Grid>
@@ -111,7 +169,7 @@ RELATION: Bound to MainWindowViewModel.
                            Foreground="{DynamicResource TextSecondary}"
                            VerticalAlignment="Center"
                            Margin="12,0,0,0" />
-                <TextBlock Grid.Column="1" Text="File-Ferry 0.1.0"
+                <TextBlock Grid.Column="1" Text="File-Ferry 1.1.0"
                            FontSize="12"
                            Foreground="{DynamicResource TextSecondary}"
                            VerticalAlignment="Center"

@@ -1,11 +1,12 @@
-﻿// ============================================================================
+// ============================================================================
 // FILE:     src\FileHarvester.App/App.axaml.cs
 // PURPOSE:  Application bootstrap. Creates the ObservableLogSink and the
 //           LogFileManager, processes any pending clear request, rotates
-//           and prunes old log files, builds the DI container, and creates
-//           the main window.
+//           and prunes old log files, builds the DI container, registers
+//           the built-in cloud providers, and creates the main window.
 // RELATION: Loaded by Avalonia at startup. Depends on
-//           FileHarvester.Core.Composition and FileHarvester.App.Services.
+//           FileHarvester.Core.Composition, FileHarvester.App.Services,
+//           and FileHarvester.Platform.Cloud.Registry.
 // ============================================================================
 
 using Avalonia;
@@ -15,6 +16,13 @@ using Avalonia.Styling;
 using FileHarvester.App.Platform;
 using FileHarvester.App.Services;
 using FileHarvester.Core.Composition;
+using FileHarvester.Core.Domain;
+using FileHarvester.Platform.Cloud.Credentials;
+using FileHarvester.Platform.Cloud.Dispatch;
+using FileHarvester.Platform.Cloud.OAuth;
+using FileHarvester.Platform.Cloud.Discovery;
+using FileHarvester.Platform.Cloud.Registry;
+using SchemaLence.Platform;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FileHarvester.App;
@@ -69,6 +77,11 @@ public partial class App : Application
         services.AddSingleton(logSink);
         services.AddSingleton(App.LogManager);
 
+        // The App-side overwrite confirmer. Registered before
+        // AddFileHarvester so it overrides the fail-closed Core default,
+        // which is registered with TryAddSingleton inside AddFileHarvester.
+        services.AddSingleton<IOverwriteConfirmer, AvaloniaOverwriteConfirmer>();
+
         services.AddFileHarvester(
             new ResilienceConfig(
                 LogDirectory: logDirectory,
@@ -76,6 +89,21 @@ public partial class App : Application
                 EnableFileSink: true),
             extraSink: logSink);
 
-        return services.BuildServiceProvider();
+        services.AddFileHarvesterCloudCredentials();
+        services.AddFileHarvesterCloudDispatch();
+        services.AddFileHarvesterCloudOAuth();
+        services.AddFileHarvesterCloudDiscovery();
+        services.AddSchemaLence(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
+
+        var provider = services.BuildServiceProvider();
+
+        // Register the built-in providers the app can resolve: S3, Azure
+        // Blob, GCS, Google Drive, OneDrive, and Dropbox. A provider with
+        // no stored credential is registered but resolves lazily on first
+        // use, so the registration is safe at startup.
+        BuiltInProviderRegistration.RegisterBuiltInProviders(provider);
+
+        return provider;
     }
 }

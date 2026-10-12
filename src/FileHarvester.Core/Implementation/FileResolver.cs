@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // FILE:     src\FileHarvester.Core/Implementation/FileResolver.cs
 // PURPOSE:  Implementation of IFileResolver. Turns each FileRequest into
 //           zero or more ResolvedFile records by trying, in order:
@@ -20,7 +20,7 @@ using Portfolio.Resilience.Abstractions;
 
 namespace FileHarvester.Core.Implementation;
 
-public sealed class FileResolver : IFileResolver
+public sealed class FileResolver : IFileResolver, ILocalFileResolver
 {
     private readonly IResilienceExecutor _resilience;
     private readonly IPathSearchService _pathSearch;

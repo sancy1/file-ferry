@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // FILE:     src/FileHarvester.Core/Implementation/ContentReader.cs
 // PURPOSE:  Implementation of IContentReader. Reads file bytes through the
 //           "file-read" resilience policy, detects encoding, computes a
@@ -20,7 +20,7 @@ namespace FileHarvester.Core.Implementation;
 /// <summary>
 /// Reads file bytes and produces FileContent records.
 /// </summary>
-public sealed class ContentReader : IContentReader
+public sealed class ContentReader : IContentReader, ILocalContentReader
 {
     private readonly IResilienceExecutor _resilience;
 

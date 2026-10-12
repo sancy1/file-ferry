@@ -13,6 +13,7 @@ RELATION: Loaded by App.axaml.cs. Every view in the app inherits the
     <Application.Styles>
         <!-- Fluent theme: light and dark variants follow the OS. -->
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
 
         <!-- Custom styles layered on top of Fluent. -->
         <StyleInclude Source="avares://FileHarvester.App/Styles/AppStyles.axaml" />

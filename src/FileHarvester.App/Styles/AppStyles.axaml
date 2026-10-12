@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 FILE:     src/FileHarvester.App/Styles/AppStyles.axaml
 PURPOSE:  Design system for File-Ferry. Colors, spacing, corner radii,
           and reusable control styles. All color resources use
@@ -71,6 +71,15 @@ RELATION: Included by App.axaml. Consumed by MainWindow.axaml and every
         <Setter Property="FontSize"   Value="12" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{DynamicResource PillPendingFg}" />
+    </Style>
+
+    <!-- Title-bar navigation buttons: hover and active states. -->
+    <Style Selector="Button.titleBarButton:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource BorderSubtle}" />
+    </Style>
+
+    <Style Selector="Button.titleBarButton.active /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource BorderSubtle}" />
     </Style>
 
     <!-- Section headings. -->

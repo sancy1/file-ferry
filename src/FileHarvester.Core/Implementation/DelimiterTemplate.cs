@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // FILE:     src/FileHarvester.Core/Implementation/DelimiterTemplate.cs
 // PURPOSE:  Expands placeholder tokens in a delimiter template string. Used
 //           by BundleComposer (Phase 1.3) in SingleMerged mode.
@@ -47,7 +47,7 @@ internal static class DelimiterTemplate
         var result = template;
 
         result = result.Replace("{path}",     content.File.AbsolutePath, StringComparison.Ordinal);
-        result = result.Replace("{filename}", Path.GetFileName(content.File.AbsolutePath), StringComparison.Ordinal);
+        result = result.Replace("{filename}", CloudPath.GetFileName(content.File.AbsolutePath), StringComparison.Ordinal);
         result = result.Replace("{index}",    index.ToString(System.Globalization.CultureInfo.InvariantCulture), StringComparison.Ordinal);
         result = result.Replace("{size}",     content.RawBytes.Length.ToString(System.Globalization.CultureInfo.InvariantCulture), StringComparison.Ordinal);
         result = result.Replace("{hash}",     content.Sha256, StringComparison.Ordinal);

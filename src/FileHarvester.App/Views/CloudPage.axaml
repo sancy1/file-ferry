@@ -1,0 +1,270 @@
+<!--
+FILE:     src/FileHarvester.App/Views/CloudPage.axaml
+PURPOSE:  The cloud page. A two-column workspace: Quick Start (the
+          eleven built-in providers, with a local filter and an
+          independently scrollable list) on the left, and the two
+          strategic actions (Connect Another Cloud, Use a Credential) on
+          the right. Navigation back to Harvest is the title-bar
+          Harvest File button; this page has no in-page Back button.
+RELATION: Selected by MainWindowViewModel.CurrentPage through the page
+          host in MainWindow.axaml.cs. The DataContext is inherited from
+          the window (MainWindowViewModel); this UserControl does not set
+          its own DataContext. Bindings go through MainWindowViewModel.Cloud.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="640"
+             x:Class="FileHarvester.App.Views.CloudPage"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid Margin="12" RowDefinitions="Auto,*">
+
+        <!-- FIXED HEADER -->
+        <StackPanel Grid.Row="0" Spacing="8">
+            <TextBlock Text="Cloud connections"
+                       Classes="sectionHeading"
+                       FontSize="16"
+                       Opacity="1" />
+            <TextBlock Text="Manage cloud connections and download selected Google Drive files."
+                       FontSize="13"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextSecondary}" />
+
+            <!-- Page-level connection message. Bound to the single
+                 Cloud.ConnectionMessage; not per-row. Visible only when
+                 Cloud.HasConnectionMessage is true. -->
+            <Border IsVisible="{Binding Cloud.HasConnectionMessage}"
+                    Background="{DynamicResource SurfaceSubtle}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusMd}"
+                    Padding="12"
+                    Margin="0,8,0,0">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding Cloud.ConnectionMessage}"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextPrimary}" />
+                    <Button Grid.Column="1"
+                            Content="Dismiss"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Command="{Binding Cloud.DismissMessageCommand}" />
+                </Grid>
+            </Border>
+
+            <Border IsVisible="{Binding Cloud.HasDriveDownloadStatus}"
+                    Background="{DynamicResource SurfaceSubtle}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusMd}"
+                    Padding="12"
+                    Margin="0,8,0,0">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding Cloud.DriveDownloadStatus}"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextPrimary}" />
+                    <Button Grid.Column="1"
+                            Content="Cancel"
+                            IsVisible="{Binding Cloud.IsDriveDownloadInProgress}"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Command="{Binding Cloud.CancelDriveDownloadCommand}" />
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- TWO-COLUMN WORKSPACE -->
+        <Grid Grid.Row="1" ColumnDefinitions="3*,2*" ColumnSpacing="12" Margin="0,16,0,0">
+
+            <!-- LEFT: Quick Start -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SurfaceRaised}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusMd}"
+                    Padding="20">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <StackPanel Grid.Row="0" Spacing="4">
+                        <TextBlock Text="Quick Start"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="Choose a known provider to connect quickly."
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+
+                    <TextBox Grid.Row="1"
+                             Name="ProviderFilterBox"
+                             Margin="0,12,0,0"
+                             FontSize="13"
+                             PlaceholderText="Search available providers"
+                             Text="{Binding Cloud.ProviderFilter}" />
+
+                    <ScrollViewer Grid.Row="2" Margin="0,12,0,0">
+                        <ItemsControl ItemsSource="{Binding Cloud.FilteredProviders}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:CloudProviderRowViewModel">
+                                    <Border Background="{DynamicResource SurfaceSubtle}"
+                                            BorderBrush="{DynamicResource BorderSubtle}"
+                                            BorderThickness="1"
+                                            CornerRadius="{DynamicResource RadiusMd}"
+                                            Padding="12"
+                                            Margin="0,0,0,8">
+                                        <StackPanel Spacing="8">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Grid.Column="0" Spacing="2">
+                                                    <TextBlock Text="{Binding DisplayName}"
+                                                               FontSize="14"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextPrimary}" />
+                                                    <TextBlock Text="{Binding StatusText}"
+                                                               FontSize="12"
+                                                               Foreground="{DynamicResource TextSecondary}" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1"
+                                                        Content="{Binding ConnectLabel}"
+                                                        FontSize="12"
+                                                        Padding="12,4"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Foreground="{DynamicResource TextPrimary}"
+                                                        VerticalAlignment="Center"
+                                                        IsEnabled="{Binding CanConfigure}"
+                                                        Command="{Binding ConnectCommand}"
+                                                        CommandParameter="{Binding}" />
+                                            </Grid>
+
+                                            <!-- Instance-name input, OAuth rows only.
+                                                 Static-credential rows are unchanged. -->
+                                            <TextBox IsVisible="{Binding IsConnectable}"
+                                                     FontSize="12"
+                                                     PlaceholderText="Instance name"
+                                                     Text="{Binding InstanceName, Mode=TwoWay}" />
+
+                                            <ItemsControl ItemsSource="{Binding Instances}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:CloudInstanceRowViewModel">
+                                                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4" Margin="0,4,0,0"
+                                                              x:CompileBindings="False">
+                                                            <TextBlock Grid.Column="0"
+                                                                       Text="{Binding InstanceName}"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource TextPrimary}"
+                                                                       VerticalAlignment="Center" />
+                                                            <Button Grid.Column="1"
+                                                                    Content="Disconnect"
+                                                                    FontSize="12"
+                                                                    Padding="12,4"
+                                                                    Background="Transparent"
+                                                                    BorderThickness="0"
+                                                                    Foreground="{DynamicResource TextPrimary}"
+                                                                    Command="{Binding DisconnectCommand}"
+                                                                    CommandParameter="{Binding}" />
+                                                            <Button Grid.Column="2"
+                                                                    Content="Choose Google Drive file"
+                                                                    IsVisible="{Binding IsGoogleDrive}"
+                                                                    FontSize="12"
+                                                                    Padding="12,4"
+                                                                    Background="Transparent"
+                                                                    BorderThickness="0"
+                                                                    Foreground="{DynamicResource TextPrimary}"
+                                                                    Command="{Binding ChooseGoogleDriveFileCommand}"
+                                                                    CommandParameter="{Binding}" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- RIGHT: the two actions -->
+            <StackPanel Grid.Column="1" Spacing="12">
+
+                <!-- Connect Another Cloud -->
+                <Border Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="20">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Connect Another Cloud"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="Can't find your provider? Search for a known cloud or define a custom connection."
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                        <Button Name="FindProviderButton"
+                                Content="Find a provider"
+                                FontSize="12"
+                                Padding="12,4"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Left"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{DynamicResource TextPrimary}"
+                                ToolTip.Tip="Search for a cloud provider by name" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Divider -->
+                <Border Height="1"
+                        Background="{DynamicResource BorderSubtle}" />
+
+                <!-- Use a Credential -->
+                <Border Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="20">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Use a Credential"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="Connect with an API key, key pair, connection string, or service-account credential."
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                        <Button Name="UseCredentialButton"
+                                Content="I have a key"
+                                FontSize="12"
+                                Padding="12,4"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Left"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{DynamicResource TextPrimary}"
+                                ToolTip.Tip="Connect with a stored credential" />
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

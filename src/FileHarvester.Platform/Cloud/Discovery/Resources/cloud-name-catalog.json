@@ -1,0 +1,79 @@
+[
+  {
+    "canonicalName": "AWS S3",
+    "aliases": ["aws", "amazon", "amazon s3", "amazon web services", "s3", "aws s3"],
+    "providerId": "aws-s3",
+    "authKind": "LongLivedKey",
+    "officialUrl": "https://aws.amazon.com/s3/"
+  },
+  {
+    "canonicalName": "Azure Blob Storage",
+    "aliases": ["azure", "microsoft azure", "azure blob", "azure blob storage", "azure storage"],
+    "providerId": "azure-blob",
+    "authKind": "ConnectionString",
+    "officialUrl": "https://azure.microsoft.com/products/storage/blobs/"
+  },
+  {
+    "canonicalName": "Google Cloud Storage",
+    "aliases": ["gcs", "google cloud", "google cloud storage", "google storage"],
+    "providerId": "gcs",
+    "authKind": "LongLivedKey",
+    "officialUrl": "https://cloud.google.com/storage"
+  },
+  {
+    "canonicalName": "Cloudflare R2",
+    "aliases": ["cloudflare", "cloudflare r2", "r2"],
+    "providerId": "cloudflare-r2",
+    "authKind": "LongLivedKey",
+    "officialUrl": "https://www.cloudflare.com/developer-platform/r2/"
+  },
+  {
+    "canonicalName": "Backblaze B2",
+    "aliases": ["backblaze", "b2", "backblaze b2"],
+    "providerId": "backblaze-b2",
+    "authKind": "LongLivedKey",
+    "officialUrl": "https://www.backblaze.com/cloud-storage"
+  },
+  {
+    "canonicalName": "Wasabi",
+    "aliases": ["wasabi", "wasabi hot cloud storage"],
+    "providerId": "wasabi",
+    "authKind": "LongLivedKey",
+    "officialUrl": "https://wasabi.com"
+  },
+  {
+    "canonicalName": "DigitalOcean Spaces",
+    "aliases": ["digitalocean", "digital ocean", "spaces", "digitalocean spaces", "do spaces"],
+    "providerId": "digitalocean-spaces",
+    "authKind": "LongLivedKey",
+    "officialUrl": "https://www.digitalocean.com/products/spaces"
+  },
+  {
+    "canonicalName": "MinIO",
+    "aliases": ["minio", "min io"],
+    "providerId": "minio",
+    "authKind": "LongLivedKey",
+    "officialUrl": "https://min.io"
+  },
+  {
+    "canonicalName": "Google Drive",
+    "aliases": ["google", "google drive", "gdrive", "google-drive", "drive"],
+    "providerId": "gdrive",
+    "authKind": "OAuth",
+    "officialUrl": "https://drive.google.com"
+  },
+  {
+    "canonicalName": "Microsoft OneDrive",
+    "aliases": ["microsoft", "one drive", "onedrive", "microsoft onedrive", "sharepoint", "microsoft sharepoint"],
+    "providerId": "onedrive",
+    "authKind": "OAuth",
+    "officialUrl": "https://onedrive.live.com"
+  },
+  {
+    "canonicalName": "Dropbox",
+    "aliases": ["dropbox"],
+    "providerId": "dropbox",
+    "authKind": "OAuth",
+    "officialUrl": "https://www.dropbox.com"
+  }
+]

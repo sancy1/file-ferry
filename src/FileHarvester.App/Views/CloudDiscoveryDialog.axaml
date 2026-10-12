@@ -1,0 +1,104 @@
+<!--
+FILE:     src/FileHarvester.App/Views/CloudDiscoveryDialog.axaml
+PURPOSE:  The provider discovery dialog. The user enters a cloud name and
+          clicks Find. The dialog calls ICloudNameResolver (the local
+          catalog only) and shows the matching candidates. Selecting a
+          candidate closes the dialog and returns it. No credential,
+          endpoint, path, key, token, secret, or connection string is
+          accepted or transmitted by this dialog.
+RELATION: Opened modally by CloudPage.axaml.cs. Constructed with the
+          ICloudNameResolver.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        mc:Ignorable="d"
+        Width="520" Height="460"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Title="Find a provider"
+        x:Class="FileHarvester.App.Views.CloudDiscoveryDialog">
+
+    <Grid Margin="24" RowDefinitions="Auto,Auto,*,Auto">
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Spacing="8">
+            <TextBlock Text="Find a provider"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Text="Enter the name of the cloud provider (for example Google or Microsoft) and click Find."
+                       FontSize="13"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextSecondary}" />
+        </StackPanel>
+
+        <!-- Search row -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,16,0,0">
+            <TextBox Grid.Column="0"
+                     Name="SearchBox"
+                     PlaceholderText="Cloud provider name"
+                     FontSize="13" />
+            <Button Grid.Column="1"
+                    Name="FindButton"
+                    Content="Find"
+                    FontSize="12"
+                    Padding="12,4"
+                    Margin="8,0,0,0"
+                    MinWidth="72" />
+        </Grid>
+
+        <!-- Results -->
+        <ScrollViewer Grid.Row="2" Margin="0,16,0,0">
+            <StackPanel Spacing="8">
+                <TextBlock Name="StatusText"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextSecondary}"
+                           IsVisible="False" />
+                <ItemsControl Name="ResultsList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CloudNameCandidateRowViewModel">
+                            <Border Background="{DynamicResource SurfaceSubtle}"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="{DynamicResource RadiusMd}"
+                                    Padding="12"
+                                    Margin="0,0,0,8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock Text="{Binding DetailText}"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Content="Select"
+                                            FontSize="12"
+                                            Padding="12,4"
+                                            VerticalAlignment="Center"
+                                            Click="OnSelectClicked" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Button Grid.Row="3"
+                Name="CancelButton"
+                Content="Cancel"
+                FontSize="12"
+                Padding="12,4"
+                Margin="0,16,0,0"
+                HorizontalAlignment="Right"
+                IsCancel="True" />
+    </Grid>
+</Window>

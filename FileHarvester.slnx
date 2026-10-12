@@ -4,5 +4,7 @@
     <Project Path="src/FileHarvester.Core/FileHarvester.Core.csproj" />
     <Project Path="src/FileHarvester.Platform/FileHarvester.Platform.csproj" />
     <Project Path="src/FileHarvester.Tests/FileHarvester.Tests.csproj" />
+    <Project Path="src/SchemaLence.Core/SchemaLence.Core.csproj" />
+    <Project Path="src/SchemaLence.Platform/SchemaLence.Platform.csproj" />
   </Folder>
 </Solution>

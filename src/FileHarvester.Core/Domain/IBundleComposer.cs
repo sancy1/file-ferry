@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // FILE:     src\FileHarvester.Core/Domain/IBundleComposer.cs
 // PURPOSE:  Contract for the service that assembles FileContent records
 //           into a ComposedDocument according to the user's output options.
@@ -26,7 +26,7 @@ public sealed record ComposerOptions(
     bool IncludeCodeFences = false)
 {
     public static ComposerOptions SingleMerged() =>
-        new(OutputMode.SingleMerged);
+        new(OutputMode.SingleMerged, IncludeHeaders: true);
 
     public static ComposerOptions SeparateFiles(bool preserveFolderStructure = true) =>
         new(

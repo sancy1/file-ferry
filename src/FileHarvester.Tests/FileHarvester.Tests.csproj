@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="NSubstitute" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
@@ -22,6 +23,9 @@
   <ItemGroup>
     <ProjectReference Include="..\FileHarvester.Core\FileHarvester.Core.csproj" />
     <ProjectReference Include="..\FileHarvester.Platform\FileHarvester.Platform.csproj" />
+    <ProjectReference Include="..\FileHarvester.App\FileHarvester.App.csproj" />
+    <ProjectReference Include="..\SchemaLence.Core\SchemaLence.Core.csproj" />
+    <ProjectReference Include="..\SchemaLence.Platform\SchemaLence.Platform.csproj" />
   </ItemGroup>
 
 </Project>

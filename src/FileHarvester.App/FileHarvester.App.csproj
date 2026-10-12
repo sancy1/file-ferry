@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -19,9 +19,9 @@
     <Product>File-Ferry</Product>
     <AssemblyTitle>File-Ferry</AssemblyTitle>
     <Description>Harvest, bundle, and re-deliver file contents - anywhere, in any format.</Description>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <Company>Alexander Sanchez Cyril</Company>
     <Copyright>Copyright (c) 2026 Alexander Sanchez Cyril</Copyright>
   </PropertyGroup>
@@ -38,12 +38,16 @@
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
+    <PackageReference Include="DocumentFormat.OpenXml" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\FileHarvester.Core\FileHarvester.Core.csproj" />
     <ProjectReference Include="..\FileHarvester.Platform\FileHarvester.Platform.csproj" />
+    <ProjectReference Include="..\SchemaLence.Core\SchemaLence.Core.csproj" />
+    <ProjectReference Include="..\SchemaLence.Platform\SchemaLence.Platform.csproj" />
   </ItemGroup>
 
 </Project>

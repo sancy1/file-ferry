@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // FILE:     src\FileHarvester.App/ViewModels/OutputOptionsViewModel.cs
 // PURPOSE:  View model for the Output Options panel. Now exposes an
 //           OutputFileName field with a smart default: single-file harvest
@@ -241,7 +241,7 @@ public sealed class OutputOptionsViewModel : ViewModelBase, IDisposable
         {
             if (files.Count == 1)
             {
-                var baseName = Path.GetFileNameWithoutExtension(
+                var baseName = CloudPath.GetFileNameWithoutExtension(
                     files[0].AbsolutePath);
                 OutputFileName = baseName;
             }
@@ -269,7 +269,7 @@ public sealed class OutputOptionsViewModel : ViewModelBase, IDisposable
         // If the current name matches what we would auto-generate for the
         // previous file set, treat it as auto-managed.
         return _resolvedFiles.Count > 0
-            && currentName == Path.GetFileNameWithoutExtension(
+            && currentName == CloudPath.GetFileNameWithoutExtension(
                 _resolvedFiles[0].AbsolutePath);
     }
 

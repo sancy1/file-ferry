@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // FILE:     src\FileHarvester.Core/Domain/IFileResolver.cs
 // PURPOSE:  Contract for the service that turns a batch of FileRequest
 //           records into ResolvedFile records by locating each on disk.
@@ -54,4 +54,5 @@ public sealed record ResolveProgress(
     int Total,
     int Processed,
     FileStatus Status,
-    string? ResolvedPath = null);
+    string? ResolvedPath = null,
+    string? Note = null);

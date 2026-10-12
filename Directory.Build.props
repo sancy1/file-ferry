@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 FILE:     Directory.Build.props
 PURPOSE:  Shared MSBuild properties inherited by every project in File-Ferry.
 RELATION: Automatically imported by the .NET SDK from the repository root.
@@ -17,6 +17,6 @@ RELATION: Automatically imported by the .NET SDK from the repository root.
     <Company>Alexander Sanchez Cyril</Company>
     <Product>File-Ferry</Product>
     <Copyright>Copyright (c) 2026 Alexander Sanchez Cyril</Copyright>
-    <Version>0.1.0</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 </Project>

@@ -1,0 +1,310 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             xmlns:data="using:Avalonia.Controls"
+             x:Class="FileHarvester.App.Views.SchemaLencePage"
+             x:DataType="vm:MainWindowViewModel">
+    <Grid Name="WorkspaceGrid" Margin="12" ColumnDefinitions="410,6,*">
+        <Border Name="BrowserPane" Grid.Column="0"
+                Background="{DynamicResource SurfaceRaised}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="14">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="10">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="SchemaLence"
+                                   FontSize="17"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="Read-only database explorer. Visibility follows database permissions."
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding SchemaLence.ActiveConnectionLabel}"
+                               FontSize="11"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextSecondary}" />
+
+                    <TextBlock Text="Saved PostgreSQL connections"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}" />
+                    <ComboBox ItemsSource="{Binding SchemaLence.Connections}"
+                              SelectedItem="{Binding SchemaLence.SelectedConnection, Mode=TwoWay}"
+                              PlaceholderText="Choose a saved database">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:CompileBindings="False">
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                        <Button Content="Connect saved"
+                                Padding="8,6"
+                                Command="{Binding SchemaLence.ConnectSelectedCommand}" />
+                        <Button Grid.Column="1"
+                                Content="Remove saved"
+                                Padding="8,6"
+                                Command="{Binding SchemaLence.DeleteSelectedConnectionCommand}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                        <Button Content="Add database"
+                                Padding="8,6"
+                                Command="{Binding SchemaLence.AddConnectionCommand}" />
+                        <Button Grid.Column="1"
+                                Content="Disconnect"
+                                Padding="8,6"
+                                Command="{Binding SchemaLence.DisconnectCommand}" />
+                    </Grid>
+
+                    <Separator />
+                    <TextBlock Text="Connection settings"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}" />
+                    <TextBox Text="{Binding SchemaLence.ConnectionName, Mode=TwoWay}"
+                             PlaceholderText="Connection name"
+                             AutomationProperties.Name="Database connection name" />
+                    <CheckBox Content="Use PostgreSQL connection URI"
+                              IsChecked="{Binding SchemaLence.UseConnectionUri, Mode=TwoWay}" />
+                    <TextBox IsVisible="{Binding SchemaLence.UseConnectionUri}"
+                             Text="{Binding SchemaLence.ConnectionUri, Mode=TwoWay}"
+                             PasswordChar="&#x25CF;"
+                                 AutomationProperties.Name="PostgreSQL connection URI (masked)" />
+                    <StackPanel IsVisible="{Binding !SchemaLence.UseConnectionUri}"
+                                Spacing="8">
+                        <TextBox Text="{Binding SchemaLence.Host, Mode=TwoWay}"
+                                 PlaceholderText="Host or server address" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                            <TextBox Text="{Binding SchemaLence.Port, Mode=TwoWay}"
+                                     PlaceholderText="Port" />
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding SchemaLence.Database, Mode=TwoWay}"
+                                     PlaceholderText="Database" />
+                        </Grid>
+                        <TextBox Text="{Binding SchemaLence.Username, Mode=TwoWay}"
+                                 PlaceholderText="Username" />
+                        <TextBlock Text="Password is used only to connect, unless you choose to remember it securely."
+                                   FontSize="10"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                        <TextBox Text="{Binding SchemaLence.Password, Mode=TwoWay}"
+                                 PasswordChar="&#x25CF;"
+                                     AutomationProperties.Name="Database password" />
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                            <TextBlock Text="SSL mode"
+                                       VerticalAlignment="Center"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextSecondary}" />
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding SchemaLence.SslModes}"
+                                      SelectedItem="{Binding SchemaLence.SslMode, Mode=TwoWay}" />
+                        </Grid>
+                    </StackPanel>
+                    <CheckBox Content="Remember password in the OS credential store"
+                              IsChecked="{Binding SchemaLence.RememberPassword, Mode=TwoWay}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                        <Button Content="Test connection"
+                                Padding="8,6"
+                                Command="{Binding SchemaLence.TestConnectionCommand}" />
+                        <Button Grid.Column="1"
+                                Content="Save &amp; connect"
+                                Padding="8,6"
+                                FontWeight="SemiBold"
+                                Command="{Binding SchemaLence.SaveAndConnectCommand}" />
+                    </Grid>
+
+                    <Separator />
+                    <TextBlock Text="Accessible schemas and objects"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}" />
+                    <ComboBox ItemsSource="{Binding SchemaLence.Namespaces}"
+                              SelectedItem="{Binding SchemaLence.SelectedNamespace, Mode=TwoWay}"
+                              PlaceholderText="Schema filter" />
+                    <TextBox Text="{Binding SchemaLence.SearchText, Mode=TwoWay}"
+                             PlaceholderText="Search schema-qualified names or type" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                        <Button Content="View all tables"
+                                Padding="8,6"
+                                Command="{Binding SchemaLence.ShowAllObjectsCommand}" />
+                        <Button Grid.Column="1"
+                                Content="Refresh"
+                                Padding="8,6"
+                                Command="{Binding SchemaLence.RefreshCommand}" />
+                    </Grid>
+                    <ListBox ItemsSource="{Binding SchemaLence.VisibleObjects}"
+                             Name="DatabaseObjectsList"
+                             MinHeight="190"
+                             MaxHeight="420"
+                             AutomationProperties.Name="Accessible database objects">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:CompileBindings="False">
+                                <StackPanel Spacing="3" Margin="3">
+                                    <TextBlock Text="{Binding QualifiedName}"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding KindLabel}"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding RowEstimate}"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <GridSplitter Name="PaneSplitter"
+                      Grid.Column="1"
+                      Width="6"
+                      HorizontalAlignment="Stretch"
+                      Background="{DynamicResource BorderSubtle}"
+                      ShowsPreview="True" />
+
+        <Border Name="DetailsPane" Grid.Column="2"
+                Background="{DynamicResource SurfaceRaised}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="14">
+            <Grid RowDefinitions="Auto,Auto,*,Auto">
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8" Margin="0,0,0,8">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="{Binding SchemaLence.StatusText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                        <TextBlock Text="{Binding SchemaLence.PageStatus}"
+                                   FontSize="10"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                        <ProgressBar IsVisible="{Binding SchemaLence.IsBackupRunning}"
+                                     IsIndeterminate="True"
+                                     Height="4"
+                                     MinWidth="100" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Name="CopyReportButton"
+                            Content="Copy structure report"
+                            Padding="8,5"
+                            Command="{Binding SchemaLence.CopyReportCommand}" />
+                    <Button Grid.Column="2"
+                            Content="Save structure report…"
+                            Padding="8,5"
+                            Command="{Binding SchemaLence.SaveReportCommand}" />
+                    <Button Grid.Column="3"
+                            Content="Close"
+                            Padding="8,5"
+                            Command="{Binding SchemaLence.CloseCommand}" />
+                </Grid>
+
+                <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="6" Margin="0,0,0,8">
+                    <Button Content="Data grid"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding SchemaLence.ShowData}"
+                            Command="{Binding SchemaLence.ShowDataCommand}" />
+                    <Button Grid.Column="1"
+                            Content="Structure / Definition"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding SchemaLence.ShowStructure}"
+                            Command="{Binding SchemaLence.ShowStructureCommand}" />
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding SchemaLence.Structure.DatabaseItem.Namespace}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextSecondary}" />
+                    <Button Grid.Column="3"
+                            Content="Count rows"
+                            Padding="8,5"
+                            Command="{Binding SchemaLence.CountRowsCommand}" />
+                    <Button Grid.Column="4" Name="ExportExcelButton"
+                            Content="Export Excel…"
+                            Padding="8,5"
+                            Command="{Binding SchemaLence.ExportExcelCommand}" />
+                    <Button Grid.Column="5" Name="BackupDatabaseButton"
+                            Content="Backup database…"
+                            Padding="8,5"
+                            ToolTip.Tip="Create a restorable PostgreSQL custom archive containing this database's schema and data. Not a live clone."
+                            Command="{Binding SchemaLence.BackupDatabaseCommand}" />
+                    <Button Grid.Column="6" Name="CancelBackupButton"
+                            Content="Cancel backup"
+                            Padding="8,5"
+                            Command="{Binding SchemaLence.CancelBackupCommand}" />
+                    <Button Grid.Column="7"
+                            Content="Cancel export"
+                            Padding="8,5"
+                            Command="{Binding SchemaLence.CancelExcelExportCommand}" />
+                </Grid>
+
+                <Grid Grid.Row="2">
+                    <data:DataGrid Name="DataGrid"
+                                   IsVisible="{Binding SchemaLence.ShowData}"
+                                   ItemsSource="{Binding SchemaLence.Rows}"
+                                   AutoGenerateColumns="False"
+                                   IsReadOnly="True"
+                                   CanUserResizeColumns="True"
+                                   CanUserReorderColumns="False"
+                                   CanUserSortColumns="False"
+                                   GridLinesVisibility="All"
+                                   HeadersVisibility="All"
+                                   SelectionMode="Extended"
+                                   RowHeight="32"
+                                   AutomationProperties.Name="Read-only database rows" />
+                    <TextBlock IsVisible="{Binding SchemaLence.IsDataPreviewUnavailable}"
+                               Text="{Binding SchemaLence.PageStatus}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               MaxWidth="440"
+                               Margin="24"
+                               Foreground="{DynamicResource TextSecondary}" />
+                    <ScrollViewer IsVisible="{Binding SchemaLence.ShowStructure}"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Auto">
+                        <TextBox Text="{Binding SchemaLence.StructureReport}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="NoWrap"
+                                 FontSize="12"
+                                 PlaceholderText="Select a database object to inspect its structure."
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+                    </ScrollViewer>
+                    <TextBlock IsVisible="{Binding !SchemaLence.IsConnected}"
+                               Text="Connect to a database to see schemas, objects, structure, and data."
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               MaxWidth="420"
+                               Foreground="{DynamicResource TextSecondary}" />
+                </Grid>
+
+                <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,8,0,0">
+                    <TextBlock Text="Data is read-only. The grid displays a bounded page; Excel export streams all rows. Backup includes database schema/data, not cluster globals."
+                               VerticalAlignment="Center"
+                               FontSize="10"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextSecondary}" />
+                    <Button Grid.Column="1"
+                            Content="Previous"
+                            Padding="8,5"
+                            Command="{Binding SchemaLence.PreviousPageCommand}" />
+                    <Button Grid.Column="2"
+                            Content="Next"
+                            Padding="8,5"
+                            Command="{Binding SchemaLence.NextPageCommand}" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
