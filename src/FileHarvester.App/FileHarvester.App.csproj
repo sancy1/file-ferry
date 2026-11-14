@@ -19,9 +19,9 @@
     <Product>File-Ferry</Product>
     <AssemblyTitle>File-Ferry</AssemblyTitle>
     <Description>Harvest, bundle, and re-deliver file contents - anywhere, in any format.</Description>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <Company>Alexander Sanchez Cyril</Company>
     <Copyright>Copyright (c) 2026 Alexander Sanchez Cyril</Copyright>
   </PropertyGroup>
@@ -33,6 +33,47 @@
     <AvaloniaResource Include="Assets\file-ferry-logo.ico" />
   </ItemGroup>
 
+  <!-- Pinned FFmpeg binaries (audio/video transcription, live
+       transcription, TTS). ~200 MB, NOT committed to git — obtain via
+       scripts/fetch-ffmpeg.ps1. App.axaml.cs resolves them from
+       AppContext.BaseDirectory\ffmpeg.
+       Deliberately NOT an MSBuild item: any item visible to publish gets
+       bundled INTO the single-file exe (+200 MB). Plain Copy targets keep
+       the binaries external, beside the exe, on every build and publish. -->
+  <Target Name="CopyFfmpegToOutput" AfterTargets="Build">
+    <ItemGroup>
+      <FfmpegPayload Include="$(MSBuildProjectDirectory)\ffmpeg\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FfmpegPayload)"
+          DestinationFiles="@(FfmpegPayload->'$(OutputPath)ffmpeg\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyFfmpegToPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <FfmpegPayload Include="$(MSBuildProjectDirectory)\ffmpeg\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FfmpegPayload)"
+          DestinationFiles="@(FfmpegPayload->'$(PublishDir)ffmpeg\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Whisper.net and LLamaSharp load natives by probing runtimes\ paths
+       on disk; single-file bundling hides them. Ship the win-x64 runtime
+       tree as loose files beside the exe (~50 MB). -->
+  <Target Name="CopyWinX64RuntimesToPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <WinX64Runtimes Include="$(OutputPath)runtimes\win-x64\**\*" />
+      <WinX64RuntimesNoAvx Include="$(OutputPath)runtimes\noavx\win-x64\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(WinX64Runtimes)"
+          DestinationFiles="@(WinX64Runtimes->'$(PublishDir)runtimes\win-x64\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(WinX64RuntimesNoAvx)"
+          DestinationFiles="@(WinX64RuntimesNoAvx->'$(PublishDir)runtimes\noavx\win-x64\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
@@ -40,6 +81,9 @@
     <PackageReference Include="Avalonia.Fonts.Inter" />
     <PackageReference Include="Avalonia.Controls.DataGrid" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <PackageReference Include="AvaloniaEdit.TextMate" />
+    <PackageReference Include="TextMateSharp.Grammars" />
     <PackageReference Include="DocumentFormat.OpenXml" />
   </ItemGroup>
 
@@ -48,6 +92,11 @@
     <ProjectReference Include="..\FileHarvester.Platform\FileHarvester.Platform.csproj" />
     <ProjectReference Include="..\SchemaLence.Core\SchemaLence.Core.csproj" />
     <ProjectReference Include="..\SchemaLence.Platform\SchemaLence.Platform.csproj" />
+    <ProjectReference Include="..\ImageTextify.Core\ImageTextify.Core.csproj" />
+    <ProjectReference Include="..\ImageTextify.Platform\ImageTextify.Platform.csproj" />
+    <ProjectReference Include="..\Prompt.Platform\Prompt.Platform.csproj" />
+    <ProjectReference Include="..\CodeViewer.Core\CodeViewer.Core.csproj" />
+    <ProjectReference Include="..\CodeViewer.Platform\CodeViewer.Platform.csproj" />
   </ItemGroup>
 
 </Project>

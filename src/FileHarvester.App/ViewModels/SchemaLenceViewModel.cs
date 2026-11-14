@@ -85,6 +85,7 @@ public sealed class SchemaLenceViewModel : ViewModelBase
         ShowStructureCommand = new RelayCommand(() => ShowData = false);
         DisconnectCommand = CreateAsyncCommand(DisconnectAsync);
         RefreshCommand = CreateAsyncCommand(RefreshAsync);
+        ResetCommand = new RelayCommand(ResetAll);
         PreviousPageCommand = new AsyncRelayCommand<object>(
             _ => LoadPageAsync(PageIndex - 1),
             _ => IsConnected && PageIndex > 0,
@@ -140,6 +141,7 @@ public sealed class SchemaLenceViewModel : ViewModelBase
     public ICommand ShowStructureCommand { get; }
     public ICommand DisconnectCommand { get; }
     public ICommand RefreshCommand { get; }
+    public ICommand ResetCommand { get; }
     public ICommand PreviousPageCommand { get; }
     public ICommand NextPageCommand { get; }
     public ICommand CopyReportCommand { get; }
@@ -604,6 +606,36 @@ public sealed class SchemaLenceViewModel : ViewModelBase
         SelectedObjectRow = null;
         StatusText = "Disconnected. Saved connection settings remain available.";
         await Task.CompletedTask;
+    }
+
+    public void ResetAll()
+    {
+        ActiveConnection = null;
+        _activePassword = null;
+        _sessionPasswords.Clear();
+        SelectedConnection = null;
+        SelectedObjectRow = null;
+        SelectedNamespace = null;
+        ConnectionName = string.Empty;
+        UseConnectionUri = false;
+        ConnectionUri = string.Empty;
+        Host = string.Empty;
+        Port = "5432";
+        Database = string.Empty;
+        Username = string.Empty;
+        Password = string.Empty;
+        SslMode = "Require";
+        RememberPassword = false;
+        SearchText = string.Empty;
+        Namespaces.Clear();
+        Objects.Clear();
+        VisibleObjects.Clear();
+        Rows.Clear();
+        Structure = null;
+        Page = null;
+        ExactRowCount = null;
+        ShowData = true;
+        StatusText = "Connect to a PostgreSQL database to browse accessible schemas.";
     }
 
     public async Task RefreshAsync()

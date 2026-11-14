@@ -10,6 +10,7 @@
 // ============================================================================
 
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
@@ -23,6 +24,9 @@ using FileHarvester.Platform.Cloud.OAuth;
 using FileHarvester.Platform.Cloud.Discovery;
 using FileHarvester.Platform.Cloud.Registry;
 using SchemaLence.Platform;
+using ImageTextify.Platform.Composition;
+using CodeViewer.Platform.Composition;
+using Prompt.Platform.Composition;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FileHarvester.App;
@@ -33,6 +37,13 @@ public partial class App : Application
     public static OsKind OsKind => Os.Current;
     public static ObservableLogSink LogSink { get; private set; } = null!;
     public static LogFileManager LogManager { get; private set; } = null!;
+
+    /// <summary>
+    /// The application top level, captured once after the main window is
+    /// attached. Used by file pickers (camera save) so they resolve to a
+    /// live visual tree root. Null before the first window is attached.
+    /// </summary>
+    public static TopLevel? MainTopLevel { get; private set; }
 
     public override void Initialize()
     {
@@ -65,6 +76,8 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow();
+            App.MainTopLevel = TopLevel.GetTopLevel(desktop.MainWindow);
+            desktop.ShutdownRequested += OnShutdownRequested;
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -82,12 +95,20 @@ public partial class App : Application
         // which is registered with TryAddSingleton inside AddFileHarvester.
         services.AddSingleton<IOverwriteConfirmer, AvaloniaOverwriteConfirmer>();
 
+        services.AddPromptFeature(
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "Prompt",
+                "prompt.db"));
+
         services.AddFileHarvester(
             new ResilienceConfig(
                 LogDirectory: logDirectory,
                 EnableConsoleSink: true,
                 EnableFileSink: true),
-            extraSink: logSink);
+            extraSink: logSink,
+            configureImageTextifyPolicies: ImageTextifyComposition.RegisterResiliencePolicies,
+            configureCodeViewerPolicies: CodeViewerComposition.RegisterResiliencePolicies);
 
         services.AddFileHarvesterCloudCredentials();
         services.AddFileHarvesterCloudDispatch();
@@ -95,6 +116,50 @@ public partial class App : Application
         services.AddFileHarvesterCloudDiscovery();
         services.AddSchemaLence(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
+        // FFmpeg bin directory: enabled when the pinned build is present
+        // under the app's base directory as ffmpeg/ (the release bundling
+        // step places ffmpeg.exe and ffprobe.exe there). When the binaries
+        // are absent, the Audio and Video categories, live transcription,
+        // and text-to-speech are unavailable; a startup log event makes the
+        // cause visible instead of the vague "not enabled" message.
+        var ffmpegBin = Path.Combine(AppContext.BaseDirectory, "ffmpeg");
+        if (!File.Exists(Path.Combine(ffmpegBin, "ffmpeg.exe"))
+            || !File.Exists(Path.Combine(ffmpegBin, "ffprobe.exe")))
+        {
+            var checkedPath = ffmpegBin;
+            ffmpegBin = null!;
+            try
+            {
+                logSink.Emit(new Portfolio.Resilience.Events.ResilienceEvent
+                {
+                    EventType = Portfolio.Resilience.Events.ResilienceEventType.CallFailed,
+                    PolicyName = "App.Startup",
+                    TimestampUtc = DateTime.UtcNow,
+                    Metadata = new Dictionary<string, object?>
+                    {
+                        ["operation"] = "ffmpeg.probe",
+                        ["message"] = "FFmpeg not found next to the app "
+                            + "(" + checkedPath + "). Audio/video transcription, "
+                            + "live transcription, and text-to-speech are disabled. "
+                            + "Re-extract the full folder: ffmpeg.exe and ffprobe.exe "
+                            + "must sit beside the app exe.",
+                    },
+                });
+            }
+            catch { }
+        }
+        services.AddImageTextify(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            ffmpegBinDirectory: ffmpegBin);
+        services.AddCodeViewer(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            logSink);
+
+        services.AddPromptStores(
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "Prompt",
+                "prompt.db"));
 
         var provider = services.BuildServiceProvider();
 
@@ -105,5 +170,16 @@ public partial class App : Application
         BuiltInProviderRegistration.RegisterBuiltInProviders(provider);
 
         return provider;
+    }
+
+    // Phase 9 (camera capture): dispose the camera sub-ViewModel on shutdown so
+    // no camera session survives the process. Scope Part 4 requires this.
+    private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
+    {
+        if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
+        var vm = desktop.MainWindow?.DataContext as FileHarvester.App.ViewModels.MainWindowViewModel;
+        if (vm?.Camera is null) return;
+        try { vm.Camera.DisposeAsync().AsTask().GetAwaiter().GetResult(); } catch { }
+        try { vm.TextToSpeech?.Dispose(); } catch { }
     }
 }

@@ -1,0 +1,34 @@
+<!--
+FILE:     src/Prompt.Platform/Prompt.Platform.csproj
+PURPOSE:  Prompt App platform layer: SQLite stores (prompts, categories,
+          versions, drafts, FTS5 search), the exporter, the importer, and
+          the Prompt resilience policy registration and DI entry point.
+RELATION: Registered in FileHarvester.slnx. Referenced by FileHarvester.App
+          and FileHarvester.Tests. References Prompt.Core for the domain
+          contracts and FileHarvester.Core for the reused format-writer
+          types. Uses Microsoft.Data.Sqlite (version pinned centrally in
+          Directory.Packages.props).
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Prompt.Core\Prompt.Core.csproj" />
+    <ProjectReference Include="..\FileHarvester.Core\FileHarvester.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Portfolio.Resilience" />
+    <!-- P3.5: .docx import via DocumentFormat.OpenXml; .pdf import via PdfPig. -->
+    <PackageReference Include="DocumentFormat.OpenXml" />
+    <PackageReference Include="PdfPig" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,205 @@
+// filepath: src/ImageTextify.Platform/Imaging/OcrResultMerger.cs
+// layer:    Infrastructure
+// module:   ImageTextify.Platform.Imaging
+// since:    Phase 2.4b2
+// purpose:  Default IOcrResultMerger. Uses ReadingOrder.Sort for
+//           multi-column layouts. Drops empty lines. Preserves per-line
+//           provenance (engine attribution).
+//
+// RELATIONSHIPS
+//   Implements : ImageTextify.Platform.Imaging.IOcrResultMerger
+//   Depends on : ImageTextify.Core.Abstractions.OcrLineResult,
+//                OcrResult, OcrTextKind, OcrEngineKind,
+//                ImageTextify.Platform.Imaging.ReadingOrder
+//   Used by    : ImageTextify.Platform.OnnxOcrEngine
+//   See also   : IOcrResultMerger.cs, ReadingOrder.cs
+//
+// NOTES
+//   - The merge is deterministic. Same inputs produce same output.
+//   - Reading order comes from bounding boxes. If regions overlap or
+//     have identical coordinates, ReadingOrder.Sort applies a stable
+//     tie-breaker.
+//   - Empty text lines are dropped to avoid spurious line breaks.
+
+using System.Text;
+using ImageTextify.Core.Abstractions;
+
+namespace ImageTextify.Platform.Imaging;
+
+/// <summary>
+/// Default result merger. Reads per-line results in detection order,
+/// reorders them by reading order, and produces the final OcrResult.
+/// </summary>
+public sealed class OcrResultMerger : IOcrResultMerger
+{
+    private static readonly ReadingOrderOptions DefaultOrderOptions = new();
+
+    /// <inheritdoc/>
+    public OcrResult Merge(IReadOnlyList<OcrLineResult> lines, IReadOnlyList<string> warnings)
+    {
+        ArgumentNullException.ThrowIfNull(lines);
+        ArgumentNullException.ThrowIfNull(warnings);
+
+        // Drop empty text lines.
+        var filtered = new List<OcrLineResult>(lines.Count);
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var l = lines[i];
+            if (string.IsNullOrWhiteSpace(l.Text) || IsPunctuationNoise(l.Text))
+            {
+                continue;
+            }
+            filtered.Add(l);
+        }
+
+        if (filtered.Count == 0)
+        {
+            return new OcrResult(
+                Text: string.Empty,
+                Confidence: null,
+                Warnings: warnings,
+                DetectedTextKind: OcrTextKind.Unknown,
+                Lines: Array.Empty<OcrLineResult>());
+        }
+
+        // Build TextRegion list from bboxes.
+        var regions = new List<TextRegion>(filtered.Count);
+        for (var i = 0; i < filtered.Count; i++)
+        {
+            var bbox = filtered[i].BoundingBox;
+            regions.Add(new TextRegion(
+                Index: i,
+                X: bbox.X,
+                Y: bbox.Y,
+                Width: bbox.Width,
+                Height: bbox.Height,
+                Confidence: filtered[i].Confidence ?? 0.0));
+        }
+
+        // Reading order.
+        IReadOnlyList<int> order = ReadingOrder.Sort(regions, DefaultOrderOptions);
+
+        // Reorder filtered lines by order.
+        var ordered = new List<OcrLineResult>(order.Count);
+        foreach (var idx in order)
+        {
+            ordered.Add(filtered[idx]);
+        }
+
+        // Build text by grouping lines on the same visual row (y-overlap).
+        // This matches the label full_text granularity: one visual row of
+        // text becomes one line in the output. Words within a row are joined
+        // with a space; separate rows are joined with a newline.
+        var sb = new StringBuilder();
+        var currentGroup = new List<OcrLineResult>();
+        var currentGroupY0 = int.MinValue;
+        var currentGroupY1 = int.MinValue;
+        for (var i = 0; i < ordered.Count; i++)
+        {
+            var line = ordered[i];
+            var bbox = line.BoundingBox;
+            var y0 = bbox.Y;
+            var y1 = bbox.Y + bbox.Height;
+            var belongsToCurrent = false;
+            if (currentGroup.Count > 0)
+            {
+                var overlap = Math.Max(0, Math.Min(currentGroupY1, y1) - Math.Max(currentGroupY0, y0));
+                var minH = Math.Min(currentGroupY1 - currentGroupY0, y1 - y0);
+                if (minH > 0 && (double)overlap / minH >= 0.5)
+                {
+                    belongsToCurrent = true;
+                }
+            }
+            if (belongsToCurrent)
+            {
+                currentGroup.Add(line);
+                currentGroupY0 = Math.Min(currentGroupY0, y0);
+                currentGroupY1 = Math.Max(currentGroupY1, y1);
+            }
+            else
+            {
+                if (currentGroup.Count > 0)
+                {
+                    for (var k = 0; k < currentGroup.Count; k++)
+                    {
+                        if (k > 0) sb.Append(' ');
+                        sb.Append(currentGroup[k].Text);
+                    }
+                    sb.Append('\n');
+                }
+                currentGroup = new List<OcrLineResult> { line };
+                currentGroupY0 = y0;
+                currentGroupY1 = y1;
+            }
+        }
+        if (currentGroup.Count > 0)
+        {
+            for (var k = 0; k < currentGroup.Count; k++)
+            {
+                if (k > 0) sb.Append(' ');
+                sb.Append(currentGroup[k].Text);
+            }
+        }
+        var mergedText = sb.ToString();
+
+        // Overall confidence: mean of non-null per-line confidences.
+        double? confidence = null;
+        var sum = 0.0;
+        var count = 0;
+        foreach (var l in ordered)
+        {
+            if (l.Confidence is { } c)
+            {
+                sum += c;
+                count++;
+            }
+        }
+        if (count > 0)
+        {
+            confidence = sum / count;
+        }
+
+        // Detected text kind: any Ppocr -> Printed; any Trocr -> Handwritten;
+        // both -> Mixed; neither (empty) -> Unknown.
+        var hasPrinted = false;
+        var hasHandwritten = false;
+        foreach (var l in ordered)
+        {
+            switch (l.Engine)
+            {
+                case OcrEngineKind.Ppocr:
+                    hasPrinted = true;
+                    break;
+                case OcrEngineKind.Trocr:
+                case OcrEngineKind.TrocrWholeImage:
+                    hasHandwritten = true;
+                    break;
+            }
+        }
+
+        OcrTextKind kind;
+        if (hasPrinted && hasHandwritten) kind = OcrTextKind.Mixed;
+        else if (hasHandwritten) kind = OcrTextKind.Handwritten;
+        else if (hasPrinted) kind = OcrTextKind.Printed;
+        else kind = OcrTextKind.Unknown;
+
+        return new OcrResult(
+            Text: mergedText,
+            Confidence: confidence,
+            Warnings: warnings,
+            DetectedTextKind: kind,
+            Lines: ordered);
+    }
+
+    /// <summary>
+    /// True when the line is a single non-alphanumeric character: table
+    /// border noise that the detector read as text. A lone bracket, pipe,
+    /// or dash is never meaningful extracted text.
+    /// </summary>
+    private static bool IsPunctuationNoise(string text)
+    {
+        var t = text.Trim();
+        if (t.Length != 1) return false;
+        return !char.IsLetterOrDigit(t[0]);
+    }
+}

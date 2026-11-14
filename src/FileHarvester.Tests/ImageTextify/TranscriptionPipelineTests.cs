@@ -1,0 +1,454 @@
+// filepath: src/FileHarvester.Tests/ImageTextify/TranscriptionPipelineTests.cs
+// layer:    Tests
+// module:   FileHarvester.Tests.ImageTextify
+// since:    Phase 5 Block 5.A.5a
+// purpose:  Behavior tests for the transcription pipeline. Uses fakes for
+//           all four ports (probe, decoder, segmenter, recognizer) and
+//           exercises every outcome and every invariant with no network,
+//           no model, no FFmpeg.
+//
+// RELATIONSHIPS
+//   Implements : n/a (test file)
+//   Depends on : ImageTextify.Platform.Speech.TranscriptionPipeline,
+//                ImageTextify.Core.Abstractions.* (all ports)
+//   Used by    : dotnet test --filter TranscriptionPipelineTests
+//   See also   : ImageTextify.Core.Abstractions.ITranscriptionPipeline
+//
+// NOTES
+//   - Every test uses fakes. No file on disk beyond Path.GetTempPath().
+//   - Fakes are private nested classes so they do not pollute the test
+//     namespace and do not collide with any other test's helpers.
+//   - The eight outcome tests below are Block 5.A.5a. The eight invariant
+//     tests are Block 5.A.5b, appended to this same file.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using FluentAssertions;
+using ImageTextify.Core.Abstractions;
+using ImageTextify.Platform.Speech;
+using Xunit;
+
+namespace FileHarvester.Tests.ImageTextify;
+
+public sealed class TranscriptionPipelineTests
+{
+    // ---------- Test 1: happy path ----------
+
+    [Fact]
+    public async Task PipelineReturnsCompletedWhenAllPortsSucceed()
+    {
+        var probe = FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(10));
+        var decoder = FakeDecoder.Success();
+        var segmenter = FakeSegmenter.WithOneRegion(0.5, 3.0);
+        var recognizer = FakeRecognizer.WithOneSegment(0.5, 3.0, "hello");
+        var pipeline = new TranscriptionPipeline(probe, decoder, segmenter, recognizer);
+
+        var result = await pipeline.RunAsync(
+            new TranscriptionRequest(@"C:\temp\test.mp3"),
+            null,
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.Completed);
+        result.Document.Should().NotBeNull();
+        result.Document!.Segments.Should().HaveCount(1);
+        result.Document.Segments[0].Text.Should().Be("hello");
+        result.UserMessage.Should().BeNull();
+    }
+
+    // ---------- Test 2: unsupported media ----------
+
+    [Fact]
+    public async Task PipelineReturnsUnsupportedMediaWhenProbeReportsUnsupported()
+    {
+        var probe = FakeProbe.Unsupported("This codec is not supported.");
+        var pipeline = new TranscriptionPipeline(
+            probe, FakeDecoder.Success(), FakeSegmenter.WithOneRegion(0, 1), FakeRecognizer.WithOneSegment(0, 1, "x"));
+
+        var result = await pipeline.RunAsync(
+            new TranscriptionRequest(@"C:\temp\test.xyz"),
+            null,
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.UnsupportedMedia);
+        result.Document.Should().BeNull();
+        result.UserMessage.Should().Be("This codec is not supported.");
+    }
+
+    // ---------- Test 3: no audio track ----------
+
+    [Fact]
+    public async Task PipelineReturnsNoAudioTrackWhenProbeReportsNoAudio()
+    {
+        var probe = FakeProbe.WithNoAudioStreams(TimeSpan.FromSeconds(5));
+        var pipeline = new TranscriptionPipeline(
+            probe, FakeDecoder.Success(), FakeSegmenter.WithOneRegion(0, 1), FakeRecognizer.WithOneSegment(0, 1, "x"));
+
+        var result = await pipeline.RunAsync(
+            new TranscriptionRequest(@"C:\temp\video.mp4"),
+            null,
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.NoAudioTrack);
+        result.Document.Should().BeNull();
+    }
+
+    // ---------- Test 4: tool missing ----------
+
+    [Fact]
+    public async Task PipelineReturnsToolMissingWhenDecoderThrowsFileNotFound()
+    {
+        var probe = FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(5));
+        var pipeline = new TranscriptionPipeline(
+            probe, FakeDecoder.ToolMissing(), FakeSegmenter.WithOneRegion(0, 1), FakeRecognizer.WithOneSegment(0, 1, "x"));
+
+        var result = await pipeline.RunAsync(
+            new TranscriptionRequest(@"C:\temp\test.mp3"),
+            null,
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.ToolMissing);
+        result.Document.Should().BeNull();
+    }
+
+    // ---------- Test 5: model missing ----------
+
+    [Fact]
+    public async Task PipelineReturnsModelMissingWhenRecognizerThrowsFileNotFound()
+    {
+        var probe = FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(5));
+        var pipeline = new TranscriptionPipeline(
+            probe, FakeDecoder.Success(), FakeSegmenter.WithOneRegion(0, 1), FakeRecognizer.ModelMissing());
+
+        var result = await pipeline.RunAsync(
+            new TranscriptionRequest(@"C:\temp\test.mp3"),
+            null,
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.ModelMissing);
+        result.Document.Should().BeNull();
+    }
+
+    // ---------- Test 6: no speech from segmenter ----------
+
+    [Fact]
+    public async Task PipelineReturnsNoSpeechDetectedWhenSegmenterReturnsEmpty()
+    {
+        var probe = FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(5));
+        var pipeline = new TranscriptionPipeline(
+            probe, FakeDecoder.Success(), FakeSegmenter.Empty(), FakeRecognizer.WithOneSegment(0, 1, "x"));
+
+        var result = await pipeline.RunAsync(
+            new TranscriptionRequest(@"C:\temp\test.mp3"),
+            null,
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.NoSpeechDetected);
+        result.Document.Should().BeNull();
+    }
+
+    // ---------- Test 7: no recognized segments ----------
+
+    [Fact]
+    public async Task PipelineReturnsNoSpeechDetectedWhenRecognizerReturnsEmpty()
+    {
+        var probe = FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(5));
+        var pipeline = new TranscriptionPipeline(
+            probe, FakeDecoder.Success(), FakeSegmenter.WithOneRegion(0, 1), FakeRecognizer.Empty());
+
+        var result = await pipeline.RunAsync(
+            new TranscriptionRequest(@"C:\temp\test.mp3"),
+            null,
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.NoSpeechDetected);
+        result.Document.Should().BeNull();
+    }
+
+    // ---------- Test 8: pre-cancelled token ----------
+
+    [Fact]
+    public async Task PipelineReturnsCancelledWhenTokenPreCancelled()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        var probe = FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(5));
+        var pipeline = new TranscriptionPipeline(
+            probe, FakeDecoder.Success(), FakeSegmenter.WithOneRegion(0, 1), FakeRecognizer.WithOneSegment(0, 1, "x"));
+
+        var result = await pipeline.RunAsync(
+            new TranscriptionRequest(@"C:\temp\test.mp3"),
+            null,
+            cts.Token);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.Cancelled);
+        result.Document.Should().BeNull();
+    }
+
+    // =========================================================
+    // Invariant tests (Block 5.A.5b)
+    // =========================================================
+
+    [Fact]
+    public async Task PipelineInvariantSegmentsAreOrdered()
+    {
+        var probe = FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(10));
+        var segmenter = FakeSegmenter.WithOneRegion(0.5, 3.0);
+        var recognizer = FakeRecognizer.WithSegments(new List<RecognizedSegment>
+        {
+            new(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3), "second", 0.9, "en"),
+            new(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), "first", 0.9, "en"),
+        });
+        var pipeline = new TranscriptionPipeline(probe, FakeDecoder.Success(), segmenter, recognizer);
+
+        var result = await pipeline.RunAsync(new TranscriptionRequest(@"C:\temp\test.mp3"), null, CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.Failed);
+        result.Document.Should().BeNull();
+        result.UserMessage.Should().Contain("segments not ordered");
+    }
+
+    [Fact]
+    public async Task PipelineInvariantSegmentsWithinDuration()
+    {
+        var probe = FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(2));
+        var segmenter = FakeSegmenter.WithOneRegion(0, 1);
+        var recognizer = FakeRecognizer.WithSegments(new List<RecognizedSegment>
+        {
+            new(TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(5), "too long", 0.9, "en"),
+        });
+        var pipeline = new TranscriptionPipeline(probe, FakeDecoder.Success(), segmenter, recognizer);
+
+        var result = await pipeline.RunAsync(new TranscriptionRequest(@"C:\temp\test.mp3"), null, CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.Failed);
+        result.Document.Should().BeNull();
+        result.UserMessage.Should().Contain("beyond duration");
+    }
+
+    [Fact]
+    public async Task PipelineInvariantCompletedHasDocument()
+    {
+        var pipeline = new TranscriptionPipeline(
+            FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(10)), FakeDecoder.Success(),
+            FakeSegmenter.WithOneRegion(0.5, 3.0), FakeRecognizer.WithOneSegment(0.5, 3.0, "hello"));
+
+        var result = await pipeline.RunAsync(new TranscriptionRequest(@"C:\temp\test.mp3"), null, CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.Completed);
+        result.Document.Should().NotBeNull();
+        result.Document!.Segments.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task PipelineInvariantNonCompletedHasNoDocument()
+    {
+        var unsupported = new TranscriptionPipeline(
+            FakeProbe.Unsupported("no"), FakeDecoder.Success(), FakeSegmenter.Empty(), FakeRecognizer.Empty());
+        var r1 = await unsupported.RunAsync(new TranscriptionRequest(@"C:\temp\x.xyz"), null, CancellationToken.None);
+
+        var noAudio = new TranscriptionPipeline(
+            FakeProbe.WithNoAudioStreams(TimeSpan.FromSeconds(1)), FakeDecoder.Success(), FakeSegmenter.Empty(), FakeRecognizer.Empty());
+        var r2 = await noAudio.RunAsync(new TranscriptionRequest(@"C:\temp\x.mp4"), null, CancellationToken.None);
+
+        r1.Outcome.Should().NotBe(TranscriptionOutcome.Completed);
+        r1.Document.Should().BeNull();
+        r2.Outcome.Should().NotBe(TranscriptionOutcome.Completed);
+        r2.Document.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task PipelineInvariantCancelledHasNoDocument()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        var pipeline = new TranscriptionPipeline(
+            FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(5)), FakeDecoder.Success(),
+            FakeSegmenter.WithOneRegion(0, 1), FakeRecognizer.WithOneSegment(0, 1, "x"));
+
+        var result = await pipeline.RunAsync(new TranscriptionRequest(@"C:\temp\test.mp3"), null, cts.Token);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.Cancelled);
+        result.Document.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task PipelinePassesProgressToDecoder()
+    {
+        var decoder = FakeDecoder.Success();
+        var pipeline = new TranscriptionPipeline(
+            FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(5)), decoder,
+            FakeSegmenter.WithOneRegion(0, 1), FakeRecognizer.WithOneSegment(0, 1, "x"));
+        var progress = new Progress<TranscriptionProgress>();
+
+        var result = await pipeline.RunAsync(new TranscriptionRequest(@"C:\temp\test.mp3"), progress, CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.Completed);
+        decoder.ReceivedProgress.Should().BeSameAs(progress);
+    }
+
+    [Fact]
+    public async Task PipelinePassesProgressToRecognizer()
+    {
+        var recognizer = FakeRecognizer.WithOneSegment(0, 1, "x");
+        var pipeline = new TranscriptionPipeline(
+            FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(5)), FakeDecoder.Success(),
+            FakeSegmenter.WithOneRegion(0, 1), recognizer);
+        var progress = new Progress<TranscriptionProgress>();
+
+        var result = await pipeline.RunAsync(new TranscriptionRequest(@"C:\temp\test.mp3"), progress, CancellationToken.None);
+
+        result.Outcome.Should().Be(TranscriptionOutcome.Completed);
+        recognizer.ReceivedProgress.Should().BeSameAs(progress);
+    }
+
+    [Fact]
+    public async Task PipelineDeletesTempDirectoryOnSuccessfulRun()
+    {
+        var before = CountTempDirs();
+        var pipeline = new TranscriptionPipeline(
+            FakeProbe.WithOneAudioStream(TimeSpan.FromSeconds(5)), FakeDecoder.Success(),
+            FakeSegmenter.WithOneRegion(0, 1), FakeRecognizer.WithOneSegment(0, 1, "x"));
+
+        await pipeline.RunAsync(new TranscriptionRequest(@"C:\temp\test.mp3"), null, CancellationToken.None);
+
+        var after = CountTempDirs();
+        after.Should().Be(before);
+    }
+
+    private static int CountTempDirs()
+    {
+        var tempPath = Path.GetTempPath();
+        if (!Directory.Exists(tempPath)) { return 0; }
+        return Directory.GetDirectories(tempPath, "imagetextify-b5a-*").Length;
+    }
+
+    // =========================================================
+    // Fakes. Each is a private nested class so the test file
+    // does not pollute the namespace and cannot collide with
+    // helpers from other tests.
+    // =========================================================
+
+    private sealed class FakeProbe : IMediaProbe
+    {
+        private readonly AudioProbeResult _result;
+        private readonly Exception? _throw;
+
+        private FakeProbe(AudioProbeResult result, Exception? toThrow)
+        {
+            _result = result;
+            _throw = toThrow;
+        }
+
+        public static FakeProbe WithOneAudioStream(TimeSpan duration) =>
+            new(new AudioProbeResult(
+                "mp3",
+                duration,
+                new List<AudioStreamInfo> { new(0, "mp3", 2, 44100, null) },
+                true,
+                null),
+                null);
+
+        public static FakeProbe WithNoAudioStreams(TimeSpan duration) =>
+            new(new AudioProbeResult("mp4", duration, new List<AudioStreamInfo>(), true, null), null);
+
+        public static FakeProbe Unsupported(string reason) =>
+            new(new AudioProbeResult("xyz", TimeSpan.Zero, new List<AudioStreamInfo>(), false, reason), null);
+
+        public Task<AudioProbeResult> ProbeAsync(string filePath, CancellationToken cancellationToken)
+        {
+            if (_throw is not null) throw _throw;
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(_result);
+        }
+    }
+
+    private sealed class FakeDecoder : IAudioDecoder
+    {
+        private readonly string? _fixedWavPath;
+        private readonly Exception? _throw;
+
+        private FakeDecoder(string? fixedWavPath, Exception? toThrow)
+        {
+            _fixedWavPath = fixedWavPath;
+            _throw = toThrow;
+        }
+
+        public IProgress<TranscriptionProgress>? ReceivedProgress { get; private set; }
+
+        public static FakeDecoder Success() => new("fake-wav-path", null);
+        public static FakeDecoder ToolMissing() => new(null, new FileNotFoundException("decoder not found"));
+
+        public Task<string> DecodeAsync(
+            string filePath,
+            int streamIndex,
+            string outputDirectory,
+            IProgress<TranscriptionProgress>? progress,
+            CancellationToken cancellationToken)
+        {
+            ReceivedProgress = progress;
+            if (_throw is not null) throw _throw;
+            cancellationToken.ThrowIfCancellationRequested();
+            var path = Path.Combine(outputDirectory, "fake.wav");
+            File.WriteAllText(path, "RIFF");
+            return Task.FromResult(path);
+        }
+    }
+
+    private sealed class FakeSegmenter : ISpeechSegmenter
+    {
+        private readonly IReadOnlyList<SpeechRegion> _regions;
+
+        private FakeSegmenter(IReadOnlyList<SpeechRegion> regions) { _regions = regions; }
+
+        public static FakeSegmenter WithOneRegion(double startSec, double endSec) =>
+            new(new List<SpeechRegion> { new(TimeSpan.FromSeconds(startSec), TimeSpan.FromSeconds(endSec)) });
+
+        public static FakeSegmenter Empty() => new(new List<SpeechRegion>());
+
+        public Task<IReadOnlyList<SpeechRegion>> DetectAsync(string wavFilePath, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(_regions);
+        }
+    }
+
+    private sealed class FakeRecognizer : ISpeechRecognizer
+    {
+        private readonly IReadOnlyList<RecognizedSegment> _segments;
+        private readonly Exception? _throw;
+
+        private FakeRecognizer(IReadOnlyList<RecognizedSegment> segments, Exception? toThrow)
+        {
+            _segments = segments;
+            _throw = toThrow;
+        }
+
+        public IProgress<TranscriptionProgress>? ReceivedProgress { get; private set; }
+
+        public static FakeRecognizer WithOneSegment(double startSec, double endSec, string text) =>
+            new(new List<RecognizedSegment>
+            {
+                new(TimeSpan.FromSeconds(startSec), TimeSpan.FromSeconds(endSec), text, 0.9, "en")
+            }, null);
+
+        public static FakeRecognizer WithSegments(IReadOnlyList<RecognizedSegment> segments) => new(segments, null);
+
+        public static FakeRecognizer Empty() => new(new List<RecognizedSegment>(), null);
+        public static FakeRecognizer ModelMissing() => new(new List<RecognizedSegment>(), new FileNotFoundException("model not found"));
+
+        public Task<IReadOnlyList<RecognizedSegment>> TranscribeAsync(
+            string wavFilePath,
+            SpeechRecognizerOptions options,
+            IProgress<TranscriptionProgress>? progress,
+            CancellationToken cancellationToken)
+        {
+            ReceivedProgress = progress;
+            if (_throw is not null) throw _throw;
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(_segments);
+        }
+    }
+}

@@ -89,6 +89,20 @@ RELATION: Bound to MainWindowViewModel.
                             ToolTip.Tip="Cloud connections"
                             Command="{Binding OpenCloudCommand}" />
 
+                    <Button Name="OpenImageTextifyButton"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding IsImageTextifyActive}"
+                            Content="ImageTextify"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Extract text from images, PDFs, audio, and video"
+                            AutomationProperties.Name="ImageTextify"
+                            Command="{Binding OpenImageTextifyCommand}" />
+
                     <Button Name="OpenLinkJoinerButton"
                             Classes="titleBarButton"
                             Classes.active="{Binding IsLinkJoinerActive}"
@@ -115,6 +129,34 @@ RELATION: Bound to MainWindowViewModel.
                             ToolTip.Tip="Extract links, paths, emails, and phone-like text"
                             Command="{Binding OpenExtractCommand}" />
 
+                    <Button Name="OpenPromptButton"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding IsPromptActive}"
+                            Content="Prompt"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Local prompt and document manager"
+                            AutomationProperties.Name="Prompt"
+                            Command="{Binding OpenPromptCommand}" />
+
+                    <Button Name="OpenCodeViewerButton"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding IsCodeViewerActive}"
+                            Content="Code Viewer"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Inspect local project structure and code"
+                            AutomationProperties.Name="Code Viewer"
+                            Command="{Binding OpenCodeViewerCommand}" />
+
                     <Button Name="OpenSchemaLenceButton"
                             Classes="titleBarButton"
                             Classes.active="{Binding IsSchemaLenceActive}"
@@ -127,6 +169,19 @@ RELATION: Bound to MainWindowViewModel.
                             VerticalAlignment="Center"
                             ToolTip.Tip="Read-only database explorer and backup workspace"
                             Command="{Binding OpenSchemaLenceCommand}" />
+
+                    <Button Name="ScreenshotButton"
+                            Classes="titleBarButton"
+                            Content="Screenshot"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Capture a screenshot"
+                            AutomationProperties.Name="Screenshot"
+                            Command="{Binding TakeScreenshotCommand}" />
 
                     <Button Name="OpenLogButton"
                             Classes="titleBarButton"

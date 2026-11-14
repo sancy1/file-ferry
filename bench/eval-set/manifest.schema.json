@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ImageTextify eval-set manifest",
+  "type": "object",
+  "required": ["schema_version", "entries"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "sha256", "category", "label_file"],
+        "properties": {
+          "file": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "category": {
+            "type": "string",
+            "enum": [
+              "clean_print", "blurry_print", "small_print", "faint_print",
+              "clear_handwriting", "faint_handwriting", "cursive",
+              "mixed_pages", "objects_receipts", "rotated", "multi_column"
+            ]
+          },
+          "label_file": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

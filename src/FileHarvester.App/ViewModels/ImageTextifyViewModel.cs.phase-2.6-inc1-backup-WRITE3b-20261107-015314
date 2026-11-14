@@ -1,0 +1,332 @@
+// ============================================================================
+// FILE:     src/FileHarvester.App/ViewModels/ImageTextifyViewModel.cs
+// PURPOSE:  The ImageTextify workspace view model. Owns the intake queue,
+//           the category selector, the empty-results status, and the
+//           commands that operate on the queue. It talks only to
+//           IImageTextifyIntakeService; it never touches Avalonia types,
+//           TopLevel, IStorageProvider, or DragDrop. The picker and drop
+//           handlers live in the page code-behind.
+// RELATION: Instantiated by MainWindowViewModel with an
+//           IImageTextifyIntakeService resolved from App.Services.
+//           Reached through the ImageTextify page, which binds through
+//           MainWindowViewModel.ImageTextify. The type name is permanent;
+//           later phases extend it, they do not replace it.
+// ============================================================================
+
+using System.Collections.ObjectModel;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using System.IO;
+using ImageTextify.Core.Abstractions;
+using ImageTextify.Core.Domain;
+using ImageTextify.Core.Settings;
+
+namespace FileHarvester.App.ViewModels;
+
+/// <summary>
+/// The ImageTextify workspace view model.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>Phase 1.5b scope.</b> The view model owns an intake queue of
+/// <see cref="ImageTextifyFileRowViewModel"/> instances, a category
+/// selector, an add method that validates each candidate through
+/// <see cref="IImageTextifyIntakeService"/>, and a per-row remove
+/// command. It does not extract, read, hash, or decode file contents.
+/// </para>
+/// <para>
+/// <b>UI-thread safety.</b> <see cref="AddFilesAsync"/> is intended to
+/// be invoked from the UI thread. Its awaits resume on the captured
+/// synchronization context, so mutations to <see cref="Files"/> occur
+/// on the UI thread without an explicit dispatcher call. A caller
+/// without a UI context (a test) simply runs synchronously, which is
+/// also safe because the collection is only mutated by the caller.
+/// </para>
+/// <para>
+/// <b>Category change.</b> Changing <see cref="SelectedCategory"/> does
+/// not revalidate existing rows. New files are validated against the
+/// currently selected category. This is deliberate: revalidating old
+/// rows would silently change their displayed state.
+/// </para>
+/// <para>
+/// <b>Status text.</b> <see cref="StatusText"/> is preserved from the
+/// Phase 1.4 foundation page. It is the right-pane empty-state message
+/// until results exist in a later phase.
+/// </para>
+/// </remarks>
+public sealed class ImageTextifyViewModel : ViewModelBase
+{
+    private readonly IImageTextifyIntakeService _intake;
+
+    private ImageTextifyCategory _selectedCategory = ImageTextifyCategory.Image;
+    private bool _isAdding;
+    private bool _isExtracting;
+    private string _extractStatusText = "No extraction has run yet.";
+    private readonly IImageTextifySettingsStore _settings;
+
+    /// <summary>
+    /// Creates the view model with its intake dependency.
+    /// </summary>
+    /// <param name="intake">
+    /// The intake evaluator. Not null. Resolved from the application
+    /// service provider by <c>MainWindowViewModel</c>.
+    /// </param>
+    /// <param name="engine">
+    /// The OCR engine. Not null. Resolved from the application service
+    /// provider by <c>MainWindowViewModel</c>. It is stored and used only
+    /// by <see cref="ExtractTextCommand"/>; no other member calls it.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="intake"/> is null.
+    /// </exception>
+    public ImageTextifyViewModel(
+        IImageTextifyIntakeService intake,
+        IImageTextifySettingsStore settings,
+        IImageOcrEngine engine)
+    {
+        _intake = intake ?? throw new ArgumentNullException(nameof(intake));
+        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _engine = engine ?? throw new ArgumentNullException(nameof(engine));
+
+        RemoveFileCommand = new RelayCommand<ImageTextifyFileRowViewModel>(RemoveFile);
+        ExtractTextCommand = new AsyncRelayCommand(ExtractAllAsync);
+    }
+
+    /// <summary>
+    /// The intake queue, in first-seen order. Rows are never removed
+    /// without an explicit user action or a category-clear.
+    /// </summary>
+    public ObservableCollection<ImageTextifyFileRowViewModel> Files { get; } = new();
+
+    /// <summary>
+    /// True when the queue holds at least one row. Bound by the page to
+    /// switch between the empty-state visual and the file list.
+    /// </summary>
+    public bool HasFiles => Files.Count > 0;
+
+    /// <summary>
+    /// True when there are no rows. Bound by the page to show the drop
+    /// zone prompt.
+    /// </summary>
+    public bool IsEmpty => Files.Count == 0;
+
+    /// <summary>
+    /// The category new files are validated against. Changing it does
+    /// not revalidate existing rows.
+    /// </summary>
+    public ImageTextifyCategory SelectedCategory
+    {
+        get => _selectedCategory;
+        set
+        {
+            if (SetProperty(ref _selectedCategory, value))
+            {
+                OnPropertyChanged(nameof(SelectedCategoryIndex));
+            }
+        }
+    }
+
+    /// <summary>
+    /// The selected category as an integer, for two-way binding to a
+    /// ComboBox's <c>SelectedIndex</c>.
+    /// </summary>
+    public int SelectedCategoryIndex
+    {
+        get => (int)_selectedCategory;
+        set
+        {
+            var clamped = value < 0 ? 0 : (value > 3 ? 3 : value);
+            SelectedCategory = (ImageTextifyCategory)clamped;
+        }
+    }
+
+    /// <summary>
+    /// True while an add operation is running. Exposed so the page can
+    /// disable the Add Files button and show progress.
+    /// </summary>
+    public bool IsAdding
+    {
+        get => _isAdding;
+        private set => SetProperty(ref _isAdding, value);
+    }
+
+    /// <summary>
+    /// The truthful foundation status, preserved from Phase 1.4. Shown
+    /// in the right pane while there are no results.
+    /// </summary>
+    /// <summary>
+    /// True when the Qwen printed-text fallback is enabled for
+    /// low-confidence printed lines. PP-OCR remains the default; the
+    /// fallback is opt-in and slower (Qwen inference per line).
+    /// Persisted only for the process lifetime (finding ITX-B9-003).
+    /// </summary>
+    public bool EnableQwenPrintedFallback
+    {
+        get => _settings.Current.EnableQwenPrintedFallback;
+        set
+        {
+            if (_settings.Current.EnableQwenPrintedFallback == value) return;
+            var current = _settings.Current;
+            _settings.Replace(new ImageTextifySettings(value, current.LowConfidenceThreshold));
+            OnPropertyChanged(nameof(EnableQwenPrintedFallback));
+        }
+    }
+
+    public string StatusText { get; } =
+        "ImageTextify foundation is ready. Image, PDF, audio, and video "
+        + "extraction will be enabled in upcoming phases.";
+
+    /// <summary>The per-row remove command, bound by each row.</summary>
+    public ICommand RemoveFileCommand { get; }
+
+    /// <summary>
+    /// The extraction results, one row per processed queue file. Cleared
+    /// at the start of each extraction. Populated only by
+    /// <see cref="ExtractTextCommand"/>.
+    /// </summary>
+    public ObservableCollection<ImageTextifyResultItemViewModel> Results { get; } = new();
+
+    /// <summary>
+    /// True while an extraction is running. Guards against re-entrant
+    /// execution and drives the progress UI in a later increment.
+    /// </summary>
+    public bool IsExtracting
+    {
+        get => _isExtracting;
+        private set => SetProperty(ref _isExtracting, value);
+    }
+
+    /// <summary>
+    /// The extraction status line. Reflects the last extraction's outcome:
+    /// how many of how many accepted files were extracted.
+    /// </summary>
+    public string ExtractStatusText
+    {
+        get => _extractStatusText;
+        private set => SetProperty(ref _extractStatusText, value);
+    }
+
+    /// <summary>
+    /// The extraction command. Runs <see cref="ExtractAllAsync"/>; bound
+    /// by the page in a later increment. No parameter; iterates every
+    /// accepted queue row in order.
+    /// </summary>
+    public ICommand ExtractTextCommand { get; }
+
+    /// <summary>
+    /// Adds each of the supplied paths to the intake queue, validating
+    /// each through <see cref="IImageTextifyIntakeService"/>. Every
+    /// candidate produces a row, including rejected and duplicate rows.
+    /// Nothing is silently discarded.
+    /// </summary>
+    /// <param name="fullPaths">
+    /// The absolute paths to add. Null or empty is a no-op.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Cancels the intake operation. On cancellation no partial row is
+    /// added.
+    /// </param>
+    /// <returns>A task that completes when every candidate has a row.</returns>
+    public async Task AddFilesAsync(
+        IReadOnlyCollection<string>? fullPaths,
+        CancellationToken cancellationToken = default)
+    {
+        if (fullPaths is null || fullPaths.Count == 0) return;
+
+        IsAdding = true;
+        try
+        {
+            foreach (var path in fullPaths)
+            {
+                if (cancellationToken.IsCancellationRequested) return;
+                if (string.IsNullOrWhiteSpace(path)) continue;
+
+                var existingRaw = Files
+                    .Where(r => r.Category == SelectedCategory)
+                    .Select(r => r.FullPathForComparison)
+                    .ToList();
+                var decision = await _intake
+                    .EvaluateAsync(path, SelectedCategory, existingRaw, cancellationToken)
+                    .ConfigureAwait(true);
+
+                if (cancellationToken.IsCancellationRequested) return;
+
+                Files.Add(new ImageTextifyFileRowViewModel(
+                    decision.Validation,
+                    decision.Reason,
+                    SelectedCategory,
+                    RemoveFileCommand));
+            }
+
+            NotifyQueueChanged();
+        }
+        finally
+        {
+            IsAdding = false;
+        }
+    }
+
+    private async Task ExtractAllAsync()
+    {
+        if (IsExtracting) return;
+        IsExtracting = true;
+        try
+        {
+            Results.Clear();
+            var accepted = Files.Where(r => r.IsAccepted).ToList();
+            if (accepted.Count == 0)
+            {
+                ExtractStatusText = "No accepted files to extract.";
+                return;
+            }
+
+            var succeeded = 0;
+            foreach (var row in accepted)
+            {
+                try
+                {
+                    await using var stream = File.OpenRead(row.FullPathForExtraction);
+                    var result = await _engine
+                        .ExtractAsync(stream, new ImageOcrOptions(), CancellationToken.None)
+                        .ConfigureAwait(true);
+                    Results.Add(new ImageTextifyResultItemViewModel(
+                        row.DisplayName,
+                        result.Text,
+                        string.Join("; ", result.Warnings),
+                        "Extracted"));
+                    succeeded++;
+                }
+                catch (OperationCanceledException)
+                {
+                    Results.Add(new ImageTextifyResultItemViewModel(
+                        row.DisplayName, string.Empty, string.Empty, "Cancelled"));
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Results.Add(new ImageTextifyResultItemViewModel(
+                        row.DisplayName, string.Empty, string.Empty, "Failed: " + ex.Message));
+                }
+            }
+            ExtractStatusText = succeeded + " of " + accepted.Count + " extracted.";
+        }
+        finally
+        {
+            IsExtracting = false;
+        }
+    }
+
+    private void RemoveFile(ImageTextifyFileRowViewModel? row)
+    {
+        if (row is null) return;
+        Files.Remove(row);
+        NotifyQueueChanged();
+    }
+
+    private void NotifyQueueChanged()
+    {
+        OnPropertyChanged(nameof(HasFiles));
+        OnPropertyChanged(nameof(IsEmpty));
+    }
+}

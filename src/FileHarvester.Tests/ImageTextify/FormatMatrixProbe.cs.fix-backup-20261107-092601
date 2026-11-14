@@ -1,0 +1,141 @@
+// filepath: src/FileHarvester.Tests/ImageTextify/FormatMatrixProbe.cs
+// layer:    Tests
+// module:   FileHarvester.Tests.ImageTextify
+// since:    Phase 2.6 diagnostic
+// purpose:  One-off diagnostic. For each image format the intake accepts,
+//           run the real OnnxOcrEngine on the original file and on a PNG
+//           re-encode of the same image, and print both result lengths.
+//           Isolates "format path" from "image is hard": same image, two
+//           encodings. Temporary. Trait=Probe. Deleted after the format
+//           question is answered.
+// RELATION: Temporary. Not referenced by production code.
+// NOTES:    Requires the ONNX models at %LOCALAPPDATA%\FileFerry\ImageTextify
+//           \Models; skips and reports if absent. Slow: real inference per
+//           format, twice. Run with --filter Category=Probe.
+// ============================================================================
+
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using FluentAssertions;
+using ImageTextify.Core.Abstractions;
+using ImageTextify.Platform.Imaging;
+using SkiaSharp;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace FileHarvester.Tests.ImageTextify;
+
+/// <summary>
+/// Temporary diagnostic: does the engine drop the file format or the image?
+/// </summary>
+[Trait("Category", "Probe")]
+public sealed class FormatMatrixProbe
+{
+    private readonly ITestOutputHelper _output;
+
+    /// <summary>Receives xUnit output.</summary>
+    public FormatMatrixProbe(ITestOutputHelper output) => _output = output;
+
+    private const string EvalDir = @"C:\Users\HP\Desktop\exracts";
+    private static readonly string ModelsRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FileFerry", "ImageTextify", "Models");
+
+    private static string ModelPath(string id) => Path.Combine(ModelsRoot, id, "model.bin");
+    private static string CompanionPath(string id, string filename) => Path.Combine(ModelsRoot, id, filename);
+
+    private static bool ModelsPresent() =>
+        File.Exists(ModelPath("ppocrv6-medium-det"))
+        && File.Exists(ModelPath("ppocrv6-medium-rec"))
+        && File.Exists(CompanionPath("ppocrv6-medium-rec", "ppocr_dict.txt"))
+        && File.Exists(ModelPath("trocr-base-handwritten-encoder"))
+        && File.Exists(ModelPath("trocr-base-handwritten-decoder"))
+        && File.Exists(CompanionPath("trocr-base-handwritten-encoder", "tokenizer.json"));
+
+    private static OnnxOcrEngine BuildEngine() => new(
+        new OnnxModelRunner(
+            ppocrDetectorPath: ModelPath("ppocrv6-medium-det"),
+            ppocrRecognizerPath: ModelPath("ppocrv6-medium-rec"),
+            ppocrDictionaryPath: CompanionPath("ppocrv6-medium-rec", "ppocr_dict.txt"),
+            trocrEncoderPath: ModelPath("trocr-base-handwritten-encoder"),
+            trocrDecoderPath: ModelPath("trocr-base-handwritten-decoder"),
+            trocrTokenizerPath: CompanionPath("trocr-base-handwritten-encoder", "tokenizer.json")),
+        new ImagePreprocessor(), new OcrLineRouter(), new OcrResultMerger());
+
+    private static string? First(string pattern) =>
+        Directory.EnumerateFiles(EvalDir, pattern, SearchOption.AllDirectories).FirstOrDefault();
+
+    private async Task<(string Length, string Snippet, int Lines, int Warnings)> RunAsync(OnnxOcrEngine engine, Stream s)
+    {
+        var r = await engine.ExtractAsync(s, new ImageOcrOptions(), CancellationToken.None).ConfigureAwait(false);
+        var snip = r.Text.Length <= 20 ? r.Text : r.Text.Substring(0, 20);
+        return (r.Text.Length.ToString(), snip, r.Lines.Count, r.Warnings.Count);
+    }
+
+    /// <summary>
+    /// For each accepted image format, run the real engine on the original
+    /// file and on a PNG re-encode of the same image, and print both results.
+    /// </summary>
+    [Fact]
+    public async Task EngineHandlesEveryAcceptedImageFormat()
+    {
+        if (!ModelsPresent())
+        {
+            _output.WriteLine("MODELS MISSING at " + ModelsRoot + " -- probe skipped.");
+            return;
+        }
+
+        var cases = new[]
+        {
+            ("png",  First("*.png")),
+            ("jpg",  First("*.jpg")),
+            ("jpeg", First("*.jpeg")),
+            ("tif",  First("*.tif")),
+            ("tiff", First("*.tiff")),
+            ("bmp",  First("*.bmp")),
+            ("webp", First("*.webp")),
+        };
+
+        await using var engine = BuildEngine();
+
+        foreach (var (label, path) in cases)
+        {
+            if (path is null)
+            {
+                _output.WriteLine(label + ": <none found in eval set>");
+                continue;
+            }
+
+            _output.WriteLine("=== " + label + ": " + path);
+
+            try
+            {
+                using var bmp = SKBitmap.Decode(path);
+                _output.WriteLine("  decoded: " + (bmp is null ? "NULL" : bmp.Width + "x" + bmp.Height));
+                if (bmp is null) continue;
+
+                using (var orig = File.OpenRead(path))
+                {
+                    var a = await RunAsync(engine, orig);
+                    _output.WriteLine("  original   : len=" + a.Length + " lines=" + a.Lines + " warnings=" + a.Warnings + " snippet=[" + a.Snippet + "]");
+                }
+
+                using var ms = new MemoryStream();
+                using (var data = bmp.Encode(SKEncodedImageFormat.Png, 100))
+                {
+                    data.SaveTo(ms);
+                }
+                ms.Position = 0;
+                var b = await RunAsync(engine, ms);
+                _output.WriteLine("  png-reenc  : len=" + b.Length + " lines=" + b.Lines + " warnings=" + b.Warnings + " snippet=[" + b.Snippet + "]");
+            }
+            catch (Exception ex)
+            {
+                _output.WriteLine("  THREW: " + ex.GetType().FullName + ": " + ex.Message);
+            }
+        }
+
+        true.Should().BeTrue();
+    }
+}

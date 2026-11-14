@@ -1,0 +1,39 @@
+=== SYNTHETIC WAV ===
+path: C:\Users\HP\AppData\Local\Temp\gate0_synthetic_0d5f1de273ec49b0b064b626a26887d7.wav
+bytes: 160044
+
+=== BUILDER METHOD DISCOVERY ===
+WhisperFactory methods: CreateBuilder, Dispose, Equals, FromBuffer, FromPath, GetHashCode, GetRuntimeInfo, GetSupportedLanguages, GetType, ToString
+WhisperProcessorBuilder methods: Build, Equals, GetHashCode, GetType, SplitOnWord, ToString, WithAudioContextSize, WithBeamSearchSamplingStrategy, WithCarryInitialPrompt, WithDuration, WithEncoderBeginHandler, WithEntropyThreshold, WithGreedySamplingStrategy, WithLanguage, WithLanguageDetection, WithLengthPenalty, WithLogProbThreshold, WithMaxInitialTs, WithMaxLastTextTokens, WithMaxSegmentLength, WithMaxTokensPerSegment, WithNoContext, WithNoSpeechThreshold, WithOffset, WithOpenVinoEncoder, WithPrintProgress, WithPrintResults, WithPrintSpecialTokens, WithPrintTimestamps, WithProbabilities, WithProgressHandler, WithPrompt, WithSegmentEventHandler, WithSingleSegment, WithStringPool, WithSuppressRegex, WithTemperature, WithTemperatureInc, WithThreads, WithTokenTimestamps, WithTokenTimestampsSumThreshold, WithTokenTimestampsThreshold, WithTranslate, WithoutStringPool, WithoutSuppressBlank
+
+=== WHISPER MODEL DOWNLOAD (small) ===
+whisper model: C:\Users\HP\AppData\Local\Temp\gate0_whisper_small.ggml
+whisper model bytes: 487601967
+
+=== SILERO VAD MODEL DOWNLOAD ===
+vad model: C:\Users\HP\AppData\Local\Temp\gate0_silero_vad.ggml
+vad model bytes: 885098
+
+=== TRANSCRIPTION (small) + SEGMENT FIELDS ===
+segment: Start=00:00:00 End=00:00:03.3600000 Text= [BEEP]
+  Text =  [BEEP]
+  Start = 00:00:00
+  End = 00:00:03.3600000
+  MinProbability = 0
+  MaxProbability = 0
+  Probability = 0
+  Language = en
+  Tokens = Whisper.net.WhisperToken[]
+  NoSpeechProbability = 1.1304951E-06
+
+=== SILERO VAD REGIONS ===
+regions: 0
+
+=== RUNTIME SELECTION ===
+RuntimeLibraryOrder: Cuda, Cuda12, Vulkan, CoreML, OpenVino, Cpu, CpuNoAvx
+
+=== RTF (small, 5s clip, CPU) ===
+segments: 1
+elapsed_seconds: 14.94
+audio_seconds: 5
+rtf: 2.989

@@ -1,0 +1,187 @@
+{
+    "schema_version":  "1.0",
+    "entries":  [
+                    {
+                        "file":  "Handwritting/blur/blurry_handwriting_line_1.png",
+                        "sha256":  "8669e7b1b0a549e3ef0d3989c616791cc3b62e92f8d22fa4d9d010a7c88e6d7b",
+                        "category":  "faint_handwriting",
+                        "label_file":  "labels/Handwritting_blur_blurry_handwriting_line_1_png.json",
+                        "notes":  "blur degradation, not faintness; category is the closest plan-defined match"
+                    },
+                    {
+                        "file":  "Handwritting/blur/blurry_handwriting_line_2.png",
+                        "sha256":  "e344ee84bcd7c25d5ee478e066434239844e7c23cc888d853bae0a40469dc282",
+                        "category":  "faint_handwriting",
+                        "label_file":  "labels/Handwritting_blur_blurry_handwriting_line_2_png.json",
+                        "notes":  "blur degradation, not faintness; category is the closest plan-defined match"
+                    },
+                    {
+                        "file":  "Handwritting/blur/blurry_handwriting_line_3.png",
+                        "sha256":  "a5229d00697976441b5a415f83f7e864bd4c2d28a5e558ccff29fc1b1db797c3",
+                        "category":  "faint_handwriting",
+                        "label_file":  "labels/Handwritting_blur_blurry_handwriting_line_3_png.json",
+                        "notes":  "blur degradation, not faintness; category is the closest plan-defined match"
+                    },
+                    {
+                        "file":  "Handwritting/blur/blurry_handwriting_line_4.png",
+                        "sha256":  "53f7c03e0af849525ea176a6ae95b4b289d9fe6f4dea4d309a07b195418d2c24",
+                        "category":  "faint_handwriting",
+                        "label_file":  "labels/Handwritting_blur_blurry_handwriting_line_4_png.json",
+                        "notes":  "blur degradation, not faintness; category is the closest plan-defined match"
+                    },
+                    {
+                        "file":  "Handwritting/blur/blurry_handwriting_line_5.png",
+                        "sha256":  "399740d25eae434e9cbdc649bf12261a25306ba850544fc21e9e6195162cc4d2",
+                        "category":  "faint_handwriting",
+                        "label_file":  "labels/Handwritting_blur_blurry_handwriting_line_5_png.json",
+                        "notes":  "blur degradation, not faintness; category is the closest plan-defined match"
+                    },
+                    {
+                        "file":  "Handwritting/blur/images (1).jpeg",
+                        "sha256":  "d67d48ffbbc497d5e78be0081566317cd3dc3842e4580ca42febfb430c4404c2",
+                        "category":  "faint_handwriting",
+                        "label_file":  "labels/Handwritting_blur_images (1)_jpeg.json",
+                        "notes":  "blur degradation, not faintness; category is the closest plan-defined match"
+                    },
+                    {
+                        "file":  "Handwritting/blur/images (2).jpeg",
+                        "sha256":  "eb29f337d0372db1a6aef0f0273a90f7234207c89df6fe8d496e1466b0f3abfe",
+                        "category":  "faint_handwriting",
+                        "label_file":  "labels/Handwritting_blur_images (2)_jpeg.json",
+                        "notes":  "blur degradation, not faintness; category is the closest plan-defined match"
+                    },
+                    {
+                        "file":  "Handwritting/blur/images (3).jpeg",
+                        "sha256":  "5de20724ca571c4b1b2662144096dffd9016209c91efa786eec39bfb3d8b58b0",
+                        "category":  "faint_handwriting",
+                        "label_file":  "labels/Handwritting_blur_images (3)_jpeg.json",
+                        "notes":  "blur degradation, not faintness; category is the closest plan-defined match"
+                    },
+                    {
+                        "file":  "Handwritting/blur/images.jpeg",
+                        "sha256":  "f88871300bb42e45d0732d275cde60fb01e7e71b039eb4cf2e52e37882356ecd",
+                        "category":  "faint_handwriting",
+                        "label_file":  "labels/Handwritting_blur_images_jpeg.json",
+                        "notes":  "blur degradation, not faintness; category is the closest plan-defined match"
+                    },
+                    {
+                        "file":  "Handwritting/sharp/handwriting_line_1.png",
+                        "sha256":  "2a5d32392ea70de933ca895363923912686b971a0789dca3b39ba8527a4af22f",
+                        "category":  "clear_handwriting",
+                        "label_file":  "labels/Handwritting_sharp_handwriting_line_1_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Handwritting/sharp/handwriting_line_2.png",
+                        "sha256":  "0d65afe5e2cb076754dfe7a3006bb0e26670c9ad6331e31c530375b0a2bda2ab",
+                        "category":  "clear_handwriting",
+                        "label_file":  "labels/Handwritting_sharp_handwriting_line_2_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Handwritting/sharp/handwriting_line_3.png",
+                        "sha256":  "7adbe367973c0143325227d160a8f2d08fbfed9a39b9d865852ba832b1ffa3a8",
+                        "category":  "clear_handwriting",
+                        "label_file":  "labels/Handwritting_sharp_handwriting_line_3_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Handwritting/sharp/handwriting_line_4.png",
+                        "sha256":  "5073630c19c35662e4a4102bad9281fd968c8d7622f826e6126a7f271c7f6805",
+                        "category":  "clear_handwriting",
+                        "label_file":  "labels/Handwritting_sharp_handwriting_line_4_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Handwritting/sharp/handwriting_line_5.png",
+                        "sha256":  "a24e6874d91686a6bb30b566b298d5384fa034d2b4d73fbc4ec6f4349da8ea2d",
+                        "category":  "clear_handwriting",
+                        "label_file":  "labels/Handwritting_sharp_handwriting_line_5_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Handwritting/sharp/images.jpeg",
+                        "sha256":  "4fcec9df686c13d00148bcd4f59042128809a06fc71e63a29b40f2bdc0e522cb",
+                        "category":  "clear_handwriting",
+                        "label_file":  "labels/Handwritting_sharp_images_jpeg.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Handwritting/sharp/last-post-was-blurry-sorry-v0-edsdh7x0cjtd1.webp",
+                        "sha256":  "ef8d33067436a40224e018a10a1be664b1d6b053eeed68c3594e70696b987389",
+                        "category":  "clear_handwriting",
+                        "label_file":  "labels/Handwritting_sharp_last-post-was-blurry-sorry-v0-edsdh7x0cjtd1_webp.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Images/blur/blurry_form_document_1.png",
+                        "sha256":  "853fdb2efeae0117334bca0188c9873b22754a4f365d36b9f9bb63621de87ae8",
+                        "category":  "blurry_print",
+                        "label_file":  "labels/Images_blur_blurry_form_document_1_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Images/blur/blurry_form_document_2.png",
+                        "sha256":  "4282b84b8991609cc01300fd24c7b33cea3c4a522189b5c61ec6bc952e8857d0",
+                        "category":  "blurry_print",
+                        "label_file":  "labels/Images_blur_blurry_form_document_2_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Images/blur/blurry_form_document_3.png",
+                        "sha256":  "27ec4f8537ee234ab2bfec282c532195627c65fa94bbf7559e16f79a8ee378b4",
+                        "category":  "blurry_print",
+                        "label_file":  "labels/Images_blur_blurry_form_document_3_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Images/blur/images4.jpeg",
+                        "sha256":  "38c30708e5d23d20cc066e7753d5df03e362b5e023826e42292f45053ecfea6f",
+                        "category":  "blurry_print",
+                        "label_file":  "labels/Images_blur_images4_jpeg.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Images/blur/texture-blurry-text-open-textbook-260nw-1175839777.webp",
+                        "sha256":  "118778189fd804433daee3a203a3d3c3a4a3d6350267c3bc692e156c9965d78c",
+                        "category":  "blurry_print",
+                        "label_file":  "labels/Images_blur_texture-blurry-text-open-textbook-260nw-1175839777_webp.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Images/sharp/form_document_1.png",
+                        "sha256":  "10e90b6362c848a9337a116d03214fd85711233fb6cee294fa68f969b7bd6f16",
+                        "category":  "clean_print",
+                        "label_file":  "labels/Images_sharp_form_document_1_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Images/sharp/form_document_2.png",
+                        "sha256":  "ee36fd243ea7228a9a664c3932fe87702979e68f0005961ff282e52e2ac9eea0",
+                        "category":  "clean_print",
+                        "label_file":  "labels/Images_sharp_form_document_2_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Images/sharp/form_document_3.png",
+                        "sha256":  "3cd4e583315a91f109552a777e7e4b65f61f7f7787cbe4d300c88a8bfcbb039b",
+                        "category":  "clean_print",
+                        "label_file":  "labels/Images_sharp_form_document_3_png.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Images/sharp/How-to-make-text-stand-out-example4.webp",
+                        "sha256":  "28a4f4169fb8dcd85e1d7cfc8cb1a1a81a114db7ed3de769b55536bbfcb3df3d",
+                        "category":  "clean_print",
+                        "label_file":  "labels/Images_sharp_How-to-make-text-stand-out-example4_webp.json",
+                        "notes":  ""
+                    },
+                    {
+                        "file":  "Images/sharp/text-image-alignment.jpg",
+                        "sha256":  "1b7e35598018aaec5bacd3a2b90d88a6c11816db1c96bc70dbd691f3e4757942",
+                        "category":  "clean_print",
+                        "label_file":  "labels/Images_sharp_text-image-alignment_jpg.json",
+                        "notes":  ""
+                    }
+                ]
+}

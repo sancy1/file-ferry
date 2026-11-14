@@ -1,0 +1,57 @@
+<!--
+FILE:     src/FileHarvester.App/Views/PromptCategoryPickerDialog.axaml
+PURPOSE:  The bulk-move category picker. Two dropdowns (the category and the
+          category's sub-categories) and OK/Cancel. The OK returns the
+          (CategoryId, SubCategoryId) pair; the Cancel closes with no result.
+RELATION: Opened by PromptPage.axaml.cs's OnBulkMoveRequested; bound to
+          PromptCategoryPickerViewModel; the result is passed to
+          PromptListViewModel.BulkMoveAsync.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        xmlns:domain="using:Prompt.Core.Domain"
+        mc:Ignorable="d"
+        d:DesignWidth="460" d:DesignHeight="260"
+        x:Class="FileHarvester.App.Views.PromptCategoryPickerDialog"
+        x:DataType="vm:PromptCategoryPickerViewModel"
+        Title="Move to Category"
+        Width="460" Height="260"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource SurfaceRaised}">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16">
+
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,10">
+            <TextBlock Text="Category" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay}" PlaceholderText="Choose a category">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="domain:Category">
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Spacing="4" Margin="0,0,0,10">
+            <TextBlock Text="Sub-category" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+            <ComboBox ItemsSource="{Binding SubCategories}" SelectedItem="{Binding SelectedSubCategory, Mode=TwoWay}" PlaceholderText="Choose a sub-category">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="domain:SubCategory">
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+
+        <TextBlock Grid.Row="2" Text="{Binding StatusText}" FontSize="11" TextWrapping="Wrap"
+                   Foreground="{DynamicResource TextSecondary}" IsVisible="{Binding StatusText}" />
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,8,0,0">
+            <Button Grid.Column="1" Content="Cancel" Padding="12,6" Command="{Binding CancelCommand}" />
+            <Button Grid.Column="2" Content="Move" Padding="12,6" FontWeight="SemiBold" Command="{Binding OkCommand}" />
+        </Grid>
+    </Grid>
+</Window>

@@ -104,6 +104,17 @@ public partial class MainWindow : Window
             AppPage.LinkJoiner => new LinkJoinerPage(),
             AppPage.Extract => new ExtractPage(),
             AppPage.SchemaLence => new SchemaLencePage(),
+            AppPage.ImageTextify => new ImageTextifyPage(),
+            AppPage.Prompt => new PromptPage(),
+            AppPage.LiveTranscription => new LiveTranscriptionPage(),
+            AppPage.CameraCapture => new CameraCapturePage(),
+            AppPage.Conversion => new ConversionPage(),
+            AppPage.TextToSpeech => new TextToSpeechPage(),
+            AppPage.CodeViewer => new CodeViewerPage
+            {
+                // The page binds directly to CodeViewerViewModel.
+                DataContext = ViewModel?.CodeViewer,
+            },
             _              => new HarvestPage(),
         };
 

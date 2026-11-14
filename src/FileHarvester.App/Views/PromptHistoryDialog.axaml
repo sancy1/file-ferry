@@ -1,0 +1,104 @@
+<!--
+FILE:     src/FileHarvester.App/Views/PromptHistoryDialog.axaml
+PURPOSE:  The version history dialog. Two panes: the versions list (left;
+          SavedAt timestamp + note) and the selected version's preview
+          (right; title + body in a ScrollViewer). Restore / Close at the
+          bottom. The ListBoxItem density is the sidebar's (F-272/F-202);
+          the preview scrolls (F-276).
+RELATION: Opened by PromptPage.axaml.cs when the viewer's History button is
+          clicked. Bound to PromptHistoryDialogViewModel.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        xmlns:domain="using:Prompt.Core.Domain"
+        mc:Ignorable="d"
+        d:DesignWidth="720" d:DesignHeight="520"
+        x:Class="FileHarvester.App.Views.PromptHistoryDialog"
+        x:DataType="vm:PromptHistoryDialogViewModel"
+        Title="Version History"
+        Width="720" Height="520"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource SurfaceRaised}">
+
+    <Window.Styles>
+        <!-- F-272: the sidebar's ListBoxItem density. F-202: the left inset. -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="16">
+
+        <TextBlock Grid.Row="0" Text="{Binding PromptTitle}" FontSize="13" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,8" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,8,2*" ColumnSpacing="8">
+            <!-- LEFT: the versions list -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SurfaceSubtle}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusSm}">
+                <ListBox ItemsSource="{Binding Versions}"
+                         SelectedItem="{Binding SelectedVersion, Mode=TwoWay}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="domain:PromptVersion">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding SavedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text="{Binding Note}"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource TextSecondary}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <!-- SPLITTER -->
+            <GridSplitter Grid.Column="1" Width="8" Background="Transparent" />
+
+            <!-- RIGHT: the preview -->
+            <Border Grid.Column="2"
+                    Background="{DynamicResource SurfaceSubtle}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusSm}"
+                    Padding="12">
+                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="6">
+                    <TextBlock Grid.Row="0" Text="{Binding PreviewTitle}"
+                               FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}"
+                               TextTrimming="CharacterEllipsis" />
+                    <Border Grid.Row="1" Height="1" Background="{DynamicResource BorderSubtle}" Margin="0,4,0,4" />
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <TextBlock Text="{Binding PreviewBody}"
+                                   TextWrapping="Wrap"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <TextBlock Grid.Row="2" Text="{Binding StatusText}" FontSize="11"
+                   TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                   Margin="0,8,0,0" IsVisible="{Binding StatusText}" />
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8" Margin="0,8,0,0">
+            <Button Grid.Column="1" Content="Restore" Padding="12,6"
+                    IsEnabled="{Binding HasSelection}"
+                    Command="{Binding RestoreCommand}" />
+            <Button Grid.Column="2" Content="Close" Padding="12,6"
+                    Command="{Binding CancelCommand}" />
+            <Button Grid.Column="3" Content="Clear History" Padding="12,6"
+                    Click="OnClearHistoryClicked" />
+        </Grid>
+    </Grid>
+</Window>

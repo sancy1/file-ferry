@@ -2,7 +2,7 @@
 
 > Harvest files from anywhere on your PC. Copy them byte-for-byte. Deliver them in any format you choose.
 
-File-Ferry is a Windows desktop toolkit for working with local files, cloud storage, text, paths, and PostgreSQL data. Its original file-harvesting workflow is joined by Cloud, SchemaLence, Link Joiner, and Extract workspaces.
+File-Ferry is a Windows desktop toolkit for working with local files, cloud storage, text, paths, images, audio, video, documents, and PostgreSQL data. Its original file-harvesting workflow is joined by Cloud, SchemaLence, ImageTextify, Prompt, Code Viewer, Link Joiner, and Extract workspaces.
 
 Built on **.NET 10**, **Avalonia UI 12**, and **Portfolio.Resilience 0.8.0**.
 
@@ -70,6 +70,50 @@ Built on **.NET 10**, **Avalonia UI 12**, and **Portfolio.Resilience 0.8.0**.
 - Filter, copy, or save matches. Extraction runs locally and does not verify,
   open, or transmit the matched values.
 
+### ImageTextify — turn images, PDFs, audio, and video into text
+
+- Local OCR pipeline for images and scanned PDFs: PP-OCR detection and
+  recognition, TrOCR for handwriting, and a Qwen vision fallback for
+  difficult printed text.
+- Audio and video transcription through Whisper, plus a live
+  transcription workspace that streams microphone and system-audio
+  loopback into a running transcript. Live transcription and audio
+  capture are Windows-only; macOS and Linux are deferred.
+- Opt-in WAV recording of captured audio.
+- Camera capture workspace: enumerate a camera, preview, freeze a frame,
+  and run it through the same OCR pipeline. Windows and Linux only;
+  macOS is not supported by the camera library.
+- Document and image conversion workspace: image format conversion,
+  Markdown to DOCX/PDF, Word to Markdown, JSON to CSV, CSV to JSON, and
+  any file to XLSX. Currently registered on Windows only.
+- Text-to-speech workspace: Edge neural voices with a System.Speech
+  fallback. Windows-only.
+- Projects: `ImageTextify.Core` (contracts and domain models) and
+  `ImageTextify.Platform` (OCR, PDF, media, audio, camera, conversion,
+  and speech engines). The workspace UI lives in `FileHarvester.App`.
+
+### Prompt — local prompt and document manager
+
+- Category and subcategory tree, prompt editor with auto-save drafts,
+  version history with restore, favorites, tags, and full-text search.
+- Trash with restore, bulk export/move/tag/delete, and keyboard
+  shortcuts.
+- Import `.txt`, `.md`, `.docx`, and `.pdf`; export a single file or a
+  zip tree through the shared format writers.
+- Projects: `Prompt.Core` and `Prompt.Platform` (SQLite stores, FTS5
+  search, importer/exporter). The workspace UI lives in
+  `FileHarvester.App`.
+
+### Code Viewer — inspect local projects
+
+- Browse a project's file tree, open files in a syntax-highlighted code
+  surface, and copy a file or the whole tree.
+- Configurable exclusion rules for generated, dependency, and binary
+  content.
+- Projects: `CodeViewer.Core` (tree model, exclusions, role
+  classification) and `CodeViewer.Platform` (project scanning). The
+  workspace UI lives in `FileHarvester.App`.
+
 ### App-wide tools
 
 - Light/dark appearance, a responsive Avalonia interface, live operation
@@ -88,8 +132,11 @@ Built on **.NET 10**, **Avalonia UI 12**, and **Portfolio.Resilience 0.8.0**.
 2. Extract the ZIP, keeping `FileFerry.exe` and the `LatoFont` folder together.
 3. Run `FileFerry.exe`; no installer or separately installed .NET runtime is
    required.
-4. Choose a workspace from the top bar: **Harvest**, **Cloud**, **Link
-   Joiner**, **Extract**, or **SchemaLence**.
+4. Choose a workspace from the top bar: **Harvest File**, **Cloud**,
+   **ImageTextify**, **Link Joiner**, **Extract**, **Prompt**,
+   **Code Viewer**, or **SchemaLence**. ImageTextify also opens the live
+   transcription, camera capture, conversion, and text-to-speech
+   sub-pages.
 
 > **The published download is a self-contained Windows x64 build.** Cloud
 > services may require your own provider account, credentials, or OAuth app
@@ -105,6 +152,11 @@ dotnet restore FileHarvester.slnx
 dotnet build FileHarvester.slnx
 dotnet run --project src\FileHarvester.App\FileHarvester.App.csproj
 ```
+
+`ImageTextify.Core` and `ImageTextify.Platform` set
+`GenerateDocumentationFile`, so their XML documentation files are emitted
+to `bin/` on every build. The other projects do not currently generate
+XML documentation.
 
 ### Publish a Windows x64 Executable
 
@@ -146,11 +198,17 @@ for the currently published version and its release notes.
 ## Architecture
 
 ```text
-FileHarvester.App       (Avalonia UI — Harvest, Cloud, and utility workspaces)
+FileHarvester.App       (Avalonia UI — all workspaces and sub-pages)
 FileHarvester.Core      (file workflows, cloud contracts, shared domain logic)
 FileHarvester.Platform  (file-system and cloud-provider adapters)
 SchemaLence.Core        (database contracts and metadata models)
 SchemaLence.Platform    (PostgreSQL provider and local persistence)
+ImageTextify.Core       (OCR, media, audio, camera, conversion, speech contracts)
+ImageTextify.Platform   (ONNX OCR, Whisper, NAudio, Periphery.Camera, converters, TTS)
+Prompt.Core             (prompt domain models and store contracts)
+Prompt.Platform         (SQLite stores, FTS5 search, import/export)
+CodeViewer.Core         (project tree model, exclusions, classification)
+CodeViewer.Platform     (project scanning)
 FileHarvester.Tests     (xUnit — app, core, and platform behavior)
 ```
 
@@ -218,6 +276,7 @@ file-ferry/
 ├── CHANGELOG.md
 ├── LICENSE
 ├── artifacts/                    Build output and release packages (git-ignored)
+├── bench/                        ImageTextify OCR evaluation harness (not shipped)
 ├── docs/                         User, architecture, and verification guides
 ├── src/
 │   ├── FileHarvester.App/        Avalonia UI and workspaces
@@ -225,6 +284,12 @@ file-ferry/
 │   ├── FileHarvester.Platform/   File and cloud adapters
 │   ├── SchemaLence.Core/         Database contracts
 │   ├── SchemaLence.Platform/     PostgreSQL and local store
+│   ├── ImageTextify.Core/        Extraction and media contracts
+│   ├── ImageTextify.Platform/    OCR, transcription, camera, conversion, TTS
+│   ├── Prompt.Core/              Prompt domain contracts
+│   ├── Prompt.Platform/          Prompt stores, search, import/export
+│   ├── CodeViewer.Core/          Project tree and exclusion model
+│   ├── CodeViewer.Platform/      Project scanning
 │   └── FileHarvester.Tests/      xUnit test suite
 └── FileHarvester.slnx            Solution
 ```
@@ -245,6 +310,9 @@ Current coverage includes:
 - Cloud providers, credentials, and downloads
 - SchemaLence PostgreSQL and Excel export
 - Link Joiner and Extract
+- ImageTextify OCR, transcription, camera, conversion, and speech
+- Prompt stores, search, import/export, and documentation contracts
+- CodeViewer tree, exclusions, and classification
 - UI view models, documentation contracts, and resilience behavior
 
 The tests are in [`src/FileHarvester.Tests/`](src/FileHarvester.Tests/).
@@ -254,11 +322,12 @@ The tests are in [`src/FileHarvester.Tests/`](src/FileHarvester.Tests/).
 ## Release Notes
 
 The first public release, [`v1.0.0`](https://github.com/sancy1/file-ferry/releases/tag/v1.0.0),
-focused on local file harvesting. The in-progress `v1.1.0` update expands
-File-Ferry with cloud connections and Google Drive downloads, PostgreSQL
-inspection and export, Link Joiner, Extract, overwrite confirmation, and
-related reliability and UI improvements.
-
+focused on local file harvesting. The `v1.1.0` release added cloud
+connections and Google Drive downloads, PostgreSQL inspection and export,
+Link Joiner, Extract, overwrite confirmation, and related reliability and
+UI improvements. The unreleased work on `main` adds the Prompt and
+Code Viewer workspaces and the ImageTextify extraction suite (OCR,
+transcription, live capture, camera, conversion, and text-to-speech).
 See [`CHANGELOG.md`](CHANGELOG.md) and the
 [release page](https://github.com/sancy1/file-ferry/releases) for the
 versioned change history.

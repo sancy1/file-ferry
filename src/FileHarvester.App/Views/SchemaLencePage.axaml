@@ -4,7 +4,7 @@
              xmlns:data="using:Avalonia.Controls"
              x:Class="FileHarvester.App.Views.SchemaLencePage"
              x:DataType="vm:MainWindowViewModel">
-    <Grid Name="WorkspaceGrid" Margin="12" ColumnDefinitions="410,6,*">
+    <Grid Name="WorkspaceGrid" Margin="12" ColumnDefinitions="410,12,*">
         <Border Name="BrowserPane" Grid.Column="0"
                 Background="{DynamicResource SurfaceRaised}"
                 BorderBrush="{DynamicResource BorderSubtle}"
@@ -13,7 +13,7 @@
                 Padding="14">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Spacing="10">
+                <StackPanel Spacing="10" Margin="0,0,14,0">
                     <StackPanel Spacing="3">
                         <TextBlock Text="SchemaLence"
                                    FontSize="17"
@@ -46,19 +46,31 @@
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
                         <Button Content="Connect saved"
                                 Padding="8,6"
+                                Background="#2E9E5B"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding SchemaLence.ConnectSelectedCommand}" />
                         <Button Grid.Column="1"
                                 Content="Remove saved"
                                 Padding="8,6"
+                                Background="#C0392B"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding SchemaLence.DeleteSelectedConnectionCommand}" />
                     </Grid>
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
                         <Button Content="Add database"
                                 Padding="8,6"
+                                Background="#2E9E5B"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding SchemaLence.AddConnectionCommand}" />
                         <Button Grid.Column="1"
                                 Content="Disconnect"
                                 Padding="8,6"
+                                Background="#C0392B"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding SchemaLence.DisconnectCommand}" />
                     </Grid>
 
@@ -111,11 +123,17 @@
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
                         <Button Content="Test connection"
                                 Padding="8,6"
+                                Background="#2D6CDF"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding SchemaLence.TestConnectionCommand}" />
                         <Button Grid.Column="1"
                                 Content="Save &amp; connect"
                                 Padding="8,6"
                                 FontWeight="SemiBold"
+                                Background="#2E9E5B"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding SchemaLence.SaveAndConnectCommand}" />
                     </Grid>
 
@@ -129,14 +147,28 @@
                               PlaceholderText="Schema filter" />
                     <TextBox Text="{Binding SchemaLence.SearchText, Mode=TwoWay}"
                              PlaceholderText="Search schema-qualified names or type" />
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
                         <Button Content="View all tables"
                                 Padding="8,6"
+                                Background="#2D6CDF"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding SchemaLence.ShowAllObjectsCommand}" />
                         <Button Grid.Column="1"
                                 Content="Refresh"
                                 Padding="8,6"
+                                Background="#2D6CDF"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding SchemaLence.RefreshCommand}" />
+                        <Button Grid.Column="2"
+                                Content="Reset"
+                                Padding="8,6"
+                                Background="#C0392B"
+                                Foreground="White"
+                                CornerRadius="6"
+                                ToolTip.Tip="Clear all fields and disconnect"
+                                Command="{Binding SchemaLence.ResetCommand}" />
                     </Grid>
                     <ListBox ItemsSource="{Binding SchemaLence.VisibleObjects}"
                              Name="DatabaseObjectsList"
@@ -166,9 +198,9 @@
 
         <GridSplitter Name="PaneSplitter"
                       Grid.Column="1"
-                      Width="6"
+                      Width="12"
                       HorizontalAlignment="Stretch"
-                      Background="{DynamicResource BorderSubtle}"
+                      Background="Transparent"
                       ShowsPreview="True" />
 
         <Border Name="DetailsPane" Grid.Column="2"
@@ -195,14 +227,23 @@
                     <Button Grid.Column="1" Name="CopyReportButton"
                             Content="Copy structure report"
                             Padding="8,5"
+                            Background="#2D6CDF"
+                            Foreground="White"
+                            CornerRadius="6"
                             Command="{Binding SchemaLence.CopyReportCommand}" />
                     <Button Grid.Column="2"
                             Content="Save structure report…"
                             Padding="8,5"
+                            Background="#2D6CDF"
+                            Foreground="White"
+                            CornerRadius="6"
                             Command="{Binding SchemaLence.SaveReportCommand}" />
                     <Button Grid.Column="3"
                             Content="Close"
                             Padding="8,5"
+                            Background="#7F8C8D"
+                            Foreground="White"
+                            CornerRadius="6"
                             Command="{Binding SchemaLence.CloseCommand}" />
                 </Grid>
 
@@ -224,23 +265,38 @@
                     <Button Grid.Column="3"
                             Content="Count rows"
                             Padding="8,5"
+                            Background="#2D6CDF"
+                            Foreground="White"
+                            CornerRadius="6"
                             Command="{Binding SchemaLence.CountRowsCommand}" />
                     <Button Grid.Column="4" Name="ExportExcelButton"
                             Content="Export Excel…"
                             Padding="8,5"
+                            Background="#2D6CDF"
+                            Foreground="White"
+                            CornerRadius="6"
                             Command="{Binding SchemaLence.ExportExcelCommand}" />
                     <Button Grid.Column="5" Name="BackupDatabaseButton"
                             Content="Backup database…"
                             Padding="8,5"
+                            Background="#2D6CDF"
+                            Foreground="White"
+                            CornerRadius="6"
                             ToolTip.Tip="Create a restorable PostgreSQL custom archive containing this database's schema and data. Not a live clone."
                             Command="{Binding SchemaLence.BackupDatabaseCommand}" />
                     <Button Grid.Column="6" Name="CancelBackupButton"
                             Content="Cancel backup"
                             Padding="8,5"
+                            Background="#7F8C8D"
+                            Foreground="White"
+                            CornerRadius="6"
                             Command="{Binding SchemaLence.CancelBackupCommand}" />
                     <Button Grid.Column="7"
                             Content="Cancel export"
                             Padding="8,5"
+                            Background="#7F8C8D"
+                            Foreground="White"
+                            CornerRadius="6"
                             Command="{Binding SchemaLence.CancelExcelExportCommand}" />
                 </Grid>
 
@@ -299,10 +355,16 @@
                     <Button Grid.Column="1"
                             Content="Previous"
                             Padding="8,5"
+                            Background="#7F8C8D"
+                            Foreground="White"
+                            CornerRadius="6"
                             Command="{Binding SchemaLence.PreviousPageCommand}" />
                     <Button Grid.Column="2"
                             Content="Next"
                             Padding="8,5"
+                            Background="#7F8C8D"
+                            Foreground="White"
+                            CornerRadius="6"
                             Command="{Binding SchemaLence.NextPageCommand}" />
                 </Grid>
             </Grid>

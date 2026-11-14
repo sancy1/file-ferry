@@ -1,0 +1,17 @@
+=== TRANSCRIPTION PIPELINE PERFORMANCE DIAGNOSTIC ===
+date: 2026-11-08 23:27:45 UTC
+whisper model: C:\Users\HP\AppData\Local\Temp\gate0_whisper_small.ggml (487601967 B)
+silero model: C:\Users\HP\AppData\Local\Temp\gate0_silero_vad.ggml (885098 B)
+
+=== CASE: silence-60s (60 s) ===
+outcome: NoSpeechDetected
+elapsed_seconds: 24.85
+audio_seconds: 60
+rtf: 0.414
+
+=== CASE: sine-60s (60 s) ===
+outcome: NoSpeechDetected
+elapsed_seconds: 2.28
+audio_seconds: 60
+rtf: 0.038
+

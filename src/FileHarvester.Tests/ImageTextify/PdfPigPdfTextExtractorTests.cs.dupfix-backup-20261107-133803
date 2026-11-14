@@ -1,0 +1,98 @@
+// filepath: src/FileHarvester.Tests/ImageTextify/PdfPigPdfTextExtractorTests.cs
+// layer:    Tests
+// module:   FileHarvester.Tests.ImageTextify
+// since:    Phase 2.6-PDF-1
+// purpose:  End-to-end test for PdfPigPdfTextExtractor. Builds a minimal
+//           one-page PDF in memory with a known text object, extracts it,
+//           and asserts the page count, the index, WasOcred=false, and that
+//           the text contains the known string.
+// RELATION: Consumes PdfPigPdfTextExtractor and the ImageTextify
+//           IPdfTextExtractor contract.
+// NOTES:    The PDF fixture is hand-built. If this test fails with a PdfPig
+//           parse exception, the FIXTURE is malformed (an xref offset is
+//           wrong), not the extractor. The failure message says so.
+// ============================================================================
+
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using FluentAssertions;
+using ImageTextify.Core.Abstractions;
+using ImageTextify.Platform.Extraction;
+using Xunit;
+
+namespace FileHarvester.Tests.ImageTextify;
+
+/// <summary>
+/// End-to-end tests for <see cref="PdfPigPdfTextExtractor"/>.
+/// </summary>
+public sealed class PdfPigPdfTextExtractorTests
+{
+    /// <summary>
+    /// Builds a minimal one-page PDF drawing the given text.
+    /// </summary>
+    /// <param name="content">The text to draw on the page.</param>
+    /// <returns>The PDF bytes.</returns>
+    private static byte[] BuildMinimalPdf(string content)
+    {
+        var streamBody = "BT /F1 12 Tf 72 720 Td (" + content + ") Tj ET";
+        var streamBody = "BT /F1 12 Tf 72 720 Td (" + content + ") Tj ET";
+        var streamBytes = Encoding.ASCII.GetBytes(streamBody);
+        var lf = ((char)10).ToString();
+        var objects = new[]
+        {
+            "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj",
+            "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj",
+            "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj",
+            "4 0 obj<</Length " + streamBytes.Length.ToString(System.Globalization.CultureInfo.InvariantCulture) + ">>" + lf + "stream" + lf + streamBody + lf + "endstream" + lf + "endobj",
+            "5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj",
+        };
+        var sb = new StringBuilder();
+        sb.Append("%PDF-1.4");
+        sb.Append((char)10);
+        var offsets = new int[objects.Length];
+        for (var i = 0; i < objects.Length; i++)
+        {
+            offsets[i] = sb.Length;
+            sb.Append(objects[i]);
+            sb.Append((char)10);
+        }
+        var xrefPos = sb.Length;
+        sb.Append("xref");
+        sb.Append((char)10);
+        sb.Append("0 " + (objects.Length + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        sb.Append((char)10);
+        sb.Append("0000000000 65535 f ");
+        sb.Append((char)10);
+        for (var i = 0; i < objects.Length; i++)
+        {
+            sb.Append(offsets[i].ToString("D10", System.Globalization.CultureInfo.InvariantCulture) + " 00000 n ");
+            sb.Append((char)10);
+        }
+        sb.Append("trailer<</Size " + (objects.Length + 1).ToString(System.Globalization.CultureInfo.InvariantCulture) + "/Root 1 0 R>>");
+        sb.Append((char)10);
+        sb.Append("startxref");
+        sb.Append((char)10);
+        sb.Append(xrefPos.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        sb.Append((char)10);
+        sb.Append("%%EOF");
+        return Encoding.ASCII.GetBytes(sb.ToString());
+    }
+
+    /// <summary>
+    /// The extractor reads the text layer of a generated one-page PDF.
+    /// </summary>
+    [Fact]
+    public async Task ExtractAsyncReadsTextLayerOfOnePagePdf()
+    {
+        var bytes = BuildMinimalPdf("Hello PDF");
+        using var stream = new MemoryStream(bytes);
+        var extractor = new PdfPigPdfTextExtractor();
+        var result = await extractor.ExtractAsync(stream, new PdfExtractionOptions(), CancellationToken.None);
+        result.Pages.Should().HaveCount(1, "a one-page fixture must produce one page entry; if this fails, the generated PDF fixture is malformed, not the extractor");
+        result.Pages[0].PageIndex.Should().Be(0);
+        result.Pages[0].WasOcred.Should().BeFalse();
+        result.Pages[0].Text.Should().Contain("Hello PDF");
+    }
+}

@@ -1,0 +1,29 @@
+<!--
+FILE:     src/FileHarvester.App/Views/ScreenshotOverlayWindow.axaml
+PURPOSE:  Fullscreen dimmed overlay for the screenshot flow. Shows the frozen
+          screen as its background, lets the user drag a selection rectangle,
+          and crops on release. Escape cancels.
+RELATION: Opened by MainWindowViewModel.TakeScreenshotCommand. Pattern proven
+          by the Phase 14 spike.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="FileHarvester.App.Views.ScreenshotOverlayWindow"
+        WindowState="FullScreen"
+        WindowDecorations="None"
+        Topmost="True"
+        ShowInTaskbar="False"
+        Background="Black"
+        Cursor="Cross">
+    <Canvas Name="RootCanvas" Background="Black">
+        <Border Name="SelectionBorder"
+                BorderBrush="White"
+                BorderThickness="1"
+                Background="#20FFFFFF"
+                IsVisible="False"
+                IsHitTestVisible="False" />
+    </Canvas>
+</Window>

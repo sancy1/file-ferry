@@ -51,6 +51,9 @@ RELATION: Bound to InputPanelViewModel. Embedded in MainWindow.axaml.
                         Content="Clear All"
                         FontSize="12"
                         Padding="10,4"
+                        Background="#C0392B"
+                        Foreground="White"
+                        CornerRadius="8"
                         VerticalAlignment="Center"
                         Command="{Binding ClearAllCommand}" />
             </Grid>
@@ -75,9 +78,12 @@ RELATION: Bound to InputPanelViewModel. Embedded in MainWindow.axaml.
 
             <!-- ACTION BUTTONS -->
             <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,Auto,*" Margin="0,0,0,12">
-                <Button Grid.Column="0" Name="ParsePasteButton" Content="Parse Paste" Padding="12,6" Margin="0,0,8,0" />
-                <Button Grid.Column="1" Name="AddFilesButton" Content="Add Files…" Padding="12,6" Margin="0,0,8,0" />
-                <Button Grid.Column="2" Name="AddFolderButton" Content="Add Folder…" Padding="12,6" />
+                <Button Grid.Column="0" Name="ParsePasteButton" Content="Parse Paste" Padding="12,6" Margin="0,0,8,0"
+                        Background="#2D6CDF" Foreground="White" CornerRadius="6" />
+                <Button Grid.Column="1" Name="AddFilesButton" Content="Add Files…" Padding="12,6" Margin="0,0,8,0"
+                        Background="#2E9E5B" Foreground="White" CornerRadius="6" />
+                <Button Grid.Column="2" Name="AddFolderButton" Content="Add Folder…" Padding="12,6"
+                        Background="#2E9E5B" Foreground="White" CornerRadius="6" />
             </Grid>
 
             <!-- FILE LIST -->
@@ -115,15 +121,23 @@ RELATION: Bound to InputPanelViewModel. Embedded in MainWindow.axaml.
                                            Foreground="{DynamicResource TextPrimary}"
                                            VerticalAlignment="Center" />
                                 <Button Grid.Column="2"
-                                        Content="✕"
                                         FontSize="11"
                                         Width="24" Height="24"
                                         Padding="0"
-                                        Background="Transparent"
+                                        Background="#C0392B"
+                                        Foreground="White"
+                                        CornerRadius="8"
                                         BorderThickness="0"
                                         ToolTip.Tip="Remove"
                                         Command="{Binding $parent[UserControl].((vm:InputPanelViewModel)DataContext).RemoveFileCommand}"
-                                        CommandParameter="{Binding}" />
+                                        CommandParameter="{Binding}">
+                                    <TextBlock Text="✕"
+                                               FontSize="11"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Margin="1,1,0,0" />
+                                </Button>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>

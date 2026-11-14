@@ -45,7 +45,7 @@ public sealed class SchemaLenceExcelExporterTests
 
             exported.Should().Be(2);
             using var workbook = SpreadsheetDocument.Open(path, false);
-            var sheet = workbook.WorkbookPart!.WorksheetParts.Single().Worksheet;
+            var sheet = workbook.WorkbookPart!.WorksheetParts.Single().Worksheet!;
             var sheetRows = sheet.Descendants<Row>().ToArray();
             sheetRows.Should().HaveCount(3);
             sheetRows.SelectMany(row => row.Elements<Cell>())

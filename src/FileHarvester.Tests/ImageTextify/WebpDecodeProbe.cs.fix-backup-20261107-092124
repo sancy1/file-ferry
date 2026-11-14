@@ -1,0 +1,74 @@
+// filepath: src/FileHarvester.Tests/ImageTextify/WebpDecodeProbe.cs
+// layer:    Tests
+// module:   FileHarvester.Tests.ImageTextify
+// since:    Phase 2.6 diagnostic
+// purpose:  One-off diagnostic. Does SkiaSharp decode WebP in this build?
+//           Prints the result of SKBitmap.Decode for the first .webp and the
+//           first .png under the eval-set root, as data and control. The
+//           assertion is deliberately weak: the test prints, it does not fail,
+//           so a WebP decode throw does not suppress the PNG control line.
+// RELATION: Temporary. Trait=Probe. Deleted after the WebP format defect is
+//           resolved. Not referenced by production code.
+// ============================================================================
+
+using System;
+using System.IO;
+using System.Linq;
+using FluentAssertions;
+using SkiaSharp;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace FileHarvester.Tests.ImageTextify;
+
+/// <summary>
+/// Temporary diagnostic: does SkiaSharp decode WebP in this build?
+/// </summary>
+[Trait(`"Category`", `"Probe`")]
+public sealed class WebpDecodeProbe
+{
+    private readonly ITestOutputHelper _output;
+
+    /// <summary>Receives xUnit output.</summary>
+    public WebpDecodeProbe(ITestOutputHelper output) => _output = output;
+
+    /// <summary>
+    /// Decodes the first WebP and the first PNG found under the eval-set root
+    /// and prints the result. The PNG is the control: if it decodes and the
+    /// WebP does not, SkiaSharp lacks the WebP codec in this build.
+    /// </summary>
+    [Fact]
+    public void SkiaSharpDecodesWebp()
+    {
+        var root = @"C:\Users\HP\Desktop\exracts";
+        var webp = Directory.EnumerateFiles(root, "*.webp", SearchOption.AllDirectories).FirstOrDefault();
+        var png  = Directory.EnumerateFiles(root, "*.png",  SearchOption.AllDirectories).FirstOrDefault();
+        _output.WriteLine("webp: " + (webp ?? "<none found>"));
+        _output.WriteLine("png:  " + (png  ?? "<none found>"));
+        if (webp is not null)
+        {
+            try
+            {
+                using var bmp = SKBitmap.Decode(webp);
+                _output.WriteLine("WEBP decode: " + (bmp is null ? "NULL" : bmp.Width + "x" + bmp.Height));
+            }
+            catch (Exception ex)
+            {
+                _output.WriteLine("WEBP decode threw: " + ex.GetType().FullName + ": " + ex.Message);
+            }
+        }
+        if (png is not null)
+        {
+            try
+            {
+                using var bmp = SKBitmap.Decode(png);
+                _output.WriteLine("PNG decode:  " + (bmp is null ? "NULL" : bmp.Width + "x" + bmp.Height));
+            }
+            catch (Exception ex)
+            {
+                _output.WriteLine("PNG decode threw:  " + ex.GetType().FullName + ": " + ex.Message);
+            }
+        }
+        true.Should().BeTrue();
+    }
+}

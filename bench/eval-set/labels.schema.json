@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ImageTextify per-image label file",
+  "type": "object",
+  "required": ["schema_version", "image_sha256", "category", "full_text"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "image_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "category": { "type": "string" },
+    "full_text": { "type": "string" },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["text"],
+        "properties": {
+          "bbox": {
+            "type": "array",
+            "items": { "type": "integer" },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "text": { "type": "string" }
+        }
+      }
+    }
+  }
+}

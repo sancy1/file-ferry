@@ -30,6 +30,33 @@ policies registered with Portfolio.Resilience 0.8.0 as of v1.1.
 | cloud-search | CloudPathSearchService listings                         | 3     | 150ms      | 1500ms    | 0.15   | 3                 | 30s          | 2               | 60s     | 120/min    | 60s         |
 | cloud-auth   | Token refresh, credential validation                    | 2     | 500ms      | 5000ms    | 0.10   | 3                 | 300s         | 1               | 15s     | 30/min     | 60s         |
 | credential-store-write | ICredentialStore.WriteAsync (caller: CloudPage.axaml.cs) | 2 | 100ms | 500ms | 0.00 | 3 | 15s | 2 | 5s | - | - |
+| code-viewer-scan | ProjectTreeEnumerator (one directory-enumeration call) | 2 | 250ms | 250ms | 0.00 | disabled | - | - | disabled | - | - |
+
+### code-viewer-scan (CodeViewer)
+
+`code-viewer-scan` wraps **one directory-enumeration call at a time**, never a
+whole-project scan. It is registered by CodeViewer through the
+`configureCodeViewerPolicies` callback on `AddFileHarvester` (the additive
+overload; the original four-parameter signature is unchanged).
+
+- **Retry:** two retries after the initial attempt, fixed ~250 ms delay, and
+  only transient `IOException` (for example a mapped-drive blip) is retried.
+  `UnauthorizedAccessException`, `DirectoryNotFoundException`, and
+  `PathTooLongException` are classified permanent and are never retried; the
+  enumerator skips the offending entry and continues.
+- **Circuit breaker: disabled.** Portfolio.Resilience 0.8.0 has no circuit
+  opt-out flag, and a `FailureThreshold` of 0 opens the circuit immediately
+  (verified against the 0.8.0 runtime), so the threshold is set to
+  `int.MaxValue` — a count consecutive failures can never reach. A local
+  directory scan must never be circuit-broken.
+- **Timeout: disabled** (`TimeoutMs = 0`, the documented opt-out). A slow
+  directory is never aborted mid-call; responsiveness comes from the caller's
+  cancellation token, which the enumerator checks between entries.
+
+Rationale: retrying or aborting an entire scan because one directory entry
+failed would repeat completed work and starve cancellation. Entry-level
+tolerance plus a narrow transient-only retry is the correct failure profile
+for local enumeration.
 
 Rate limits use RateLimitStrategy.SlidingWindow. The window is 60
 seconds; PermitLimit is the per-minute maximum.

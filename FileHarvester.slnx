@@ -6,5 +6,13 @@
     <Project Path="src/FileHarvester.Tests/FileHarvester.Tests.csproj" />
     <Project Path="src/SchemaLence.Core/SchemaLence.Core.csproj" />
     <Project Path="src/SchemaLence.Platform/SchemaLence.Platform.csproj" />
+    <Project Path="src/ImageTextify.Core/ImageTextify.Core.csproj" />
+    <Project Path="src/ImageTextify.Platform/ImageTextify.Platform.csproj" />
+    <!-- TEMPORARILY EXCLUDED: Prompt.Core is untracked and does not compile. Uncomment when Prompt owner fixes it. -->
+    <!-- <Project Path="src/Prompt.Core/Prompt.Core.csproj" /> -->
+    <!-- TEMPORARILY EXCLUDED: Prompt.Platform CS1061 errors on PolicyDefinition.ErrorClassification. Uncomment when fixed. -->
+    <!-- <Project Path="src/Prompt.Platform/Prompt.Platform.csproj" /> -->
+    <Project Path="src/CodeViewer.Core/CodeViewer.Core.csproj" />
+    <Project Path="src/CodeViewer.Platform/CodeViewer.Platform.csproj" />
   </Folder>
 </Solution>

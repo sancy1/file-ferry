@@ -1,0 +1,399 @@
+<!--
+FILE:     src/FileHarvester.App/Views/CodeViewerPage.axaml
+PURPOSE:  The CodeViewer workspace page. A project tab strip on top, a
+          toolbar (display-mode selector, Auto Display toggle, project
+          name/path, open count, refresh, menu), and three independent
+          resizable panes: Project Browser (left), Project Tree Structure
+          (upper right), Code Content (lower right). The right-hand panes
+          resize against each other; the browser resizes against the
+          whole right workspace. Structure Only and Code Only collapse
+          the other viewer.
+RELATION: Selected by MainWindowViewModel.CurrentPage through the page
+          host. The DataContext is inherited from the window; bindings go
+          through MainWindowViewModel.CodeViewer. The root Grid uses
+          Margin="12" to match HarvestPage and ImageTextifyPage (the
+          shell provides the content top; the first row carries no top
+          margin).
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             xmlns:cv="using:CodeViewer.Core.Domain"
+             xmlns:views="using:FileHarvester.App.Views"
+             mc:Ignorable="d"
+             d:DesignWidth="1280" d:DesignHeight="720"
+             x:Class="FileHarvester.App.Views.CodeViewerPage"
+             x:DataType="vm:CodeViewerViewModel">
+    <!--
+    Row density for the Project Browser (and, per the house pattern, any
+    ListBox inside this page). The default ListBoxItem MinHeight=32 and
+    default Padding produce a ~32px row — visibly looser than the sidebar.
+    F-272/F-197: the fix is the container's Style, not the control's Margin.
+    Values match PromptListPanel.axaml and CategoryManagerDialog.axaml
+    (the established sidebar standard). Scoped to this UserControl; no
+    leak to other apps or the shell.
+    -->
+    <UserControl.Styles>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0,1" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Margin="12" RowDefinitions="Auto,Auto,*">
+
+        <!-- TAB STRIP: open projects + add button -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource SurfaceRaised}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="6,4"
+                Margin="0,0,0,12">
+            <DockPanel>
+                <Button Name="AddProjectButton"
+                        DockPanel.Dock="Right"
+                        Content="+"
+                        Padding="10,2"
+                        FontSize="14"
+                        Background="#2E9E5B"
+                        Foreground="White"
+                        CornerRadius="6"
+                        AutomationProperties.Name="Open project folder" />
+                <!-- Horizontal tab list. A ListBox with a horizontal
+                     VirtualizingStackPanel lays out and realizes the tab
+                     buttons; the parent DockPanel bounds its width. -->
+                <ListBox Name="TabStrip"
+                         ItemsSource="{Binding Tabs}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ProjectTabViewModel">
+                            <Border Background="{DynamicResource SurfaceSubtle}"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="{DynamicResource RadiusSm}"
+                                    Margin="0,0,6,0">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <!-- Clickable project name switches to this tab -->
+                                    <Button Content="{Binding ProjectName}"
+                                            FontSize="12"
+                                            Padding="8,3"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Command="{Binding $parent[ListBox].((vm:CodeViewerViewModel)DataContext).SelectTabCommand}"
+                                            CommandParameter="{Binding}"
+                                            AutomationProperties.Name="Switch to project" />
+                                    <!-- Close this tab -->
+                                    <Button Content="✕"
+                                            FontSize="10"
+                                            Padding="4,0"
+                                            Background="#C0392B"
+                                            Foreground="White"
+                                            CornerRadius="6"
+                                            BorderThickness="0"
+                                            Command="{Binding $parent[ListBox].((vm:CodeViewerViewModel)DataContext).CloseTabCommand}"
+                                            CommandParameter="{Binding}"
+                                            AutomationProperties.Name="Close project" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- TOOLBAR: display mode, Auto Display, project info, refresh, menu -->
+        <Border Grid.Row="1"
+                IsVisible="{Binding HasActiveTab}"
+                Background="{DynamicResource SurfaceRaised}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="10,6"
+                Margin="0,0,0,12">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto">
+                <ComboBox Name="DisplayModeSelector"
+                          Grid.Column="0"
+                          SelectedIndex="{Binding ActiveTab.DisplayMode, Mode=TwoWay}"
+                          MinWidth="170"
+                          AutomationProperties.Name="Display mode">
+                    <ComboBoxItem Content="Structure Only" />
+                    <ComboBoxItem Content="Code Only" />
+                    <ComboBoxItem Content="Structure + Code" />
+                </ComboBox>
+
+                <ToggleButton Grid.Column="1"
+                              Content="Auto Display"
+                              IsChecked="{Binding ActiveTab.State.AutoDisplay, Mode=OneWay}"
+                              Command="{Binding ActiveTab.ToggleAutoDisplayCommand}"
+                              Margin="12,0,0,0"
+                              AutomationProperties.Name="Auto Display" />
+
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ActiveTab.ProjectName}"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Text="{Binding ActiveTab.ProjectPath}"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextSecondary}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding ActiveTab.OpenedLabel}"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextSecondary}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <Button Grid.Column="3"
+                        Content="⟳"
+                        Command="{Binding ActiveTab.RefreshCommand}"
+                        Padding="8,2"
+                        FontSize="13"
+                        Background="#2D6CDF"
+                        Foreground="White"
+                        CornerRadius="6"
+                        AutomationProperties.Name="Refresh project" />
+                <Button Grid.Column="4"
+                        Name="ManageExclusionsButton"
+                        Content="Exclusions"
+                        Padding="10,2"
+                        FontSize="11"
+                        Margin="6,0,0,0"
+                        Background="#2D6CDF"
+                        Foreground="White"
+                        CornerRadius="6"
+                        AutomationProperties.Name="Manage exclusions" />
+                <Button Grid.Column="5"
+                        Name="ProjectMenuButton"
+                        Content="⋮"
+                        Padding="8,2"
+                        FontSize="13"
+                        Margin="6,0,0,0"
+                        Background="#7F8C8D"
+                        Foreground="White"
+                        CornerRadius="6"
+                        AutomationProperties.Name="Project menu" />
+            </Grid>
+        </Border>
+
+        <!-- EMPTY STATE -->
+        <Border Grid.Row="2"
+                IsVisible="{Binding ShowEmptyState}"
+                Background="{DynamicResource SurfaceRaised}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="8">
+                <TextBlock Text="Open a project folder to inspect its structure and code."
+                           FontSize="14"
+                           Foreground="{DynamicResource TextPrimary}" />
+                <TextBlock Text="Use the + button above to choose a local folder."
+                           FontSize="12"
+                           Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+        </Border>
+
+        <!-- THREE-PANE WORKSPACE -->
+        <Grid Grid.Row="2"
+              IsVisible="{Binding HasActiveTab}"
+              ColumnDefinitions="280,6,*"
+              ColumnSpacing="0">
+
+            <!-- PANE 1: PROJECT BROWSER -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SurfaceRaised}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusMd}"
+                    Padding="10,8">
+                <Grid RowDefinitions="Auto,*">
+                    <StackPanel Grid.Row="0" Spacing="2" Margin="0,0,0,8">
+                        <TextBlock Text="Project Browser"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="{Binding ActiveTab.ProjectPath}"
+                                   FontSize="10.5"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+
+                    <ListBox Name="BrowserList"
+                             Grid.Row="1"
+                             ItemsSource="{Binding ActiveTab.BrowserRows}"
+                             Background="Transparent"
+                             BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ProjectNodeRowViewModel">
+                                <Grid ColumnDefinitions="Auto,Auto,Auto,*">
+                                    <!-- Indent spacer -->
+                                    <Border Width="{Binding Indent}" Grid.Column="0" />
+                                    <!-- Expand/collapse arrow -->
+                                    <Button Grid.Column="1"
+                                            IsVisible="{Binding IsDirectory}"
+                                            Command="{Binding ToggleExpandCommand}"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Padding="4,0"
+                                            FontSize="14"
+                                            Foreground="{DynamicResource TextSecondary}">
+                                        <TextBlock Text="{Binding IsExpanded, Converter={x:Static vm:CodeViewerConverters.ExpandArrow}}" />
+                                    </Button>
+                                    <Border Grid.Column="1"
+                                            IsVisible="{Binding !IsDirectory}"
+                                            Width="14" />
+                                    <!-- Checkbox -->
+                                    <CheckBox Grid.Column="2"
+                                              IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                              Command="{Binding ToggleCheckCommand}"
+                                              VerticalAlignment="Center" />
+                                    <!-- Icon + name -->
+                                    <StackPanel Grid.Column="3"
+                                                Orientation="Horizontal"
+                                                Spacing="5"
+                                                Margin="4,0,0,0">
+                                        <TextBlock Text="{Binding IsDirectory, Converter={x:Static vm:CodeViewerConverters.NodeIcon}}"
+                                                   FontSize="12" />
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextPrimary}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Vertical splitter: browser vs right workspace -->
+            <GridSplitter Grid.Column="1"
+                          Width="6"
+                          HorizontalAlignment="Stretch"
+                          Background="{DynamicResource BorderSubtle}"
+                          ShowsPreview="True" />
+
+            <!-- RIGHT WORKSPACE: structure (top) + code (bottom) -->
+            <Grid Grid.Column="2"
+                  Name="RightWorkspace"
+                  RowDefinitions="*,6,*"
+                  RowSpacing="0">
+
+                <!-- PANE 2: PROJECT TREE STRUCTURE -->
+                <Border Name="StructurePane"
+                        Grid.Row="0"
+                        Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="10,8">
+                    <Grid RowDefinitions="Auto,*">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
+                            <TextBlock Grid.Column="0"
+                                       Text="Project Tree Structure"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding ActiveTab.StructureLineCountLabel}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,10,0" />
+                            <Button Grid.Column="2"
+                                    Content="Copy Tree"
+                                    Command="{Binding ActiveTab.CopyTreeCommand}"
+                                    Padding="10,3"
+                                    FontSize="11"
+                                    Background="#2D6CDF"
+                                    Foreground="White"
+                                    CornerRadius="6" />
+                        </Grid>
+                        <ScrollViewer Grid.Row="1"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Auto">
+                            <TextBlock Text="{Binding ActiveTab.StructureText}"
+                                       FontFamily="Consolas, Menlo, monospace"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextPrimary}"
+                                       TextWrapping="NoWrap" />
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- Horizontal splitter: structure vs code -->
+                <GridSplitter Name="StructureCodeSplitter"
+                              Grid.Row="1"
+                              Height="6"
+                              HorizontalAlignment="Stretch"
+                              Background="{DynamicResource BorderSubtle}"
+                              ShowsPreview="True" />
+
+                <!-- PANE 3: CODE CONTENT -->
+                <Border Name="CodePane"
+                        Grid.Row="2"
+                        Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="10,8">
+                    <Grid RowDefinitions="Auto,*">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
+                            <TextBlock Grid.Column="0"
+                                       Text="Code Content"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding ActiveTab.CodeFileCountLabel}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,10,0" />
+                            <Button Grid.Column="2"
+                                    Content="Copy All"
+                                    Command="{Binding ActiveTab.CopyAllCommand}"
+                                    Padding="10,3"
+                                    FontSize="11"
+                                    Background="#2D6CDF"
+                                    Foreground="White"
+                                    CornerRadius="6" />
+                        </Grid>
+
+                        <!-- Single outer vertical scroller; cards auto-size
+                             vertically so there is no nested vertical
+                             scrollbar. The ListBox virtualizes the cards. -->
+                        <ListBox Name="CodeCardsList"
+                                 Grid.Row="1"
+                                 ItemsSource="{Binding ActiveTab.CodeCards}"
+                                 Background="Transparent"
+                                 BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:CodeFileCardViewModel">
+                                    <views:CodeFileCardView />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

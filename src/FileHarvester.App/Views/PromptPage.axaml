@@ -1,0 +1,321 @@
+<!--
+FILE:     src/FileHarvester.App/Views/PromptPage.axaml
+PURPOSE:  The Prompt App's page. Two-pane layout: sidebar (categories tree
+          and prompt list, arriving at P2.3) on the left, viewer on the
+          right. Sidebar collapses at IsSidebarVisible=false; the viewer
+          expands to full width. The search bar row is reserved at P2.2
+          and filled at P2.8.
+RELATION: Selected by MainWindowViewModel.CurrentPage through the page
+          host in MainWindow.axaml.cs. The DataContext is inherited from
+          the window (MainWindowViewModel); bindings go through
+          MainWindowViewModel.Prompt.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             xmlns:views="using:FileHarvester.App.Views"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="640"
+             x:Class="FileHarvester.App.Views.PromptPage"
+             x:DataType="vm:MainWindowViewModel">
+
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding Prompt.NewPromptCommand}" />
+        <KeyBinding Gesture="Ctrl+F" Command="{Binding Prompt.FocusSearchCommand}" />
+        <KeyBinding Gesture="Ctrl+E" Command="{Binding Prompt.Viewer.ExportCommand}" />
+        <KeyBinding Gesture="Delete" Command="{Binding Prompt.Viewer.DeleteCommand}" />
+    </UserControl.KeyBindings>
+
+    <Grid Margin="12">
+        <Grid RowDefinitions="Auto,*">
+
+            <!-- SEARCH BAR ROW - filled at P2.8 -->
+            <Border Grid.Row="0"
+                    Margin="0,0,0,12"
+                    Background="{DynamicResource SurfaceSubtle}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusSm}"
+                    Padding="8,6">
+                <Grid ColumnDefinitions="2*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+                    <TextBox Grid.Column="0"
+                             x:Name="SearchTextBox"
+                             Text="{Binding Prompt.List.SearchText, Mode=TwoWay}"
+                             PlaceholderText="Search prompts..."
+                             FontSize="12"
+                             VerticalAlignment="Center" />
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding Prompt.List.ScopeOptions}"
+                              SelectedItem="{Binding Prompt.List.SearchScope, Mode=TwoWay}"
+                              MinWidth="140"
+                              FontSize="12"
+                              VerticalAlignment="Center" />
+                    <TextBox Grid.Column="2"
+                             Text="{Binding Prompt.List.SearchTags, Mode=TwoWay}"
+                             PlaceholderText="Tags (comma-separated)"
+                             MinWidth="160"
+                             FontSize="12"
+                             VerticalAlignment="Center" />
+                    <CheckBox Grid.Column="3"
+                              IsChecked="{Binding Prompt.List.FavoritesOnly, Mode=TwoWay}"
+                              Content="Favorites only"
+                              FontSize="12"
+                              VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <!-- TWO-PANE WORKSPACE -->
+            <Grid Grid.Row="1" ColumnSpacing="6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="{Binding Prompt.SidebarColumnWidth}" />
+                    <ColumnDefinition Width="6" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- LEFT PANE: SIDEBAR -->
+                <Border Grid.Column="0"
+                        IsVisible="{Binding Prompt.IsSidebarVisible}"
+                        Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="6">
+                    <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+                        <!-- Sidebar header: title and subtitle -->
+                        <StackPanel Grid.Row="0" Spacing="1" Margin="0,0,0,2">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0"
+                                           Text="Prompts"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                                <Button Grid.Column="1"
+                                        Content="&#x27E8;"
+                                        FontSize="14"
+                                        Width="28" Height="28"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        ToolTip.Tip="Hide sidebar"
+                                        AutomationProperties.Name="Hide sidebar"
+                                        Command="{Binding Prompt.ToggleSidebarCommand}" />
+                            </Grid>
+                            <TextBlock Text="Organize and browse your prompt library."
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
+
+                        <!-- Status message -->
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding Prompt.List.StatusText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,2,0,4"
+                                   Foreground="{DynamicResource TextSecondary}" />
+
+                        <views:PromptListPanel Grid.Row="2" DataContext="{Binding Prompt.List}" />
+
+                        <!-- Sidebar footer: New Prompt + Import + Trash buttons -->
+                        <Grid Grid.Row="3" ColumnDefinitions="*,*,*" ColumnSpacing="6" Margin="0,6,0,0">
+                            <Button Grid.Column="0"
+                                    Content="+ New Prompt"
+                                    Padding="12,6"
+                                    HorizontalAlignment="Stretch"
+                                    FontWeight="SemiBold"
+                                    Background="#2E9E5B"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    AutomationProperties.Name="Create new prompt"
+                                    Command="{Binding Prompt.NewPromptCommand}" />
+                            <Button Grid.Column="1"
+                                    Content="+ Import"
+                                    Padding="12,6"
+                                    HorizontalAlignment="Stretch"
+                                    FontWeight="SemiBold"
+                                    Background="#2D6CDF"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    AutomationProperties.Name="Import a file as a prompt"
+                                    Command="{Binding Prompt.ImportCommand}" />
+                            <Button Grid.Column="2"
+                                    Content="Trash"
+                                    Padding="12,6"
+                                    HorizontalAlignment="Stretch"
+                                    FontWeight="SemiBold"
+                                    Background="#C0392B"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    AutomationProperties.Name="Open the trash"
+                                    Command="{Binding Prompt.TrashCommand}" />
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- SPLITTER -->
+                <GridSplitter Grid.Column="1"
+                              IsVisible="{Binding Prompt.IsSidebarVisible}"
+                              Width="6"
+                              HorizontalAlignment="Stretch"
+                              Background="{DynamicResource BorderSubtle}"
+                              ShowsPreview="True" />
+
+                <!-- RIGHT PANE: VIEWER -->
+                <Border Grid.Column="2"
+                        Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="24">
+                    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
+
+                        <Button Grid.Row="0"
+                                Content="&#x27E9;"
+                                FontSize="14"
+                                Width="28" Height="28"
+                                Padding="0"
+                                HorizontalAlignment="Left"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{DynamicResource TextPrimary}"
+                                IsVisible="{Binding !Prompt.IsSidebarVisible}"
+                                ToolTip.Tip="Show sidebar"
+                                AutomationProperties.Name="Show sidebar"
+                                Command="{Binding Prompt.ToggleSidebarCommand}" />
+
+                        <StackPanel Grid.Row="1"
+                                    IsVisible="{Binding !Prompt.Viewer.HasSelection}"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"
+                                    Spacing="8"
+                                    MaxWidth="480"
+                                    Margin="0,40,0,0">
+                            <TextBlock Text="No prompt selected"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Text="Select a prompt from the list, or create one with the + New Prompt button."
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
+
+                        <Grid Grid.Row="1"
+                              IsVisible="{Binding Prompt.Viewer.HasSelection}"
+                              RowDefinitions="Auto,Auto,Auto,*"
+                              Margin="0,8,0,0">
+                            <TextBlock Grid.Row="0"
+                                       Text="{Binding Prompt.Viewer.SelectedTitle}"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Grid.Row="1"
+                                       Text="{Binding Prompt.Viewer.SelectedCategoryLabel}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       Margin="0,2,0,0" />
+                            <Border Grid.Row="2"
+                                    Height="1"
+                                    Background="{DynamicResource BorderSubtle}"
+                                    Margin="0,8,0,8" />
+                            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+                                <TextBlock Text="{Binding Prompt.Viewer.SelectedBody}"
+                                           TextWrapping="Wrap"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                            </ScrollViewer>
+                        </Grid>
+
+                        <Grid Grid.Row="4"
+                              ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto"
+                              ColumnSpacing="8"
+                              Margin="0,12,0,0">
+                            <Button Grid.Column="0"
+                                    Content="Copy"
+                                    Padding="10,6"
+                                    Background="#2D6CDF"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    IsEnabled="{Binding Prompt.Viewer.HasSelection}"
+                                    Command="{Binding Prompt.Viewer.CopyCommand}" />
+                            <Button Grid.Column="1"
+                                    Content="Edit"
+                                    Padding="10,6"
+                                    Background="#2D6CDF"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    IsEnabled="{Binding Prompt.Viewer.HasSelection}"
+                                    ToolTip.Tip="Edit this prompt"
+                                    Command="{Binding Prompt.Viewer.EditCommand}" />
+                            <Button Grid.Column="2"
+                                    Content="Export"
+                                    Padding="10,6"
+                                    Background="#2D6CDF"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    IsEnabled="{Binding Prompt.Viewer.HasSelection}"
+                                    ToolTip.Tip="Export this prompt"
+                                    Command="{Binding Prompt.Viewer.ExportCommand}" />
+                            <Button Grid.Column="3"
+                                    Content="Delete"
+                                    Padding="10,6"
+                                    Background="#C0392B"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    IsEnabled="{Binding Prompt.Viewer.HasSelection}"
+                                    Command="{Binding Prompt.Viewer.DeleteCommand}" />                            <Button Grid.Column="4"
+                                    Content="History"
+                                    Padding="10,6"
+                                    Background="#2D6CDF"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    IsEnabled="{Binding Prompt.Viewer.HasSelection}"
+                                    ToolTip.Tip="View version history"
+                                    Command="{Binding Prompt.Viewer.HistoryCommand}" />
+                            <Button Grid.Column="6"
+                                    Content="&#x2605;"
+                                    Padding="10,6"
+                                    FontSize="14"
+                                    Background="#7F8C8D"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    IsEnabled="{Binding Prompt.Viewer.HasSelection}"
+                                    IsVisible="{Binding Prompt.Viewer.IsFavorite}"
+                                    ToolTip.Tip="Remove from favorites"
+                                    Command="{Binding Prompt.Viewer.FavoriteCommand}" />
+                            <Button Grid.Column="6"
+                                    Content="&#x2606;"
+                                    Padding="10,6"
+                                    FontSize="14"
+                                    Background="#7F8C8D"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    IsEnabled="{Binding Prompt.Viewer.HasSelection}"
+                                    IsVisible="{Binding !Prompt.Viewer.IsFavorite}"
+                                    ToolTip.Tip="Add to favorites"
+                                    Command="{Binding Prompt.Viewer.FavoriteCommand}" />
+                                    <Button Grid.Column="7"
+                                            Content="?"
+                                            Padding="10,6"
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            Background="#7F8C8D"
+                                            Foreground="White"
+                                            CornerRadius="6"
+                                            ToolTip.Tip="Keyboard shortcuts"
+                                            AutomationProperties.Name="Keyboard shortcuts"
+                                            Command="{Binding Prompt.Viewer.ShortcutsCommand}" />
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

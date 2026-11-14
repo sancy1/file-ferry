@@ -22,10 +22,34 @@ namespace FileHarvester.Core.Composition;
 
 public static class ServiceCollectionExtensions
 {
+    // ------------------------------------------------------------------
+    // Backward-compatible overload. This signature predates CodeViewer
+    // and is preserved verbatim so existing compiled consumers keep
+    // binding. It delegates to the five-parameter overload below.
+    // ------------------------------------------------------------------
     public static IServiceCollection AddFileHarvester(
         this IServiceCollection services,
         ResilienceConfig config,
-        ILogSink? extraSink = null)
+        ILogSink? extraSink = null,
+        Action<ResilienceBuilder>? configureImageTextifyPolicies = null)
+        => services.AddFileHarvester(
+            config,
+            extraSink,
+            configureImageTextifyPolicies,
+            configureCodeViewerPolicies: null);
+
+    // ------------------------------------------------------------------
+    // Additive overload adding the CodeViewer policy callback. Each
+    // feature registers only the policies it owns through its own
+    // callback; the new parameter changes nothing for callers that do
+    // not supply it.
+    // ------------------------------------------------------------------
+    public static IServiceCollection AddFileHarvester(
+        this IServiceCollection services,
+        ResilienceConfig config,
+        ILogSink? extraSink,
+        Action<ResilienceBuilder>? configureImageTextifyPolicies,
+        Action<ResilienceBuilder>? configureCodeViewerPolicies)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(config);
@@ -218,6 +242,12 @@ public static class ServiceCollectionExtensions
                 "System.Security.SecurityException");
             r.ErrorClassification.PermanentExceptionTypeNames.Add(
                 "System.IO.PathTooLongException");
+
+            // Feature-owned resilience policies. Each feature registers
+            // only the policies it owns through its own callback.
+            configureImageTextifyPolicies?.Invoke(r);
+            configureCodeViewerPolicies?.Invoke(r);
+
         });
 
         // ---- Platform adapters --------------------------------------------

@@ -1,0 +1,106 @@
+=== ZIP VERIFY ===
+path: C:\Users\HP\AppData\Local\Temp\ffmpeg-master-latest-win64-lgpl.zip
+bytes: 175410920 (expected 175410920)
+sha256: 92E617D4D4291A7D808CB35F765AB32A11967DC759366F4ADAAEC1022CC3B152
+sha256 match: OK
+
+=== EXTRACT ===
+extract dir: C:\Users\HP\AppData\Local\Temp\ffmpeg-gate0
+ffmpeg.exe: C:\Users\HP\AppData\Local\Temp\ffmpeg-gate0\ffmpeg-master-latest-win64-lgpl\bin\ffmpeg.exe | 136160768 B
+ffprobe.exe: C:\Users\HP\AppData\Local\Temp\ffmpeg-gate0\ffmpeg-master-latest-win64-lgpl\bin\ffprobe.exe | 135944704 B
+license files found: 1
+  C:\Users\HP\AppData\Local\Temp\ffmpeg-gate0\ffmpeg-master-latest-win64-lgpl\LICENSE.txt
+
+=== ffmpeg -version (first 3 lines) ===
+ffmpeg version N-128691-gcc583787bb-20261108 Copyright (c) 2000-2026 the FFmpeg developers
+built with gcc 16.2.0 (crosstool-NG 1.29.0.36_fbb6372)
+configuration: --prefix=/ffbuild/prefix --pkg-config-flags=--static --pkg-config=pkg-config --cross-prefix=x86_64-w64-mingw32- --arch=x86_64 --target-os=mingw32 --enable-version3 --disable-debug --disable-w32threads --enable-pthreads --enable-iconv --enable-zlib --enable-libxml2 --enable-libvmaf --enable-fontconfig --enable-libharfbuzz --enable-libfreetype --enable-libfribidi --enable-lcms2 --enable-vulkan --enable-libdav1d --enable-libvorbis --enable-librav1e --enable-librsvg --disable-libxcb --disable-xlib --disable-libpulse --enable-gmp --enable-lzma --enable-liblcevc-dec --enable-opencl --enable-amf --enable-libaom --disable-avisynth --enable-chromaprint --disable-libdavs2 --disable-libdvdread --disable-libdvdnav --disable-libfdk-aac --enable-ffnvcodec --enable-cuda-llvm --disable-frei0r --enable-libgme --enable-libkvazaar --enable-libaribb24 --enable-libaribcaption --enable-libass --enable-libbluray --enable-libcurl --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-librist --enable-libssh --enable-libtheora --enable-libvpx --enable-libwebp --enable-libzmq --enable-lv2 --enable-libvpl --enable-openal --enable-liboapv --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenh264 --enable-libopenjpeg --enable-libopenmpt --disable-librubberband --enable-schannel --enable-sdl2 --enable-libsnappy --enable-libsoxr --enable-libsrt --enable-libsvtav1 --enable-libtwolame --enable-libuavs3d --disable-libdrm --enable-vaapi --enable-vapoursynth --disable-libvidstab --enable-libvvenc --disable-whisper --disable-libx264 --disable-libx265 --disable-libxavs2 --disable-libxvid --enable-libzimg --disable-libzvbi --extra-cflags=-DLIBTWOLAME_STATIC --extra-cxxflags= --extra-libs=-lgomp --extra-ldflags=-pthread --extra-ldexeflags= --cc=x86_64-w64-mingw32-gcc --cxx=x86_64-w64-mingw32-g++ --ar=x86_64-w64-mingw32-gcc-ar --ranlib=x86_64-w64-mingw32-gcc-ranlib --nm=x86_64-w64-mingw32-gcc-nm --extra-version=20261108
+
+=== license flags in ffmpeg -version output ===
+configuration: --prefix=/ffbuild/prefix --pkg-config-flags=--static --pkg-config=pkg-config --cross-prefix=x86_64-w64-mingw32- --arch=x86_64 --target-os=mingw32 --enable-version3 --disable-debug --disable-w32threads --enable-pthreads --enable-iconv --enable-zlib --enable-libxml2 --enable-libvmaf --enable-fontconfig --enable-libharfbuzz --enable-libfreetype --enable-libfribidi --enable-lcms2 --enable-vulkan --enable-libdav1d --enable-libvorbis --enable-librav1e --enable-librsvg --disable-libxcb --disable-xlib --disable-libpulse --enable-gmp --enable-lzma --enable-liblcevc-dec --enable-opencl --enable-amf --enable-libaom --disable-avisynth --enable-chromaprint --disable-libdavs2 --disable-libdvdread --disable-libdvdnav --disable-libfdk-aac --enable-ffnvcodec --enable-cuda-llvm --disable-frei0r --enable-libgme --enable-libkvazaar --enable-libaribb24 --enable-libaribcaption --enable-libass --enable-libbluray --enable-libcurl --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-librist --enable-libssh --enable-libtheora --enable-libvpx --enable-libwebp --enable-libzmq --enable-lv2 --enable-libvpl --enable-openal --enable-liboapv --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenh264 --enable-libopenjpeg --enable-libopenmpt --disable-librubberband --enable-schannel --enable-sdl2 --enable-libsnappy --enable-libsoxr --enable-libsrt --enable-libsvtav1 --enable-libtwolame --enable-libuavs3d --disable-libdrm --enable-vaapi --enable-vapoursynth --disable-libvidstab --enable-libvvenc --disable-whisper --disable-libx264 --disable-libx265 --disable-libxavs2 --disable-libxvid --enable-libzimg --disable-libzvbi --extra-cflags=-DLIBTWOLAME_STATIC --extra-cxxflags= --extra-libs=-lgomp --extra-ldflags=-pthread --extra-ldexeflags= --cc=x86_64-w64-mingw32-gcc --cxx=x86_64-w64-mingw32-g++ --ar=x86_64-w64-mingw32-gcc-ar --ranlib=x86_64-w64-mingw32-gcc-ranlib --nm=x86_64-w64-mingw32-gcc-nm --extra-version=20261108
+
+=== relevant decoders present ===
+V...BD flv                  FLV / Sorenson Spark / Sorenson H.263 (Flash Video) (codec flv1)
+VFS..D h264                 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10
+V....D h264_qsv             H264 video (Intel Quick Sync Video acceleration) (codec h264)
+V..... h264_amf             H264 AMD AMF video decoder (codec h264)
+V..... h264_cuvid           Nvidia CUVID H264 decoder (codec h264)
+VFS..D hevc                 HEVC (High Efficiency Video Coding)
+V....D hevc_qsv             HEVC video (Intel Quick Sync Video acceleration) (codec hevc)
+V..... hevc_amf             HEVC AMD AMF video decoder (codec hevc)
+V..... hevc_cuvid           Nvidia CUVID HEVC decoder (codec hevc)
+VF..BD mpeg4                MPEG-4 part 2
+V..... mpeg4_cuvid          Nvidia CUVID MPEG4 decoder (codec mpeg4)
+VFS..D vp8                  On2 VP8
+V....D libvpx               libvpx VP8 (codec vp8)
+V..... vp8_cuvid            Nvidia CUVID VP8 decoder (codec vp8)
+V....D vp8_qsv              VP8 video (Intel Quick Sync Video acceleration) (codec vp8)
+VFS..D vp9                  Google VP9
+V..... libvpx-vp9           libvpx VP9 (codec vp9)
+V..... vp9_amf              VP9 AMD AMF video decoder (codec vp9)
+V..... vp9_cuvid            Nvidia CUVID VP9 decoder (codec vp9)
+V....D vp9_qsv              VP9 video (Intel Quick Sync Video acceleration) (codec vp9)
+V...BD wmv2                 Windows Media Video 8
+A....D aac                  AAC (Advanced Audio Coding)
+A....D aac_fixed            AAC (Advanced Audio Coding) (codec aac)
+A....D aac_latm             AAC LATM (Advanced Audio Coding LATM syntax)
+A....D ac3                  ATSC A/52A (AC-3)
+A....D amrnb                AMR-NB (Adaptive Multi-Rate NarrowBand) (codec amr_nb)
+A....D amrwb                AMR-WB (Adaptive Multi-Rate WideBand) (codec amr_wb)
+AF...D flac                 FLAC (Free Lossless Audio Codec)
+A....D mp3float             MP3 (MPEG audio layer 3) (codec mp3)
+A....D mp3                  MP3 (MPEG audio layer 3)
+
+=== SYNTHETIC SOURCES ===
+work dir: C:\Users\HP\AppData\Local\Temp\gate0a_20261108171835
+vid gen: [vost#0:0 @ 0000019348b17d80] Unknown encoder 'libx264'
+vid gen: [vost#0:0 @ 0000019348b17d80] Error selecting an encoder
+vid gen: Error opening output file C:\Users\HP\AppData\Local\Temp\gate0a_20261108171835\src_video.mp4.
+vid gen: Error opening output files: Encoder not found
+src audio: OK 352878 B
+src video: MISSING (libx264 encode absent in LGPL build is expected; video tests below may still run via a pre-generated alternative)
+regenerating video source with mpeg4 (LGPL-safe) instead of libx264
+src video (mpeg4): OK 116791 B
+
+=== AUDIO FORMAT CONVERSION ===
+audio.mp3 -> OK 9200 B
+audio.wav -> OK 352878 B
+audio.m4a -> OK 31154 B
+audio.aac -> OK 30619 B
+audio.flac -> OK 33160 B
+audio.ogg -> OK 9749 B
+audio.wma -> OK 35744 B
+audio.amr -> OK 3238 B
+audio summary: 8 passed, 0 failed
+
+=== VIDEO CONTAINER CONVERSION ===
+video.mp4 -> OK 113329 B
+video.mov -> OK 113384 B
+video.mkv -> OK 102621 B
+video.avi -> OK 122988 B
+video.webm -> OK 34817 B
+video.wmv -> OK 144907 B
+video.flv -> OK 123097 B
+video.m4v -> OK 113289 B
+video summary: 8 passed, 0 failed
+
+=== DECODE TO 16 KHZ MONO PCM ===
+decode audio.aac -> OK 65388 B
+decode audio.amr -> OK 64640 B
+decode audio.flac -> OK 64000 B
+decode audio.m4a -> OK 64000 B
+decode audio.mp3 -> OK 64000 B
+decode audio.ogg -> OK 64000 B
+decode audio.wav -> OK 64000 B
+decode audio.wma -> OK 63902 B
+decode src_audio.wav -> OK 64000 B
+decode src_video.mp4 -> OK 64000 B
+decode video.avi -> OK 65202 B
+decode video.flv -> OK 65202 B
+decode video.m4v -> OK 64000 B
+decode video.mkv -> OK 64000 B
+decode video.mov -> OK 64000 B
+decode video.mp4 -> OK 64000 B
+decode video.webm -> OK 64000 B
+decode video.wmv -> OK 63902 B
+decode summary: 18 passed, 0 failed

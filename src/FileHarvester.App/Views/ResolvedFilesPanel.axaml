@@ -35,16 +35,19 @@ RELATION: Bound to ResolvedFilesPanelViewModel. Embedded in MainWindow.axaml.
 
                 <Button Grid.Column="1" Name="ResolveButton" Content="Resolve"
                         FontSize="12" Padding="12,4" Margin="0,0,6,0"
+                        Background="#2E9E5B" Foreground="White" CornerRadius="8"
                         VerticalAlignment="Center"
                         Command="{Binding ResolveCommand}" />
 
                 <Button Grid.Column="2" Name="CancelButton" Content="Cancel"
                         FontSize="12" Padding="12,4" Margin="0,0,6,0"
+                        Background="#7F8C8D" Foreground="White" CornerRadius="8"
                         VerticalAlignment="Center"
                         Command="{Binding CancelCommand}" />
 
                 <Button Grid.Column="3" Name="ClearButton" Content="Clear"
                         FontSize="12" Padding="12,4"
+                        Background="#C0392B" Foreground="White" CornerRadius="8"
                         VerticalAlignment="Center"
                         Command="{Binding ClearCommand}" />
             </Grid>

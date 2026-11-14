@@ -1,0 +1,71 @@
+// filepath: src/ImageTextify.Platform/Extraction/PdfPigPdfTextExtractor.cs
+// layer:    Infrastructure
+// module:   ImageTextify.Platform.Extraction
+// since:    Phase 2.6-PDF-1
+// purpose:  PdfPig-backed implementation of IPdfTextExtractor for the
+//           digital-PDF path. Opens the PDF, walks each requested page,
+//           and reads the text layer in reading order. Does not OCR
+//           scanned pages; a page with no text layer comes back empty and
+//           the caller reports that as a visible failure.
+// RELATION: Implements IPdfTextExtractor (ImageTextify.Core.Abstractions).
+//           Registered in AddImageTextify. Consumed by
+//           ImageTextifyViewModel.ExtractAllAsync for the Pdf category.
+// NOTES:    - Uses ContentOrderTextExtractor (reading order), not page.Text
+//             (content-stream order). Same choice as Prompt.Platform's
+//             PdfPigTextExtractor, which is a separate implementation for
+//             a different interface and is not reused here.
+//           - WasOcred is always false in this phase: no OCR runs on PDF
+//             pages. Scanned-PDF OCR is a later phase with its own
+//             renderer dependency.
+//           - The caller owns the stream; this class does not dispose it.
+//             The PdfPig document is disposed.
+//           - Encryption and malformed-PDF exceptions are not mapped here;
+//             they propagate and the caller turns them into a failed row.
+//             PdfEncryptedException is defined in the contract for a later
+//             phase that verifies PdfPig's exact encryption exception type.
+// ============================================================================
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using ImageTextify.Core.Abstractions;
+using UglyToad.PdfPig;
+using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
+
+namespace ImageTextify.Platform.Extraction;
+
+/// <summary>
+/// Extracts the embedded text layer from a digital PDF.
+/// </summary>
+public sealed class PdfPigPdfTextExtractor : IPdfTextExtractor
+{
+    /// <inheritdoc/>
+    public Task<PdfTextResult> ExtractAsync(
+        Stream pdfStream,
+        PdfExtractionOptions options,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(pdfStream);
+        ArgumentNullException.ThrowIfNull(options);
+
+        // PdfPig reads the stream synchronously; run it off the caller's
+        // async context, matching Prompt.Platform's extractor and keeping
+        // the UI thread free during multi-page extraction.
+        return Task.Run(() =>
+        {
+            using var document = PdfDocument.Open(pdfStream);
+            var pages = new List<PdfPageText>();
+            var wanted = options.PageIndexes;
+            foreach (var page in document.GetPages())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (wanted is not null && !wanted.Contains(page.Number - 1)) continue;
+                var text = ContentOrderTextExtractor.GetText(page) ?? string.Empty;
+                pages.Add(new PdfPageText(page.Number - 1, text, WasOcred: false));
+            }
+            return new PdfTextResult(pages);
+        }, cancellationToken);
+    }
+}

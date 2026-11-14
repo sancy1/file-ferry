@@ -1,0 +1,327 @@
+<!--
+FILE:     src/FileHarvester.App/Views/ConversionPage.axaml
+PURPOSE:  The document/image conversion workspace page. Two-pane layout:
+          left = input picker, target format, Convert/Reset. right = status,
+          result path, and (for image targets) a preview. Back button at
+          top-left. The right pane fills available width; the left is fixed
+          so the form stays legible on narrow windows.
+RELATION: Selected by MainWindowViewModel.CurrentPage through the page host.
+          Bindings go through MainWindowViewModel.Conversion. Compile bindings
+          are OFF in this initial shell (the Conversion property is added in
+          the next step) and are turned back ON in the next edit.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="640"
+             x:Class="FileHarvester.App.Views.ConversionPage"
+             x:DataType="vm:MainWindowViewModel"
+             >
+
+    <Grid Margin="12">
+        <Grid ColumnDefinitions="400,6,*">
+
+            <!-- LEFT PANE: FORM -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SurfaceRaised}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusMd}"
+                    Padding="16">
+                <Grid RowDefinitions="*,Auto">
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="12">
+
+                        <Button Content="&#x2190; Back to ImageTextify"
+                                HorizontalAlignment="Left"
+                                Padding="8,4"
+                                FontSize="11"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{DynamicResource TextSecondary}"
+                                ToolTip.Tip="Return to the ImageTextify workspace"
+                                AutomationProperties.Name="Back to ImageTextify"
+                                Command="{Binding OpenImageTextifyCommand}" />
+
+                        <TextBlock Text="Convert"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="Convert an image between PNG, JPG, JPEG, WEBP, ICO, and GIF — or convert Markdown/Word/JSON/CSV/PDF."
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}" />
+
+                        <Separator Background="{DynamicResource BorderSubtle}" Height="1" />
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Input file"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextSecondary}" />
+                            <Button Content="Choose file…"
+                                    Padding="12,6"
+                                    Foreground="White"
+                                    Background="#2D6CDF"
+                                    CornerRadius="6"
+                                    Command="{Binding Conversion.SelectFileCommand}"
+                                    AutomationProperties.Name="Choose input file"
+                                    ToolTip.Tip="Open a file to convert" />
+                            <TextBlock Text="{Binding Conversion.InputPath, FallbackValue='No file selected.'}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Target format"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextSecondary}" />
+                            <ComboBox HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding Conversion.SupportedFormats}"
+                                      SelectedItem="{Binding Conversion.TargetFormat, Mode=TwoWay}"
+                                      AutomationProperties.Name="Target format" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Convert"
+                                    Padding="12,6"
+                                    FontWeight="SemiBold"
+                                    Foreground="White"
+                                    Background="#2E9E5B"
+                                    CornerRadius="6"
+                                    Command="{Binding Conversion.ConvertCommand}"
+                                    AutomationProperties.Name="Convert file" />
+                            <Button Content="Reset"
+                                    Padding="12,6"
+                                    Foreground="White"
+                                    Background="#C0392B"
+                                    CornerRadius="6"
+                                    Command="{Binding Conversion.ResetCommand}"
+                                    AutomationProperties.Name="Reset conversion" />
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding Conversion.StatusText, FallbackValue='Choose an input file and a target format.'}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,6,0,0"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- STATUS BANNER -->
+                <Border Grid.Row="1"
+                        Margin="0,14,0,0"
+                        Padding="12,10"
+                        CornerRadius="8"
+                        Background="{DynamicResource SurfaceSubtle}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        IsVisible="{Binding Conversion.HasInput}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="4"
+                                CornerRadius="2"
+                                Background="#2D6CDF"
+                                VerticalAlignment="Stretch" />
+                        <TextBlock Text="{Binding Conversion.StatusText}"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                    </StackPanel>
+                </Border>
+                </Grid>
+            </Border>
+
+            <!-- SPLITTER -->
+            <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch"
+                          Background="{DynamicResource BorderSubtle}" ShowsPreview="True" />
+
+            <!-- RIGHT PANE: PREVIEW (ORIGINAL | CONVERTED) -->
+            <Border Grid.Column="2"
+                    Background="{DynamicResource SurfaceRaised}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusMd}"
+                    Padding="24">
+                <Grid RowDefinitions="Auto,*">
+
+                    <TextBlock Grid.Row="0" Text="Preview"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,14"
+                               Foreground="{DynamicResource TextPrimary}" />
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*,12,*">
+
+                        <!-- ORIGINAL CARD -->
+                        <Border Grid.Column="0"
+                                Background="{DynamicResource SurfaceSubtle}"
+                                BorderBrush="{DynamicResource BorderSubtle}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource RadiusMd}">
+                            <Grid RowDefinitions="Auto,*">
+                                <Border Grid.Row="0" Padding="14,10"
+                                        BorderBrush="{DynamicResource BorderSubtle}"
+                                        BorderThickness="0,0,0,1">
+                                    <StackPanel>
+                                        <TextBlock Text="Original"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock Text="{Binding Conversion.InputFileName, FallbackValue='No file selected'}"
+                                                   FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                </Border>
+                                <Grid Grid.Row="1">
+                                    <!-- empty state -->
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                Spacing="6" IsVisible="{Binding !Conversion.HasInput}">
+                                        <TextBlock Text="No file selected"
+                                                   FontSize="12"
+                                                   TextAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                    <!-- image preview -->
+                                    <Image x:Name="InputPreviewImage"
+                                           Grid.Row="1"
+                                           Stretch="Uniform"
+                                           Margin="16"
+                                           IsVisible="{Binding Conversion.IsInputImage}" />
+                                    <!-- document card (binary formats) -->
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                Spacing="10" Margin="16"
+                                                IsVisible="{Binding Conversion.IsInputBinaryDocument}">
+                                        <Border Width="72" Height="72" CornerRadius="10"
+                                                Background="#2D6CDF"
+                                                HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding Conversion.InputExtension, StringFormat={}{0}}"
+                                                       FontSize="13"
+                                                       FontWeight="Bold"
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="{Binding Conversion.InputFileName}"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock Text="Document preview"
+                                                   FontSize="11"
+                                                   TextAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                    <!-- text content preview -->
+                                    <Border Grid.Row="1" Margin="8"
+                                            Background="{DynamicResource SurfaceRaised}"
+                                            BorderBrush="{DynamicResource BorderSubtle}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            IsVisible="{Binding Conversion.IsInputText}">
+                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                                      VerticalScrollBarVisibility="Auto">
+                                            <TextBlock Text="{Binding Conversion.InputTextPreview}"
+                                                       FontFamily="Consolas, Courier New, monospace"
+                                                       FontSize="11"
+                                                       TextWrapping="NoWrap"
+                                                       Margin="10"
+                                                       Foreground="{DynamicResource TextPrimary}" />
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <!-- CONVERTED CARD -->
+                        <Border Grid.Column="2"
+                                Background="{DynamicResource SurfaceSubtle}"
+                                BorderBrush="{DynamicResource BorderSubtle}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource RadiusMd}">
+                            <Grid RowDefinitions="Auto,*">
+                                <Border Grid.Row="0" Padding="14,10"
+                                        BorderBrush="{DynamicResource BorderSubtle}"
+                                        BorderThickness="0,0,0,1">
+                                    <StackPanel>
+                                        <TextBlock Text="Converted"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock Text="{Binding Conversion.OutputFileName, FallbackValue='Nothing converted yet'}"
+                                                   FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                </Border>
+                                <Grid Grid.Row="1">
+                                    <!-- empty state -->
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                Spacing="6" IsVisible="{Binding !Conversion.HasResult}">
+                                        <TextBlock Text="No result yet"
+                                                   FontSize="12"
+                                                   TextAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                    <!-- image preview -->
+                                    <Image x:Name="OutputPreviewImage"
+                                           Grid.Row="1"
+                                           Stretch="Uniform"
+                                           Margin="16"
+                                           IsVisible="{Binding Conversion.IsOutputImage}" />
+                                    <!-- document card (binary formats) -->
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                Spacing="10" Margin="16"
+                                                IsVisible="{Binding Conversion.IsOutputBinaryDocument}">
+                                        <Border Width="72" Height="72" CornerRadius="10"
+                                                Background="#2E9E5B"
+                                                HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding Conversion.OutputExtension, StringFormat={}{0}}"
+                                                       FontSize="13"
+                                                       FontWeight="Bold"
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="{Binding Conversion.OutputFileName}"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock Text="Conversion complete"
+                                                   FontSize="11"
+                                                   TextAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                    <!-- text content preview -->
+                                    <Border Grid.Row="1" Margin="8"
+                                            Background="{DynamicResource SurfaceRaised}"
+                                            BorderBrush="{DynamicResource BorderSubtle}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            IsVisible="{Binding Conversion.IsOutputText}">
+                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                                      VerticalScrollBarVisibility="Auto">
+                                            <TextBlock Text="{Binding Conversion.OutputTextPreview}"
+                                                       FontFamily="Consolas, Courier New, monospace"
+                                                       FontSize="11"
+                                                       TextWrapping="NoWrap"
+                                                       Margin="10"
+                                                       Foreground="{DynamicResource TextPrimary}" />
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

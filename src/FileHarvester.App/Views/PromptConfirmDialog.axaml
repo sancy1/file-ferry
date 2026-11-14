@@ -1,0 +1,33 @@
+<!--
+FILE:     src/FileHarvester.App/Views/PromptConfirmDialog.axaml
+PURPOSE:  A simple yes/no confirmation dialog. The title and message come
+          from PromptConfirmDialogViewModel; the Yes/No buttons close the
+          window with true/false.
+RELATION: Created by PromptTrashDialog.axaml.cs's OnEmptyTrashClicked (the
+          Empty Trash confirmation). Bound to PromptConfirmDialogViewModel.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        mc:Ignorable="d"
+        d:DesignWidth="420" d:DesignHeight="200"
+        x:Class="FileHarvester.App.Views.PromptConfirmDialog"
+        x:DataType="vm:PromptConfirmDialogViewModel"
+        Title="{Binding Title}"
+        Width="420" Height="200"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource SurfaceRaised}">
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Message}"
+                   FontSize="12"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource TextPrimary}" />
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,12,0,0">
+            <Button Grid.Column="1" Content="No" Padding="12,6" Click="OnNoClicked" />
+            <Button Grid.Column="2" Content="Yes" Padding="12,6" FontWeight="SemiBold" Click="OnYesClicked" />
+        </Grid>
+    </Grid>
+</Window>

@@ -12,8 +12,12 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Avalonia.Headless" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Whisper.net" />
+    <PackageReference Include="Whisper.net.Runtime" />
+    <PackageReference Include="Whisper.net.Runtime.NoAvx" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +30,12 @@
     <ProjectReference Include="..\FileHarvester.App\FileHarvester.App.csproj" />
     <ProjectReference Include="..\SchemaLence.Core\SchemaLence.Core.csproj" />
     <ProjectReference Include="..\SchemaLence.Platform\SchemaLence.Platform.csproj" />
+    <ProjectReference Include="..\ImageTextify.Core\ImageTextify.Core.csproj" />
+    <ProjectReference Include="..\ImageTextify.Platform\ImageTextify.Platform.csproj" />
+    <ProjectReference Include="..\Prompt.Core\Prompt.Core.csproj" />
+    <ProjectReference Include="..\Prompt.Platform\Prompt.Platform.csproj" />
+    <ProjectReference Include="..\CodeViewer.Core\CodeViewer.Core.csproj" />
+    <ProjectReference Include="..\CodeViewer.Platform\CodeViewer.Platform.csproj" />
   </ItemGroup>
 
 </Project>

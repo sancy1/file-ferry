@@ -1,0 +1,186 @@
+<!--
+FILE:     src/FileHarvester.App/Views/ManageExclusionsDialog.axaml
+PURPOSE:  Modal Manage Exclusions dialog. Left column: manual entry (name
+          TextBox, kind ComboBox, Add button) and picker buttons. Right
+          column: current rules list. Bottom: Cancel / Save & Apply.
+RELATION: DataContext is ManageExclusionsViewModel. Opened by
+          CodeViewerPage.OnManageExclusionsClicked.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        xmlns:cv="using:CodeViewer.Core.Domain"
+        mc:Ignorable="d"
+        x:Class="FileHarvester.App.Views.ManageExclusionsDialog"
+        x:DataType="vm:ManageExclusionsViewModel"
+        Title="Manage Exclusions"
+        Width="820" Height="560"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource SurfaceRaised}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,12">
+            <TextBlock Text="Manage Exclusions"
+                       FontSize="18" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Text="Items listed here never appear in any CodeViewer project browser."
+                       FontSize="12"
+                       Foreground="{DynamicResource TextSecondary}" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,12,*">
+
+            <StackPanel Grid.Column="0" Spacing="12">
+
+                <Border Background="{DynamicResource SurfaceSubtle}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusSm}"
+                        Padding="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Add an exclusion"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding NewName, Mode=TwoWay}"
+                                     PlaceholderText="Name (e.g. node_modules, README.md)"
+                                     FontSize="12" />
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding Kinds}"
+                                      SelectedItem="{Binding NewKind, Mode=TwoWay}"
+                                      MinWidth="100"
+                                      FontSize="12" />
+                        </Grid>
+
+                        <Button Content="Add"
+                                Padding="12,4"
+                                FontSize="12"
+                                HorizontalAlignment="Left"
+                                Command="{Binding AddManualCommand}" />
+
+                        <TextBlock Text="{Binding StatusText}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{DynamicResource SurfaceSubtle}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusSm}"
+                        Padding="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Select from your PC"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <Button Grid.Column="0"
+                                    Name="AddFoldersButton"
+                                    Content="Add Folder(s)…"
+                                    Padding="12,6"
+                                    FontSize="12"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center" />
+                            <Button Grid.Column="1"
+                                    Name="AddFilesButton"
+                                    Content="Add File(s)…"
+                                    Padding="12,6"
+                                    FontSize="12"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center" />
+                        </Grid>
+
+                        <TextBlock Text="Only the selected item's name is added. No files are copied."
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <Border Grid.Column="2"
+                    Background="{DynamicResource SurfaceSubtle}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusSm}"
+                    Padding="12">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0"
+                               Text="Current exclusions"
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}"
+                               Margin="0,0,0,8" />
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding Rules}"
+                             Background="Transparent"
+                             BorderThickness="0">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="Padding" Value="0,2" />
+                                <Setter Property="MinHeight" Value="0" />
+                            </Style>
+                        </ListBox.Styles>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="cv:ExclusionRule">
+                                <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Kind}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               Width="52"
+                                               VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Width="1"
+                                            Background="{DynamicResource BorderSubtle}"
+                                            Margin="0,2" />
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Name}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextPrimary}"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <Button Grid.Column="3"
+                                            Content="X"
+                                            FontSize="10"
+                                            Padding="6,0"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Command="{Binding $parent[ListBox].((vm:ManageExclusionsViewModel)DataContext).RemoveCommand}"
+                                            CommandParameter="{Binding}"
+                                            AutomationProperties.Name="Remove exclusion" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,12,0,0" ColumnSpacing="8">
+            <TextBlock Grid.Column="0"
+                       Text="Saved rules also apply automatically to projects opened in the future."
+                       FontSize="11"
+                       Foreground="{DynamicResource TextSecondary}"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap" />
+            <Button Grid.Column="1"
+                    Name="CancelButton"
+                    Content="Cancel"
+                    Padding="16,6"
+                    FontSize="12" />
+            <Button Grid.Column="2"
+                    Name="SaveButton"
+                    Content="Save &amp; Apply"
+                    Padding="16,6"
+                    FontSize="12" />
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,128 @@
+// filepath: src/ImageTextify.Platform/Extraction/PdfPigPdfTextExtractor.cs
+// layer:    Infrastructure
+// module:   ImageTextify.Platform.Extraction
+// since:    Phase 2.6-PDF-1
+// purpose:  PdfPig-backed implementation of IPdfTextExtractor for the
+//           digital-PDF path. Reconstructs page text from word positions
+//           so line breaks, word spacing, and paragraph gaps are
+//           preserved, instead of using the content-order extractor which
+//           normalizes whitespace.
+// RELATION: Implements IPdfTextExtractor (ImageTextify.Core.Abstractions).
+//           Registered in AddImageTextify. Consumed by
+//           ImageTextifyViewModel.ExtractAllAsync for the Pdf category.
+// NOTES:    - Groups words into lines by vertical position, joins words
+//             within a line with a single space, joins lines with a newline,
+//             and inserts a blank line where the vertical gap between lines
+//             exceeds a paragraph threshold.
+//           - Word spacing that the PDF encodes inside a single word run is
+//             not recoverable; PdfPig exposes one Word.Text per glyph run.
+//             Tabs and column alignment are not restored.
+//           - WasOcred is always false in this phase: no OCR runs on PDF
+//             pages.
+//           - The caller owns the stream; this class does not dispose it.
+//             The PdfPig document is disposed.
+//           - Encryption and malformed-PDF exceptions are not mapped here;
+//             they propagate and the caller turns them into a failed row.
+// ============================================================================
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using ImageTextify.Core.Abstractions;
+using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
+
+namespace ImageTextify.Platform.Extraction;
+
+/// <summary>
+/// Extracts the embedded text layer from a digital PDF, preserving line
+/// breaks, word spacing, and paragraph gaps by reconstructing text from
+/// word positions.
+/// </summary>
+public sealed class PdfPigPdfTextExtractor : IPdfTextExtractor
+{
+    /// <inheritdoc/>
+    public Task<PdfTextResult> ExtractAsync(
+        Stream pdfStream,
+        PdfExtractionOptions options,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(pdfStream);
+        ArgumentNullException.ThrowIfNull(options);
+
+        return Task.Run(() =>
+        {
+            using var document = PdfDocument.Open(pdfStream);
+            var pages = new List<PdfPageText>();
+            var wanted = options.PageIndexes;
+            foreach (var page in document.GetPages())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (wanted is not null && !wanted.Contains(page.Number - 1)) continue;
+                var text = BuildPageText(page);
+                pages.Add(new PdfPageText(page.Number - 1, text, WasOcred: false));
+            }
+            return new PdfTextResult(pages);
+        }, cancellationToken);
+    }
+
+    /// <summary>
+    /// Reconstructs a page's text from its words and their positions.
+    /// </summary>
+    private static string BuildPageText(Page page)
+    {
+        var words = page.GetWords().ToList();
+        if (words.Count == 0) return string.Empty;
+
+        // Group by vertical band. PDF Y increases upward, so larger Bottom
+        // is higher on the page; sort top-down. A word joins the current
+        // line when its Bottom is within half its height of the line Bottom.
+        var sorted = words.OrderByDescending(w => w.BoundingBox.Bottom).ToList();
+        var lines = new List<List<Word>>();
+        var current = new List<Word> { sorted[0] };
+        var currentBottom = sorted[0].BoundingBox.Bottom;
+        for (var i = 1; i < sorted.Count; i++)
+        {
+            var w = sorted[i];
+            var h = Math.Max(w.BoundingBox.Height, 1.0);
+            if (Math.Abs(w.BoundingBox.Bottom - currentBottom) <= h * 0.5)
+            {
+                current.Add(w);
+            }
+            else
+            {
+                lines.Add(current);
+                current = new List<Word> { w };
+                currentBottom = w.BoundingBox.Bottom;
+            }
+        }
+        lines.Add(current);
+
+        // Median line height sets the paragraph-gap threshold.
+        var heights = lines.Select(l => l.Max(w => w.BoundingBox.Height)).OrderBy(x => x).ToList();
+        var medianHeight = heights[heights.Count / 2];
+        if (medianHeight <= 0) medianHeight = 10.0;
+        var paragraphGap = medianHeight * 1.6;
+
+        var sb = new StringBuilder();
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var line = lines[i].OrderBy(w => w.BoundingBox.Left).ToList();
+            for (var k = 0; k < line.Count; k++)
+            {
+                if (k > 0) sb.Append(' ');
+                sb.Append(line[k].Text);
+            }
+            if (i < lines.Count - 1)
+            {
+                var gap = lines[i][0].BoundingBox.Bottom - lines[i + 1][0].BoundingBox.Bottom;
+                sb.Append('\n');
+                if (gap > paragraphGap) sb.Append('\n');
+            }
+        }
+        return sb.ToString();
+    }
+}

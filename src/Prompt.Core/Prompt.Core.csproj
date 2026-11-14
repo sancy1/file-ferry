@@ -1,0 +1,23 @@
+<!--
+FILE:     src/Prompt.Core/Prompt.Core.csproj
+PURPOSE:  Prompt App domain layer: prompt, category and version models,
+          the store/export/import interfaces, and the ComposedDocument
+          adapter. Reuses the FileHarvester.Core format-writer contracts.
+RELATION: Registered in FileHarvester.slnx. Referenced by Prompt.Platform
+          and FileHarvester.Tests. Consumes FileHarvester.Core domain types
+          (IFormatWriter, ComposedDocument, FileContent, IOverwriteConfirmer)
+          without ever modifying them.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FileHarvester.Core\FileHarvester.Core.csproj" />
+  </ItemGroup>
+
+</Project>

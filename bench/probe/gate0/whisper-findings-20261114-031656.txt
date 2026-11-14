@@ -1,0 +1,27 @@
+=== SYNTHETIC WAV ===
+path: C:\Users\HP\AppData\Local\Temp\gate0_synthetic_8bdc688ea8124bb3a8dd230f532f2813.wav
+bytes: 160044
+
+=== BUILDER METHOD DISCOVERY ===
+WhisperFactory methods: CreateBuilder, Dispose, Equals, FromBuffer, FromPath, GetHashCode, GetRuntimeInfo, GetSupportedLanguages, GetType, ToString
+WhisperProcessorBuilder methods: Build, Equals, GetHashCode, GetType, SplitOnWord, ToString, WithAudioContextSize, WithBeamSearchSamplingStrategy, WithCarryInitialPrompt, WithDuration, WithEncoderBeginHandler, WithEntropyThreshold, WithGreedySamplingStrategy, WithLanguage, WithLanguageDetection, WithLengthPenalty, WithLogProbThreshold, WithMaxInitialTs, WithMaxLastTextTokens, WithMaxSegmentLength, WithMaxTokensPerSegment, WithNoContext, WithNoSpeechThreshold, WithOffset, WithOpenVinoEncoder, WithPrintProgress, WithPrintResults, WithPrintSpecialTokens, WithPrintTimestamps, WithProbabilities, WithProgressHandler, WithPrompt, WithSegmentEventHandler, WithSingleSegment, WithStringPool, WithSuppressRegex, WithTemperature, WithTemperatureInc, WithThreads, WithTokenTimestamps, WithTokenTimestampsSumThreshold, WithTokenTimestampsThreshold, WithTranslate, WithoutStringPool, WithoutSuppressBlank
+
+=== WHISPER MODEL DOWNLOAD (small) ===
+whisper model: C:\Users\HP\AppData\Local\Temp\gate0_whisper_small.ggml
+whisper model bytes: 185551186
+
+=== SILERO VAD MODEL DOWNLOAD ===
+vad model: C:\Users\HP\AppData\Local\Temp\gate0_silero_vad.ggml
+vad model bytes: 885098
+
+=== TRANSCRIPTION (small) + SEGMENT FIELDS ===
+TRANSCRIPTION FAILED: WhisperModelLoadException: Failed to load the whisper model.
+
+=== SILERO VAD REGIONS ===
+regions: 0
+
+=== RUNTIME SELECTION ===
+RuntimeLibraryOrder: Cuda, Cuda12, Vulkan, CoreML, OpenVino, Cpu, CpuNoAvx
+
+=== RTF (small, 5s clip, CPU) ===
+RTF FAILED: WhisperModelLoadException: Failed to load the whisper model.

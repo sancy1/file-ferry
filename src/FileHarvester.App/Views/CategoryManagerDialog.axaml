@@ -1,0 +1,182 @@
+<!--
+FILE:     src/FileHarvester.App/Views/CategoryManagerDialog.axaml
+PURPOSE:  The category manager dialog. Two panes: categories on the left,
+          sub-categories of the selected category on the right. Create,
+          reorder, delete. The delete's P1.2 cascade moves prompts to
+          uncategorized.
+RELATION: Opened by PromptPage.axaml.cs when the sidebar's Manage button is
+          clicked. Bound to CategoryManagerViewModel. The rename editor
+          (TextBox + Save + Cancel) is visible only while IsRenaming is
+          true.
+          clicked. Bound to CategoryManagerViewModel.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        xmlns:domain="using:Prompt.Core.Domain"
+        mc:Ignorable="d"
+        d:DesignWidth="720" d:DesignHeight="480"
+        x:Class="FileHarvester.App.Views.CategoryManagerDialog"
+        x:DataType="vm:CategoryManagerViewModel"
+        Title="Manage Categories"
+        Width="720" Height="480"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource SurfaceRaised}">
+
+    <Window.Styles>
+        <!-- F-272: the sidebar's ListBoxItem density. The dialog's two
+             ListBoxes inherit Padding=0,1 and MinHeight=0 (the default
+             ListBoxItem padding/MinHeight is the wide vertical gap the
+             user reported). The scope is this Window; no leak to other
+             windows. -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0,1" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="*,Auto,Auto" Margin="12">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,8,*">
+
+            <!-- LEFT: CATEGORIES -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SurfaceSubtle}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusSm}"
+                    Padding="6">
+                <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="2">
+                    <TextBlock Grid.Row="0" Text="Categories"
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}" />
+
+                    <ListBox Grid.Row="1" Margin="0,4,0,0"
+                             ItemsSource="{Binding Categories}"
+                             SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                             AutomationProperties.Name="Categories">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="domain:Category">
+                                <TextBlock Text="{Binding Name}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding NewCategoryName, Mode=TwoWay}"
+                                 PlaceholderText="New category name"
+                                 FontSize="12" />
+                        <Button Grid.Column="1"
+                                Content="+ New"
+                                Padding="8,4"
+                                Command="{Binding CreateCategoryCommand}" />
+                    </Grid>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="4">
+                        <Button Grid.Column="0" Content="Rename" Padding="8,4" Command="{Binding RenameCategoryCommand}" />
+                        <Button Grid.Column="1" Content="Delete" Padding="8,4" Command="{Binding DeleteCategoryCommand}" />
+                        <Button Grid.Column="2" Content="&#x25B2;" Padding="8,4" Command="{Binding MoveCategoryUpCommand}" ToolTip.Tip="Move up" />
+                        <Button Grid.Column="3" Content="&#x25BC;" Padding="8,4" Command="{Binding MoveCategoryDownCommand}" ToolTip.Tip="Move down" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- SPLITTER -->
+            <GridSplitter Grid.Column="1" Width="8" Background="Transparent" />
+
+            <!-- RIGHT: SUB-CATEGORIES -->
+            <Border Grid.Column="2"
+                    Background="{DynamicResource SurfaceSubtle}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusSm}"
+                    Padding="6">
+                <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="2">
+                    <TextBlock Grid.Row="0" Text="Sub-categories"
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}" />
+
+                    <ListBox Grid.Row="1" Margin="0,4,0,0"
+                             ItemsSource="{Binding SubCategories}"
+                             SelectedItem="{Binding SelectedSubCategory, Mode=TwoWay}"
+                             AutomationProperties.Name="Sub-categories">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="domain:SubCategory">
+                                <TextBlock Text="{Binding Name}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding NewSubCategoryName, Mode=TwoWay}"
+                                 PlaceholderText="New sub-category name"
+                                 FontSize="12" />
+                        <Button Grid.Column="1"
+                                Content="+ New"
+                                Padding="8,4"
+                                Command="{Binding CreateSubCategoryCommand}" />
+                    </Grid>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="4">
+                        <Button Grid.Column="0" Content="Rename" Padding="8,4" Command="{Binding RenameSubCategoryCommand}" />
+                        <Button Grid.Column="1" Content="Delete" Padding="8,4" Command="{Binding DeleteSubCategoryCommand}" />
+                        <Button Grid.Column="2" Content="&#x25B2;" Padding="8,4" Command="{Binding MoveSubCategoryUpCommand}" ToolTip.Tip="Move up" />
+                        <Button Grid.Column="3" Content="&#x25BC;" Padding="8,4" Command="{Binding MoveSubCategoryDownCommand}" ToolTip.Tip="Move down" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- RENAME EDITOR: visible only while IsRenaming is true -->
+        <Border Grid.Row="1"
+                IsVisible="{Binding IsRenaming}"
+                Background="{DynamicResource SurfaceSubtle}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusSm}"
+                Padding="8"
+                Margin="0,4,0,0">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
+                <TextBlock Grid.Column="0"
+                           Text="New name:"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextPrimary}" />
+                <TextBox Grid.Column="1"
+                         Text="{Binding RenameName, Mode=TwoWay}"
+                         PlaceholderText="New name"
+                         FontSize="12" />
+                <Button Grid.Column="2"
+                        Content="Save"
+                        Padding="12,4"
+                        Command="{Binding SaveRenameCommand}" />
+                <Button Grid.Column="3"
+                        Content="Cancel"
+                        Padding="12,4"
+                        Command="{Binding CancelRenameCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- BOTTOM: STATUS + CLOSE -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,4,0,0">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding StatusText}"
+                       FontSize="11"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextSecondary}" />
+            <Button Grid.Column="1"
+                    Content="Close"
+                    Padding="12,6"
+                    Command="{Binding CloseCommand}" />
+        </Grid>
+    </Grid>
+</Window>

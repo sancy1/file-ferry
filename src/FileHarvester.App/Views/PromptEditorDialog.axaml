@@ -1,0 +1,79 @@
+<!--
+FILE:     src/FileHarvester.App/Views/PromptEditorDialog.axaml
+PURPOSE:  The modal editor dialog for creating or editing a prompt. Title,
+          Body, Category, Sub-category, Tags; Save and Cancel. The DataContext
+          is PromptEditorViewModel.
+RELATION: Opened by PromptPage.axaml.cs's NewPrompt / Edit handlers.
+          Bound to PromptEditorViewModel.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        xmlns:domain="using:Prompt.Core.Domain"
+        mc:Ignorable="d"
+        d:DesignWidth="600" d:DesignHeight="560"
+        x:Class="FileHarvester.App.Views.PromptEditorDialog"
+        x:DataType="vm:PromptEditorViewModel"
+        Title="{Binding DialogTitle}"
+        Width="600" Height="560"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="{DynamicResource SurfaceRaised}">
+
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+    </Window.KeyBindings>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="0,0,0,12">
+            <TextBlock Grid.Column="0" Text="Title" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Grid.Column="1" Text="{Binding Title, Mode=TwoWay}" PlaceholderText="Prompt title" FontSize="13" AutomationProperties.Name="Prompt title" />
+        </Grid>
+
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="8">
+            <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="8">
+                <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock Text="Category" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                    <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay}" PlaceholderText="Choose a category">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="domain:Category">
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Text="Sub-category" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                    <ComboBox ItemsSource="{Binding SubCategories}" SelectedItem="{Binding SelectedSubCategory, Mode=TwoWay}" PlaceholderText="Choose a sub-category">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="domain:SubCategory">
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="1" Spacing="4">
+                <TextBlock Text="Tags (comma-separated)" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                <TextBox Text="{Binding TagsText, Mode=TwoWay}" PlaceholderText="shakespeare, sonnets" FontSize="13" AutomationProperties.Name="Prompt tags" />
+                <CheckBox Content="Favorite" IsChecked="{Binding IsFavorite, Mode=TwoWay}" FontSize="12" />
+            </StackPanel>
+
+            <TextBlock Grid.Row="2" Text="{Binding StatusText}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" IsVisible="{Binding StatusText}" />
+
+            <Grid Grid.Row="3" RowDefinitions="Auto,*" RowSpacing="4">
+                <TextBlock Grid.Row="0" Text="Body" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                <TextBox Grid.Row="1" Text="{Binding Body, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" FontSize="13" VerticalContentAlignment="Top" AutomationProperties.Name="Prompt body" VerticalAlignment="Stretch" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+            </Grid>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,12,0,0">
+            <Button Grid.Column="1" Content="Cancel" Padding="12,6" Command="{Binding CancelCommand}" />
+            <Button Grid.Column="2" Content="Save" Padding="12,6" FontWeight="SemiBold" IsEnabled="{Binding CanSave}" Command="{Binding SaveCommand}" />
+        </Grid>
+    </Grid>
+</Window>

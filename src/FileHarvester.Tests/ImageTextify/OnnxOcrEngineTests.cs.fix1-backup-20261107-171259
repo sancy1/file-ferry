@@ -1,0 +1,218 @@
+// filepath: src/FileHarvester.Tests/ImageTextify/OnnxOcrEngineTests.cs
+// layer:    Tests
+// module:   FileHarvester.Tests.ImageTextify
+// since:    Phase 2.4b2
+// purpose:  Behavior tests for OnnxOcrEngine. Uses FakeOcrModelRunner
+//           to verify pipeline logic (detection, routing, merging,
+//           whole-image fallback) without ONNX inference.
+//
+// RELATIONSHIPS
+//   Implements : n/a (test file)
+//   Depends on : ImageTextify.Platform.Imaging.OnnxOcrEngine,
+//                OcrLineRouter, OcrResultMerger, FakeOcrModelRunner
+//   Used by    : none found (test runner)
+//   See also   : OnnxOcrEngine.cs, FakeOcrModelRunner.cs
+//
+// NOTES
+//   - Uses FakeOcrModelRunner to control detection, recognition, and
+//     TrOCR outputs. No real ONNX models are loaded.
+//   - Preprocessing is bypassed by passing ImageOcrOptions with
+//     Enhance=false so the engine decodes the raw stream directly.
+//   - Tests use minimal synthetic PNG bytes generated at test time.
+
+using System.Text;
+using FluentAssertions;
+using ImageTextify.Core.Abstractions;
+using ImageTextify.Platform.Imaging;
+using SkiaSharp;
+using Xunit;
+
+namespace FileHarvester.Tests.ImageTextify;
+
+/// <summary>
+/// Tests for <see cref="OnnxOcrEngine"/>.
+/// </summary>
+public sealed class OnnxOcrEngineTests
+{
+    /// <summary>
+    /// Produces a minimal valid PNG byte array for the given dimensions.
+    /// </summary>
+    private static byte[] MakeImageBytes(int width, int height)
+    {
+        using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.White);
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        return data.ToArray();
+    }
+
+    /// <summary>
+    /// Builds an engine with fakes. Preprocessing is a no-op fake, so
+    /// use Enhance=false in the options to bypass.
+    /// </summary>
+    private static OnnxOcrEngine MakeEngine(IOcrModelRunner runner) =>
+        new(runner, new NoOpPreprocessor(), new OcrLineRouter(), new OcrResultMerger());
+
+    /// <summary>
+    /// Empty detection + empty TrOCR returns empty result with warning.
+    /// </summary>
+    [Fact]
+    public async Task EmptyDetectionEmptyTrOCRReturnsEmptyResult()
+    {
+        var runner = new FakeOcrModelRunner(
+            detectionBoxes: Array.Empty<DetectionBox>(),
+            ppocrText: "",
+            ppocrConfidence: 0.9,
+            trocrText: "");
+        var engine = MakeEngine(runner);
+        var bytes = MakeImageBytes(100, 100);
+
+        var result = await engine.ExtractAsync(
+            new MemoryStream(bytes),
+            new ImageOcrOptions(Enhance: false),
+            CancellationToken.None);
+
+        result.Text.Should().BeEmpty();
+        result.DetectedTextKind.Should().Be(OcrTextKind.Unknown);
+        result.Warnings.Should().Contain("No text detected.");
+        result.Lines.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Empty detection + non-empty TrOCR produces whole-image line.
+    /// </summary>
+    [Fact]
+    public async Task EmptyDetectionNonEmptyTrOCRProducesWholeImageLine()
+    {
+        var runner = new FakeOcrModelRunner(
+            detectionBoxes: Array.Empty<DetectionBox>(),
+            ppocrText: "",
+            ppocrConfidence: null,
+            trocrText: "Hello from TrOCR");
+        var engine = MakeEngine(runner);
+        var bytes = MakeImageBytes(100, 100);
+
+        var result = await engine.ExtractAsync(
+            new MemoryStream(bytes),
+            new ImageOcrOptions(Enhance: false),
+            CancellationToken.None);
+
+        result.Text.Should().Be("Hello from TrOCR");
+        result.DetectedTextKind.Should().Be(OcrTextKind.Handwritten);
+        result.Lines.Should().HaveCount(1);
+        result.Lines[0].Engine.Should().Be(OcrEngineKind.TrocrWholeImage);
+    }
+
+    /// <summary>
+    /// Single detection + plausible PP-OCR returns Printed result.
+    /// </summary>
+    [Fact]
+    public async Task SingleDetectionPlausiblePpocrReturnsPrinted()
+    {
+        var box = new DetectionBox(new OcrBoundingBox(10, 10, 200, 30), 0.95);
+        var runner = new FakeOcrModelRunner(
+            detectionBoxes: new[] { box },
+            ppocrText: "Hello world",
+            ppocrConfidence: 0.95,
+            trocrText: "");
+        var engine = MakeEngine(runner);
+        var bytes = MakeImageBytes(300, 100);
+
+        var result = await engine.ExtractAsync(
+            new MemoryStream(bytes),
+            new ImageOcrOptions(Enhance: false),
+            CancellationToken.None);
+
+        result.Text.Should().Be("Hello world");
+        result.DetectedTextKind.Should().Be(OcrTextKind.Printed);
+        result.Lines.Should().HaveCount(1);
+        result.Lines[0].Engine.Should().Be(OcrEngineKind.Ppocr);
+    }
+
+    /// <summary>
+    /// Single detection + garbage PP-OCR + valid TrOCR produces Handwritten.
+    /// </summary>
+    [Fact]
+    public async Task SingleDetectionGarbagePpocrValidTrOCRProducesHandwritten()
+    {
+        var box = new DetectionBox(new OcrBoundingBox(10, 10, 200, 30), 0.95);
+        var runner = new FakeOcrModelRunner(
+            detectionBoxes: new[] { box },
+            ppocrText: "aaaaaaa",
+            ppocrConfidence: 0.95,
+            trocrText: "Hello world");
+        var engine = MakeEngine(runner);
+        var bytes = MakeImageBytes(300, 100);
+
+        var result = await engine.ExtractAsync(
+            new MemoryStream(bytes),
+            new ImageOcrOptions(Enhance: false),
+            CancellationToken.None);
+
+        result.Text.Should().Be("Hello world");
+        result.DetectedTextKind.Should().Be(OcrTextKind.Handwritten);
+        result.Lines.Should().HaveCount(1);
+        result.Lines[0].Engine.Should().Be(OcrEngineKind.Trocr);
+    }
+
+    /// <summary>
+    /// Cancelled token throws OperationCanceledException.
+    /// </summary>
+    [Fact]
+    public async Task CancelledTokenThrowsOperationCanceled()
+    {
+        var runner = new FakeOcrModelRunner(
+            detectionBoxes: Array.Empty<DetectionBox>(),
+            ppocrText: "",
+            ppocrConfidence: null,
+            trocrText: "");
+        var engine = MakeEngine(runner);
+        var bytes = MakeImageBytes(100, 100);
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        Func<Task> act = async () => await engine.ExtractAsync(
+            new MemoryStream(bytes),
+            new ImageOcrOptions(Enhance: false),
+            cts.Token);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    /// <summary>
+    /// Null stream throws ArgumentNullException.
+    /// </summary>
+    [Fact]
+    public async Task NullStreamThrowsArgumentNull()
+    {
+        var runner = new FakeOcrModelRunner(
+            detectionBoxes: Array.Empty<DetectionBox>(),
+            ppocrText: "",
+            ppocrConfidence: null,
+            trocrText: "");
+        var engine = MakeEngine(runner);
+
+        Func<Task> act = async () => await engine.ExtractAsync(
+            null!,
+            new ImageOcrOptions(Enhance: false),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    /// <summary>
+    /// No-op preprocessor for tests that bypass preprocessing.
+    /// </summary>
+    private sealed class NoOpPreprocessor : IImagePreprocessor
+    {
+        public Task<ImagePreprocessingResult> PreprocessAsync(
+            Stream imageStream,
+            ImagePreprocessingOptions options,
+            CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException(
+                "Tests must use ImageOcrOptions(Enhance: false) to bypass preprocessing.");
+        }
+    }
+}

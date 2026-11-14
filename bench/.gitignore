@@ -1,0 +1,9 @@
+# filepath: bench/.gitignore
+# purpose:  Keep harness venv, eval images, and per-run JSON out of git.
+.venv/
+eval-set/images/
+reports/*.json
+# The following reports are committed because they are the durable selection records:
+!reports/selection.md
+!reports/models.md
+!reports/limitations.md

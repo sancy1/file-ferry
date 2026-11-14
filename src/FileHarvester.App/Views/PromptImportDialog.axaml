@@ -1,0 +1,64 @@
+<!--
+FILE:     src/FileHarvester.App/Views/PromptImportDialog.axaml
+PURPOSE:  The import dialog. Source file picker (Browse button), category
+          and sub-category pickers (the editor's pattern), and the Import /
+          Cancel buttons. The file is imported as a prompt with the selected
+          category/sub-category.
+RELATION: Opened by PromptPage.axaml.cs when the + Import button is clicked.
+          Bound to PromptImportDialogViewModel. The Browse button's click is
+          handled in the code-behind (the native file picker).
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        xmlns:domain="using:Prompt.Core.Domain"
+        mc:Ignorable="d"
+        d:DesignWidth="520" d:DesignHeight="320"
+        x:Class="FileHarvester.App.Views.PromptImportDialog"
+        x:DataType="vm:PromptImportDialogViewModel"
+        Title="Import Prompt"
+        Width="520" Height="320"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource SurfaceRaised}">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="16">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0" Text="Source file" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Grid.Column="1" Text="{Binding SourceFilePath, Mode=TwoWay}" FontSize="12" PlaceholderText="Choose a file..." />
+            <Button Grid.Column="2" Content="Browse..." Padding="10,4" Click="OnBrowseClicked" />
+        </Grid>
+
+        <StackPanel Grid.Row="1" Spacing="4" Margin="0,0,0,10">
+            <TextBlock Text="Category" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay}" PlaceholderText="Choose a category">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="domain:Category">
+                        <TextBlock Text="{Binding Name}" FontSize="12" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Spacing="4" Margin="0,0,0,10">
+            <TextBlock Text="Sub-category" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+            <ComboBox ItemsSource="{Binding SubCategories}" SelectedItem="{Binding SelectedSubCategory, Mode=TwoWay}" PlaceholderText="Choose a sub-category">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="domain:SubCategory">
+                        <TextBlock Text="{Binding Name}" FontSize="12" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+
+        <TextBlock Grid.Row="3" Text="{Binding StatusText}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" IsVisible="{Binding StatusText}" />
+
+        <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,8,0,0">
+            <Button Grid.Column="1" Content="Cancel" Padding="12,6" Command="{Binding CancelCommand}" />
+            <Button Grid.Column="2" Content="Import" Padding="12,6" FontWeight="SemiBold"
+                    IsEnabled="{Binding CanImport}" Command="{Binding ImportCommand}" />
+        </Grid>
+    </Grid>
+</Window>

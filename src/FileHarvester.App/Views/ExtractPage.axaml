@@ -3,7 +3,7 @@
              xmlns:vm="using:FileHarvester.App.ViewModels"
              x:Class="FileHarvester.App.Views.ExtractPage"
              x:DataType="vm:MainWindowViewModel">
-    <Grid Name="WorkspaceGrid" Margin="12" ColumnDefinitions="1*,6,1*">
+    <Grid Name="WorkspaceGrid" Margin="12" ColumnDefinitions="1*,12,1*">
         <Border Name="InputPane" Grid.Column="0"
                 Background="{DynamicResource SurfaceRaised}"
                 BorderBrush="{DynamicResource BorderSubtle}"
@@ -25,11 +25,17 @@
                     <Button Grid.Column="1"
                             Content="Paste"
                             Padding="10,6"
+                            Background="#2D6CDF"
+                            Foreground="White"
+                            CornerRadius="6"
                             AutomationProperties.Name="Paste text from clipboard"
                             Command="{Binding Extract.PasteCommand}" />
                     <Button Grid.Column="2"
                             Content="Clear input"
                             Padding="10,6"
+                            Background="#C0392B"
+                            Foreground="White"
+                            CornerRadius="6"
                             Command="{Binding Extract.ClearInputCommand}" />
                 </Grid>
 
@@ -58,19 +64,31 @@
                                 Content="Extract All"
                                 Padding="12,8"
                                 FontWeight="SemiBold"
+                                Background="#2E9E5B"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding Extract.ExtractAllCommand}" />
                         <Button Grid.Row="1" Grid.Column="0"
                                 Content="Links &amp; Paths"
                                 Padding="10,6"
+                                Background="#2E9E5B"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding Extract.ExtractLinksCommand}" />
                         <Button Grid.Row="1" Grid.Column="1"
                                 Content="Emails"
                                 Padding="10,6"
+                                Background="#2E9E5B"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding Extract.ExtractEmailsCommand}" />
                         <Button Grid.Row="2" Grid.Column="0"
                                 Content="Phones"
                                 Padding="10,6"
                                 Grid.ColumnSpan="2"
+                                Background="#2E9E5B"
+                                Foreground="White"
+                                CornerRadius="6"
                                 Command="{Binding Extract.ExtractPhonesCommand}" />
                     </Grid>
                 </Grid>
@@ -78,9 +96,9 @@
         </Border>
 
         <GridSplitter Name="PaneSplitter" Grid.Column="1"
-                      Width="6"
+                      Width="12"
                       HorizontalAlignment="Stretch"
-                      Background="{DynamicResource BorderSubtle}"
+                      Background="Transparent"
                       ShowsPreview="True" />
 
         <Border Name="ResultsPane" Grid.Column="2"
@@ -155,6 +173,9 @@
                                     <Button Grid.Column="1"
                                             Content="Copy"
                                             Padding="8,4"
+                                            Background="#2D6CDF"
+                                            Foreground="White"
+                                            CornerRadius="6"
                                             VerticalAlignment="Center"
                                             AutomationProperties.Name="Copy this match"
                                             Command="{Binding CopyCommand}" />
@@ -176,31 +197,44 @@
                     <CheckBox Grid.Row="0"
                               Content="Include category headings and counts in saved text"
                               IsChecked="{Binding Extract.IncludeCategoryHeadings, Mode=TwoWay}" />
-                    <Grid Grid.Row="1" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-                        <Button Grid.Row="0" Grid.Column="0" Name="CopySelectedButton"
-                                Content="Copy selected"
-                                Padding="10,6" />
-                        <Button Grid.Row="0" Grid.Column="1"
-                                Content="Copy active category"
-                                Padding="10,6"
-                                Command="{Binding Extract.CopyActiveCategoryCommand}" />
-                        <Button Grid.Row="1" Grid.Column="0"
-                                Content="Copy all results"
-                                Padding="10,6"
-                                Command="{Binding Extract.CopyAllCommand}" />
-                        <Button Grid.Row="1" Grid.Column="1"
-                                Content="Save results…"
-                                Padding="10,6"
-                                Command="{Binding Extract.SaveResultsCommand}" />
-                        <Button Grid.Row="2" Grid.Column="0"
-                                Content="Clear results"
-                                Padding="10,6"
-                                Command="{Binding Extract.ClearResultsCommand}" />
-                        <Button Grid.Row="2" Grid.Column="1"
-                                Content="Close"
-                                Padding="10,6"
-                                Command="{Binding Extract.CloseCommand}" />
-                    </Grid>
+                    <StackPanel Grid.Row="1" Spacing="8">
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                            <Button Grid.Column="0" Name="CopySelectedButton"
+                                    Content="Copy selected"
+                                    Padding="10,6"
+                                    Background="#2D6CDF" Foreground="White" CornerRadius="6" />
+                            <Button Grid.Column="1"
+                                    Content="Copy active category"
+                                    Padding="10,6"
+                                    Background="#2D6CDF" Foreground="White" CornerRadius="6"
+                                    Command="{Binding Extract.CopyActiveCategoryCommand}" />
+                            <Button Grid.Column="2"
+                                    Content="Copy all results"
+                                    Padding="10,6"
+                                    Background="#2D6CDF" Foreground="White" CornerRadius="6"
+                                    Command="{Binding Extract.CopyAllCommand}" />
+                        </Grid>
+                        <Border Height="1"
+                                Background="{DynamicResource BorderSubtle}"
+                                HorizontalAlignment="Stretch" />
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                            <Button Grid.Column="0"
+                                    Content="Save results…"
+                                    Padding="10,6"
+                                    Background="#2D6CDF" Foreground="White" CornerRadius="6"
+                                    Command="{Binding Extract.SaveResultsCommand}" />
+                            <Button Grid.Column="1"
+                                    Content="Clear results"
+                                    Padding="10,6"
+                                    Background="#C0392B" Foreground="White" CornerRadius="6"
+                                    Command="{Binding Extract.ClearResultsCommand}" />
+                            <Button Grid.Column="2"
+                                    Content="Close"
+                                    Padding="10,6"
+                                    Background="#7F8C8D" Foreground="White" CornerRadius="6"
+                                    Command="{Binding Extract.CloseCommand}" />
+                        </Grid>
+                    </StackPanel>
                 </Grid>
             </Grid>
         </Border>

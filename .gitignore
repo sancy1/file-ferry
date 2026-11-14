@@ -20,3 +20,18 @@ desktop.ini
 crash.txt
 run-output.txt
 *.tmp.txt
+
+# ---- ImageTextify model files - too large for git, re-downloadable ----
+# The app downloads models to %LOCALAPPDATA%\FileFerry\ImageTextify\Models
+# on first use; bench/ holds eval harness source + reports (committable)
+# but its model folders are runtime assets, not source.
+bench/models-qwen/
+bench/models-onnx/
+*.gguf
+
+# Bundled FFmpeg binaries (~200 MB) - distributed via release asset, not git
+src/FileHarvester.App/ffmpeg/
+
+# Python bytecode caches (bench harness)
+__pycache__/
+*.pyc

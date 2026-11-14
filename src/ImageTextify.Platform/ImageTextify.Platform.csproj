@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ImageTextify.Core\ImageTextify.Core.csproj" />
+    <ProjectReference Include="..\FileHarvester.Platform\FileHarvester.Platform.csproj" />
+    <ProjectReference Include="..\FileHarvester.Core\FileHarvester.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Phase 2.1: local OCR runtime and image preprocessing. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="PdfPig" />
+    <PackageReference Include="PdfPig.Rendering.Skia" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+
+    <!-- Phase 2.4d: Qwen handwriting runtime (LLamaSharp). -->
+    <PackageReference Include="LLamaSharp" />
+    <PackageReference Include="LLamaSharp.Backend.Cpu" />
+
+    <!-- Phase 5 Block 5.C: Silero VAD and Whisper speech recognition. -->
+    <PackageReference Include="Whisper.net" />
+    <PackageReference Include="Whisper.net.Runtime" />
+    <PackageReference Include="Whisper.net.Runtime.NoAvx" />
+
+    <!-- Phase 10: audio capture. -->
+    <PackageReference Include="NAudio" />
+
+    <!-- Phase 9: camera capture. Avalonia preview control + still-capture dependency. -->
+    <PackageReference Include="Periphery.Camera" />
+    <PackageReference Include="Periphery.Camera.Avalonia" />
+
+    <!-- Phase 11: document/image conversion (see Directory.Packages.props for the pinned versions). -->
+    <PackageReference Include="Meziantou.Framework.Imaging" />
+    <PackageReference Include="DocSharp.Docx" />
+    <PackageReference Include="DocSharp.Markdown" />
+    <PackageReference Include="TinyPdf" />
+    <PackageReference Include="Aspose.Cells.FOSS" />
+    <PackageReference Include="SuperConvert" />
+
+    <!-- Phase 13: text-to-speech (Edge neural TTS primary, System.Speech fallback). -->
+    <PackageReference Include="System.Speech" />
+    <PackageReference Include="EdgeTTS.DotNet" />
+
+    <!-- Phase 14: screenshot capture (Windows-only, WAV-adjacent to System.Speech). -->
+    <PackageReference Include="System.Drawing.Common" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Test assembly visibility for the internal IFileHasher seam. -->
+    <InternalsVisibleTo Include="FileHarvester.Tests" />
+  </ItemGroup>
+
+</Project>

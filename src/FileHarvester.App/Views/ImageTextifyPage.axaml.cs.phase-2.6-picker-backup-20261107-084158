@@ -1,0 +1,125 @@
+// ============================================================================
+// FILE:     src/FileHarvester.App/Views/ImageTextifyPage.axaml.cs
+// PURPOSE:  Code-behind for the ImageTextify page. Wires the file picker
+//           and the drop-zone drag/drop events. Both handlers forward plain
+//           path strings to the workspace view model; the view model never
+//           sees Avalonia types.
+// RELATION: Hosted by MainWindow's page host when CurrentPage is
+//           AppPage.ImageTextify.
+// ============================================================================
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
+using FileHarvester.App.ViewModels;
+
+namespace FileHarvester.App.Views;
+
+/// <summary>
+/// The ImageTextify workspace page.
+/// </summary>
+public partial class ImageTextifyPage : UserControl
+{
+    private static readonly string[] AllFilesPatterns = { "*" };
+
+    private static readonly FilePickerFileType[] AllFilesFilter =
+    {
+        new FilePickerFileType("All files") { Patterns = AllFilesPatterns },
+    };
+
+    /// <summary>
+    /// Creates the page. Loads the compiled XAML; does not set a
+    /// DataContext, so the window's DataContext flows down.
+    /// </summary>
+    public ImageTextifyPage()
+    {
+        InitializeComponent();
+        WireAddFilesButton();
+        WireDropZone();
+    }
+
+    private MainWindowViewModel? ViewModel => DataContext as MainWindowViewModel;
+
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
+
+    private void WireAddFilesButton()
+    {
+        var addButton = this.FindControl<Button>("AddFilesButton");
+        if (addButton is not null) addButton.Click += OnAddFilesClicked;
+    }
+
+    private void WireDropZone()
+    {
+        var dropZone = this.FindControl<Border>("DropZone");
+        if (dropZone is null) return;
+
+        dropZone.AddHandler(DragDrop.DragOverEvent, OnDropZoneDragOver);
+        dropZone.AddHandler(DragDrop.DropEvent, OnDropZoneDrop);
+    }
+
+    private async void OnAddFilesClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null || ViewModel is null) return;
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Add files to ImageTextify",
+            AllowMultiple = true,
+            FileTypeFilter = AllFilesFilter,
+        });
+
+        if (files.Count == 0) return;
+
+        var paths = files
+            .Select(f => f.TryGetLocalPath())
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Select(p => p!)
+            .ToList();
+
+        if (paths.Count == 0) return;
+
+        await ViewModel.ImageTextify.AddFilesAsync(paths, CancellationToken.None).ConfigureAwait(true);
+    }
+
+    private void OnDropZoneDragOver(object? sender, DragEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        // TryGetFiles() returns a nullable array. Capture once and null-guard.
+        var files = e.DataTransfer.TryGetFiles();
+        var hasFiles = ImageTextifyDropHelpers.ExtractLocalPaths(files).Count > 0;
+
+        e.DragEffects = hasFiles
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private async void OnDropZoneDrop(object? sender, DragEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        var viewModel = ViewModel;
+        if (viewModel is null) return;
+
+        var files = e.DataTransfer.TryGetFiles();
+        if (files is null || files.Length == 0) return;
+
+        var paths = ImageTextifyDropHelpers.ExtractLocalPaths(files);
+
+        if (paths.Count == 0) return;
+
+        e.Handled = true;
+
+        await viewModel.ImageTextify.AddFilesAsync(paths, CancellationToken.None).ConfigureAwait(true);
+    }
+}

@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ImageTextify.Core\ImageTextify.Core.csproj" />
+    <ProjectReference Include="..\FileHarvester.Platform\FileHarvester.Platform.csproj" />
+    <ProjectReference Include="..\FileHarvester.Core\FileHarvester.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Phase 2.1: local OCR runtime and image preprocessing. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+
+    <!-- Phase 2.4d: Qwen handwriting runtime (LLamaSharp). -->
+    <PackageReference Include="LLamaSharp" />
+    <PackageReference Include="LLamaSharp.Backend.Cpu" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Test assembly visibility for the internal IFileHasher seam. -->
+    <InternalsVisibleTo Include="FileHarvester.Tests" />
+  </ItemGroup>
+
+</Project>
+

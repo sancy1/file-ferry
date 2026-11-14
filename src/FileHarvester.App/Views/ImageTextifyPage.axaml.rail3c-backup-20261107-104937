@@ -1,0 +1,256 @@
+<!--
+FILE:     src/FileHarvester.App/Views/ImageTextifyPage.axaml
+PURPOSE:  The ImageTextify workspace page. Two-pane layout: input intake
+          on the left (category selector, Add Files, drag-and-drop surface,
+          file list with per-row remove), results area on the right. Phase
+          1.5b shows the empty state only; extraction arrives in a later
+          phase.
+RELATION: Selected by MainWindowViewModel.CurrentPage through the page
+          host in MainWindow.axaml.cs. The DataContext is inherited
+          from the window (MainWindowViewModel); this UserControl does
+          not set its own DataContext. Bindings go through
+          MainWindowViewModel.ImageTextify.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="640"
+             x:Class="FileHarvester.App.Views.ImageTextifyPage"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid Margin="12">
+
+        <!-- TWO-PANE WORKSPACE -->
+        <Grid ColumnDefinitions="410,6,*">
+
+            <!-- LEFT PANE: INPUT INTAKE -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SurfaceRaised}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusMd}"
+                    Padding="16">
+                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+
+                    <!-- Category selector -->
+                    <!-- ImageTextify workspace heading inside the left pane -->
+                    <!-- Workspace header block: heading and subtitle -->
+                    <StackPanel Grid.Row="0" Spacing="4">
+                    <TextBlock Text="ImageTextify"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}"
+                               Margin="0,0,0,4" />
+                    <TextBlock Text="Extract text from images, PDFs, and handwritten notes, and transcribe speech from audio and video."
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Margin="0,0,0,12" />
+                    </StackPanel>
+
+                    <!-- Category selector -->
+                    <StackPanel Grid.Row="1" Spacing="6" Margin="0,16,0,0">
+                        <TextBlock Text="Category"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                        <ComboBox Name="CategorySelector"
+                                  HorizontalAlignment="Stretch"
+                                  SelectedIndex="{Binding ImageTextify.SelectedCategoryIndex, Mode=TwoWay}"
+                                  AutomationProperties.Name="File category">
+                            <ComboBoxItem Content="Images" />
+                            <ComboBoxItem Content="PDFs" />
+                            <ComboBoxItem Content="Audio" />
+                            <ComboBoxItem Content="Video" />
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Add Files + Extract Text buttons -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,12,0,12">
+                        <Button Name="AddFilesButton"
+                                Content="Add Files..."
+                                Padding="12,6"
+                                HorizontalAlignment="Left"
+                                AutomationProperties.Name="Add files" />
+                        <Button Name="ExtractTextButton"
+                                Content="Extract Text"
+                                Padding="12,6"
+                                IsEnabled="{Binding !ImageTextify.IsExtracting}"
+                                Command="{Binding ImageTextify.ExtractTextCommand}"
+                                AutomationProperties.Name="Extract text from queued files" />
+                    </StackPanel>
+
+                    <!-- Drop zone + file list -->
+                    <Grid Grid.Row="3">
+                        <Border Name="DropZone"
+                                Background="{DynamicResource SurfaceSubtle}"
+                                BorderBrush="{DynamicResource BorderSubtle}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource RadiusSm}"
+                                Padding="12"
+                                MinHeight="200"
+                                DragDrop.AllowDrop="True"
+                                AutomationProperties.Name="Drop zone">
+                            <Grid>
+
+                                <!-- Empty drop prompt -->
+                                <StackPanel VerticalAlignment="Center"
+                                            HorizontalAlignment="Center"
+                                            Spacing="6"
+                                            IsVisible="{Binding ImageTextify.IsEmpty}">
+                                    <TextBlock Text="Drop files here"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Text="or use Add Files"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               Opacity="0.7"
+                                               HorizontalAlignment="Center" />
+                                </StackPanel>
+
+                                <!-- File list -->
+                                <ListBox Name="FileListBox"
+                                         ItemsSource="{Binding ImageTextify.Files}"
+                                         IsVisible="{Binding ImageTextify.HasFiles}"
+                                         Background="Transparent"
+                                         BorderThickness="0">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ImageTextifyFileRowViewModel">
+                                            <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+                                                <StackPanel Grid.Column="0" Spacing="2">
+                                                    <TextBlock Text="{Binding DisplayName}"
+                                                               FontSize="12"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource TextPrimary}" />
+                                                    <TextBlock Text="{Binding StatusText}"
+                                                               FontSize="11"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource TextSecondary}" />
+                                                    <TextBlock Text="{Binding SizeText}"
+                                                               FontSize="11"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource TextSecondary}" />
+                                                    <TextBlock Text="{Binding DirectoryText}"
+                                                               FontSize="10"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Opacity="0.7"
+                                                               Foreground="{DynamicResource TextSecondary}" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1"
+                                                        Content="x"
+                                                        FontSize="11"
+                                                        Width="24" Height="24"
+                                                        Padding="0"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        ToolTip.Tip="Remove"
+                                                        AutomationProperties.Name="Remove file"
+                                                        Command="{Binding $parent[UserControl].((vm:MainWindowViewModel)DataContext).ImageTextify.RemoveFileCommand}"
+                                                        CommandParameter="{Binding}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Settings + file count (row 4) -->
+                    <StackPanel Grid.Row="4" Spacing="6" Margin="0,8,0,0">
+                        <CheckBox Content="Use Qwen for difficult printed text"
+                                  IsChecked="{Binding ImageTextify.EnableQwenPrintedFallback, Mode=TwoWay}"
+                                  FontSize="12"
+                                  ToolTip.Tip="Qwen is slower than PP-OCR and may hallucinate. Enable only if printed text is coming out wrong; PP-OCR remains the default."
+                                  AutomationProperties.Name="Use Qwen for difficult printed text" />
+                        <TextBlock Text="{Binding ImageTextify.Files.Count, StringFormat='{}{0} file(s) in queue'}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- SPLITTER -->
+            <GridSplitter Grid.Column="1"
+                          Width="6"
+                          HorizontalAlignment="Stretch"
+                          Background="{DynamicResource BorderSubtle}"
+                          ShowsPreview="True" />
+
+            <!-- RIGHT PANE: RESULTS -->
+            <Border Grid.Column="2"
+                    Background="{DynamicResource SurfaceRaised}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RadiusMd}"
+                    Padding="24">
+                <Grid RowDefinitions="Auto,*">
+                    <!-- Results header: title and extraction status line -->
+                    <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,10">
+                        <TextBlock Text="Results"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="{Binding ImageTextify.ExtractStatusText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+
+                    <!-- Result list + empty state; exactly one is visible -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+                        <ListBox ItemsSource="{Binding ImageTextify.Results}"
+                                 IsVisible="{Binding ImageTextify.HasResults}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 AutomationProperties.Name="Extraction results">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:CompileBindings="False">
+                                    <StackPanel Spacing="2" Margin="0,4">
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock Text="{Binding StatusText}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding ExtractedText}"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock Text="{Binding WarningsText}"
+                                                   FontSize="10"
+                                                   TextWrapping="Wrap"
+                                                   Opacity="0.7"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <StackPanel VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"
+                                    Spacing="8"
+                                    MaxWidth="480"
+                                    IsVisible="{Binding ImageTextify.HasNoResults}">
+                            <TextBlock Text="No results yet"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Text="{Binding ImageTextify.StatusText}"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
