@@ -27,6 +27,7 @@ using SchemaLence.Platform;
 using ImageTextify.Platform.Composition;
 using CodeViewer.Platform.Composition;
 using Prompt.Platform.Composition;
+using DeploymentVault.Platform.Composition;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FileHarvester.App;
@@ -116,6 +117,12 @@ public partial class App : Application
         services.AddFileHarvesterCloudDiscovery();
         services.AddSchemaLence(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
+
+        services.AddDeploymentVaultStores(
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "DeploymentVault",
+                "vault.db"));
         // FFmpeg bin directory: enabled when the pinned build is present
         // under the app's base directory as ffmpeg/ (the release bundling
         // step places ffmpeg.exe and ffprobe.exe there). When the binaries

@@ -89,20 +89,6 @@ RELATION: Bound to MainWindowViewModel.
                             ToolTip.Tip="Cloud connections"
                             Command="{Binding OpenCloudCommand}" />
 
-                    <Button Name="OpenImageTextifyButton"
-                            Classes="titleBarButton"
-                            Classes.active="{Binding IsImageTextifyActive}"
-                            Content="ImageTextify"
-                            FontSize="12"
-                            Padding="12,4"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Foreground="{DynamicResource TextPrimary}"
-                            VerticalAlignment="Center"
-                            ToolTip.Tip="Extract text from images, PDFs, audio, and video"
-                            AutomationProperties.Name="ImageTextify"
-                            Command="{Binding OpenImageTextifyCommand}" />
-
                     <Button Name="OpenLinkJoinerButton"
                             Classes="titleBarButton"
                             Classes.active="{Binding IsLinkJoinerActive}"
@@ -128,6 +114,20 @@ RELATION: Bound to MainWindowViewModel.
                             VerticalAlignment="Center"
                             ToolTip.Tip="Extract links, paths, emails, and phone-like text"
                             Command="{Binding OpenExtractCommand}" />
+
+                    <Button Name="OpenImageTextifyButton"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding IsImageTextifyActive}"
+                            Content="ImageTextify"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Extract text from images, PDFs, audio, and video"
+                            AutomationProperties.Name="ImageTextify"
+                            Command="{Binding OpenImageTextifyCommand}" />
 
                     <Button Name="OpenPromptButton"
                             Classes="titleBarButton"
@@ -156,6 +156,20 @@ RELATION: Bound to MainWindowViewModel.
                             ToolTip.Tip="Inspect local project structure and code"
                             AutomationProperties.Name="Code Viewer"
                             Command="{Binding OpenCodeViewerCommand}" />
+
+                    <Button Name="OpenDeploymentVaultButton"
+                            Classes="titleBarButton"
+                            Classes.active="{Binding IsDeploymentVaultActive}"
+                            Content="Deployment Vault"
+                            FontSize="12"
+                            Padding="12,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource TextPrimary}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Local registry of deployed applications and infrastructure"
+                            AutomationProperties.Name="Deployment Vault"
+                            Command="{Binding OpenDeploymentVaultCommand}" />
 
                     <Button Name="OpenSchemaLenceButton"
                             Classes="titleBarButton"
@@ -224,7 +238,7 @@ RELATION: Bound to MainWindowViewModel.
                            Foreground="{DynamicResource TextSecondary}"
                            VerticalAlignment="Center"
                            Margin="12,0,0,0" />
-                <TextBlock Grid.Column="1" Text="File-Ferry 1.1.0"
+                <TextBlock Grid.Column="1" Text="File-Ferry 1.3.0"
                            FontSize="12"
                            Foreground="{DynamicResource TextSecondary}"
                            VerticalAlignment="Center"

@@ -30,6 +30,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using ImageTextify.Platform.Imaging;
+using DeploymentVault.Core.Abstractions;
 
 namespace FileHarvester.App.ViewModels;
 
@@ -119,6 +120,33 @@ public sealed class MainWindowViewModel : ViewModelBase
             App.Services.GetRequiredService<IGlobalExclusionStore>(),
             App.Services.GetRequiredService<GlobalExclusionsHolder>());
 
+        var envSafe = new EnvSafeViewModel(
+            App.Services.GetRequiredService<DeploymentVault.Core.EnvSafe.Abstractions.IEnvFileValidator>(),
+            App.Services.GetRequiredService<DeploymentVault.Core.EnvSafe.Abstractions.IEnvFileConverter>(),
+            App.Services.GetRequiredService<DeploymentVault.Core.EnvSafe.Abstractions.ISafetyScanner>(),
+            App.Services.GetRequiredService<DeploymentVault.Core.EnvSafe.Abstractions.IEnvFileReader>(),
+            ConfirmDeletionAsync,
+            SaveVaultExportAsync,
+            PickEnvSafeInputAsync,
+            CopyToClipboardAsync);
+
+        var keyForge = new KeyForgeViewModel(
+            App.Services.GetRequiredService<DeploymentVault.Core.KeyForge.Abstractions.IKeyExtractor>(),
+            App.Services.GetRequiredService<DeploymentVault.Core.KeyForge.Abstractions.IKeyForger>(),
+            App.Services.GetRequiredService<DeploymentVault.Core.KeyForge.Abstractions.IDocumentTextReader>(),
+            ConfirmDeletionAsync,
+            SaveVaultExportAsync,
+            PickKeyForgeDocumentAsync,
+            CopyToClipboardAsync);
+
+        DeploymentVault = new DeploymentVaultViewModel(
+            App.Services.GetRequiredService<IDeploymentVaultStore>(),
+            ConfirmDeletionAsync,
+            SaveVaultExportAsync,
+            App.Services.GetRequiredService<DeploymentVault.Platform.Export.IVaultExporter>(),
+            envSafe,
+            keyForge);
+
         InputPanel.FilesChanged += OnInputFilesChanged;
         LinkJoiner.SendToHarvestRequested += (_, text) =>
         {
@@ -145,6 +173,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         OpenCameraCaptureCommand = new AsyncRelayCommand<object>(_ => OpenCameraCapture());
         OpenConversionCommand = new RelayCommand(OpenConversion);
         OpenTextToSpeechCommand = new RelayCommand(OpenTextToSpeech);
+        OpenDeploymentVaultCommand = new RelayCommand(() => CurrentPage = AppPage.DeploymentVault);
     }
 
     // Clipboard bridge for CodeViewer copy commands. The view models stay
@@ -215,6 +244,12 @@ public sealed class MainWindowViewModel : ViewModelBase
     /// </summary>
     public CodeViewerViewModel CodeViewer { get; }
 
+    /// <summary>
+    /// The Deployment Vault workspace: a local registry of deployed applications
+    /// and their infrastructure records.
+    /// </summary>
+    public DeploymentVaultViewModel DeploymentVault { get; }
+
     public AppPage CurrentPage
     {
         get => _currentPage;
@@ -234,6 +269,7 @@ public sealed class MainWindowViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsCameraCaptureActive));
                 OnPropertyChanged(nameof(IsConversionActive));
                 OnPropertyChanged(nameof(IsTextToSpeechActive));
+                OnPropertyChanged(nameof(IsDeploymentVaultActive));
             }
         }
     }
@@ -251,6 +287,9 @@ public sealed class MainWindowViewModel : ViewModelBase
     public bool IsCameraCaptureActive => CurrentPage == AppPage.CameraCapture;
     public bool IsConversionActive => CurrentPage == AppPage.Conversion;
     public bool IsTextToSpeechActive => CurrentPage == AppPage.TextToSpeech;
+
+    /// <summary>True when the Deployment Vault workspace is the current page.</summary>
+    public bool IsDeploymentVaultActive => CurrentPage == AppPage.DeploymentVault;
     public ICommand OpenCloudCommand { get; }
     public ICommand OpenHarvestCommand { get; }
     public ICommand OpenLinkJoinerCommand { get; }
@@ -287,6 +326,9 @@ public sealed class MainWindowViewModel : ViewModelBase
     /// <summary>Navigates to the text-to-speech workspace (Phase 13).</summary>
     public ICommand OpenTextToSpeechCommand { get; }
 
+    /// <summary>Navigates to the Deployment Vault workspace (Phase A).</summary>
+    public ICommand OpenDeploymentVaultCommand { get; }
+
     public string WindowTitle
     {
         get => _windowTitle;
@@ -310,7 +352,7 @@ public sealed class MainWindowViewModel : ViewModelBase
     public Uri? LogoUri => LogoService.CurrentUri;
     public bool HasLogo => LogoService.HasLogo;
     public string AppName => "File-Ferry";
-    public string Version => "1.1.0";
+    public string Version => "1.3.0";
 
 #pragma warning restore CA1822
 
@@ -368,6 +410,30 @@ public sealed class MainWindowViewModel : ViewModelBase
         await FrameImageWriter.WriteAsync(stream, dest, ct);
     }
 
+    /// <summary>
+    /// Save-file delegate for the Deployment Vault export: opens a save picker
+    /// filtered to the requested extension and returns the chosen local path,
+    /// or null when cancelled. The VM/exporter writes the file itself.
+    /// </summary>
+    /// <param name="title">The picker title.</param>
+    /// <param name="suggestedFileName">Suggested file name.</param>
+    /// <param name="extension">The target extension including the leading dot.</param>
+    private static async Task<string?> SaveVaultExportAsync(string title, string suggestedFileName, string extension)
+    {
+        var top = App.MainTopLevel;
+        if (top?.StorageProvider is null) return null;
+        var ext = string.IsNullOrWhiteSpace(extension) ? ".json" : extension;
+        var filter = new[] { new FilePickerFileType(ext.TrimStart('.') + " file") { Patterns = new[] { "*" + ext } } };
+        var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = suggestedFileName,
+            DefaultExtension = ext.TrimStart('.'),
+            FileTypeChoices = filter,
+        });
+        return file?.Path.LocalPath;
+    }
+
     /// <summary>PNG file-type filter used by the camera save picker. Hoisted for CA1861.</summary>
     private static readonly FilePickerFileType[] PngFilter =
         new[] { new FilePickerFileType("PNG image") { Patterns = new[] { "*.png" } } };
@@ -384,6 +450,44 @@ public sealed class MainWindowViewModel : ViewModelBase
     private void OpenConversion()
     {
         CurrentPage = AppPage.Conversion;
+    }
+
+    /// <summary>File-type choices for the EnvSafe import picker. Hoisted for CA1861.</summary>
+    private static readonly FilePickerFileType[] EnvSafeFileTypes =
+    {
+        new FilePickerFileType("Environment files") { Patterns = new[] { "*.env", "*.txt", "*.md", "*.docx" } },
+    };
+
+    /// <summary>File-type choices for the KeyForge import picker. Hoisted for CA1861.</summary>
+    private static readonly FilePickerFileType[] KeyForgeFileTypes =
+    {
+        new FilePickerFileType("Documents") { Patterns = new[] { "*.txt", "*.md", "*.env", "*.json", "*.yaml", "*.yml", "*.docx", "*.pdf", "*.xlsx" } },
+    };
+
+    private static async Task<string?> PickEnvSafeInputAsync()
+    {
+        var top = App.MainTopLevel;
+        if (top?.StorageProvider is null) return null;
+        var files = await top.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+        {
+            Title = "Choose an .env file to convert",
+            AllowMultiple = false,
+            FileTypeFilter = EnvSafeFileTypes,
+        });
+        return files.Count > 0 ? files[0].Path.LocalPath : null;
+    }
+
+    private static async Task<string?> PickKeyForgeDocumentAsync()
+    {
+        var top = App.MainTopLevel;
+        if (top?.StorageProvider is null) return null;
+        var files = await top.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+        {
+            Title = "Choose a document to forge keys in",
+            AllowMultiple = false,
+            FileTypeFilter = KeyForgeFileTypes,
+        });
+        return files.Count > 0 ? files[0].Path.LocalPath : null;
     }
 
     private static async Task<string?> PickConversionInputAsync(CancellationToken ct)
@@ -456,4 +560,23 @@ public sealed class MainWindowViewModel : ViewModelBase
     /// <summary>File-type choices for the TTS WAV save picker. Hoisted for CA1861.</summary>
     private static readonly Avalonia.Platform.Storage.FilePickerFileType[] TtsWavFileTypeChoices =
         new[] { new Avalonia.Platform.Storage.FilePickerFileType("WAV audio") { Patterns = new[] { "*.wav" } } };
+
+    /// <summary>
+    /// Confirmation delegate for the Deployment Vault permanent-delete actions.
+    /// Shows the confirm dialog and returns the user choice.
+    /// </summary>
+    /// <param name="title">The dialog title.</param>
+    /// <param name="message">The confirmation message.</param>
+    /// <returns>True to proceed, false to cancel.</returns>
+    private static async Task<bool> ConfirmDeletionAsync(string title, string message)
+    {
+        var desktop = Application.Current?.ApplicationLifetime
+            as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+        if (desktop?.MainWindow is null) return false;
+        var dialog = new FileHarvester.App.Views.ConfirmDeleteDialog
+        {
+            DataContext = new FileHarvester.App.ViewModels.ConfirmDeleteDialogViewModel(title, message),
+        };
+        return await dialog.ShowDialog<bool>(desktop.MainWindow);
+    }
 }

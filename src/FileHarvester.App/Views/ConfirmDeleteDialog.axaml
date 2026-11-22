@@ -1,0 +1,83 @@
+<!--
+filepath: src/FileHarvester.App/Views/ConfirmDeleteDialog.axaml
+layer:    App / Views
+module:   FileHarvester.App.Views
+since:    Phase A (Deployment Vault registry)
+purpose:  Modal confirmation for a permanent-delete action. Two footer
+          buttons: Delete (dark red #922B21) and Cancel (default). Delete
+          closes with true; Cancel and X-close return false.
+RELATIONSHIPS
+  Implements : n/a (Avalonia Window)
+  Depends on : ConfirmDeleteDialogViewModel
+  Used by    : MainWindowViewModel.ConfirmDeletionAsync via ShowDialog<bool>
+  See also   : HarvestResultDialog.axaml (layout reference),
+               AmbiguityDialog.axaml.cs (Close(result) pattern)
+NOTES
+  - Title and message bind to ConfirmDeleteDialogViewModel.Title/Message.
+  - The Delete button uses #922B21 (dark red, permanent-delete convention).
+  - X-close returns default(bool) = false. Fail-closed.
+  - Delete is rightmost (primary action position in this app), Cancel is
+    to its left. Matches the Dialog pattern where the destructive action is
+    visually separated from the escape.
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:FileHarvester.App.ViewModels"
+        mc:Ignorable="d"
+        d:DesignWidth="480" d:DesignHeight="220"
+        x:Class="FileHarvester.App.Views.ConfirmDeleteDialog"
+        x:DataType="vm:ConfirmDeleteDialogViewModel"
+        Title="{Binding Title}"
+        Width="480" Height="220"
+        MinWidth="360" MinHeight="180"
+        WindowStartupLocation="CenterOwner"
+        Icon="/Assets/file-ferry-logo.png">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+
+        <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,16">
+            <TextBlock Text="{Binding Title}"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Text="{Binding Message}"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextSecondary}"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <Border Grid.Row="1"
+                Background="{DynamicResource SurfaceSubtle}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="12">
+            <TextBlock Text="This action cannot be undone."
+                       FontSize="12"
+                       Foreground="#EF4444"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Margin="0,16,0,0">
+            <Button Name="CancelButton"
+                    Content="Cancel"
+                    FontSize="12"
+                    Padding="16,6"
+                    HorizontalAlignment="Right" />
+            <Button Name="DeleteButton"
+                    Content="Delete"
+                    FontSize="12"
+                    FontWeight="SemiBold"
+                    Padding="16,6"
+                    Foreground="White"
+                    Background="#922B21"
+                    HorizontalAlignment="Right" />
+        </StackPanel>
+    </Grid>
+</Window>

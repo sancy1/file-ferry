@@ -110,6 +110,7 @@ public partial class MainWindow : Window
             AppPage.CameraCapture => new CameraCapturePage(),
             AppPage.Conversion => new ConversionPage(),
             AppPage.TextToSpeech => new TextToSpeechPage(),
+            AppPage.DeploymentVault => new DeploymentVaultPage(),
             AppPage.CodeViewer => new CodeViewerPage
             {
                 // The page binds directly to CodeViewerViewModel.
@@ -125,6 +126,11 @@ public partial class MainWindow : Window
         if (page == AppPage.SchemaLence && ViewModel is not null)
         {
             _ = ViewModel.SchemaLence.InitializeAsync();
+        }
+
+        if (page == AppPage.DeploymentVault && ViewModel is not null)
+        {
+            _ = ViewModel.DeploymentVault.LoadAsync();
         }
     }
 

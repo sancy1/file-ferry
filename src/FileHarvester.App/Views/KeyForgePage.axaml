@@ -1,0 +1,353 @@
+<!--
+filepath: src/FileHarvester.App/Views/KeyForgePage.axaml
+layer:    App / Views
+module:   FileHarvester.App.Views
+since:    Phase A (KeyForge)
+purpose:  The KeyForge tool page: a two-panel original -> forged converter.
+          Left = Original (editable), right = Forged (editable). The two view
+          windows fill the vertical space top to bottom. A right sidebar holds
+          the form fields, a horizontal divider, the action buttons (vertical),
+          and the detected-keys panel with per-key copy.
+RELATIONSHIPS
+  Implements : n/a (Avalonia UserControl)
+  Depends on : MainWindowViewModel.DeploymentVault.KeyForge (KeyForgeViewModel),
+               MainWindowViewModel.DeploymentVault.CloseKeyForgeCommand
+  Used by    : DeploymentVaultPage.axaml (swapped in when IsKeyForgeActive)
+  See also   : EnvSafePage.axaml (sibling sub-app layout), ConversionPage.axaml
+NOTES
+  - x:CompileBindings="False": the KeyForge property is nullable on the parent
+    VM, so runtime bindings are used to stay null-safe.
+  - Both panes are editable TextBoxes (monospace, AcceptsReturn). The forged
+    pane can be hand-edited before saving.
+  - The detected-keys panel shows one row per key: family badge, masked
+    original, visible fake, and a per-key copy button.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="720"
+             x:Class="FileHarvester.App.Views.KeyForgePage"
+             x:DataType="vm:MainWindowViewModel"
+             x:CompileBindings="False">
+
+    <Grid Margin="12">
+        <Grid RowDefinitions="Auto,*">
+
+            <!-- TOP BAR -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Button Content="&#x2190; Back to Deployment Vault"
+                            Padding="8,4"
+                            FontSize="11"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#7F8C8D"
+                            ToolTip.Tip="Return to the Deployment Vault"
+                            AutomationProperties.Name="Back to Deployment Vault"
+                            Command="{Binding DeploymentVault.CloseKeyForgeCommand}" />
+                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="KeyForge"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="Shape-identical fakes. Local. Offline. Your real keys never leave this machine."
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+                </StackPanel>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding DeploymentVault.KeyForge.StatusText, FallbackValue='Paste or import content to begin.'}"
+                           FontSize="11"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondary}" />
+            </Grid>
+
+            <!-- MAIN AREA: two view windows (fill vertical) | right sidebar -->
+            <Grid Grid.Row="1" ColumnDefinitions="*,10,Auto">
+
+                <!-- TWO VIEW WINDOWS: fill vertical top to bottom -->
+                <Grid Grid.Column="0" ColumnDefinitions="*,8,1.2*">
+
+                    <!-- ORIGINAL CARD -->
+                    <Border Grid.Column="0"
+                            Background="{DynamicResource SurfaceSubtle}"
+                            BorderBrush="{DynamicResource BorderSubtle}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource RadiusMd}">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Padding="14,10"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="0,0,0,1">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Original"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock Text="{Binding DeploymentVault.KeyForge.SourceLabel, FallbackValue='Pasted'}"
+                                                   FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Content="Import file…"
+                                            Padding="10,4"
+                                            FontSize="11"
+                                            Foreground="White"
+                                            Background="#2D6CDF"
+                                            CornerRadius="6"
+                                            VerticalAlignment="Center"
+                                            ToolTip.Tip="Import a .txt, .md, .env, .json, .yaml, .docx, .pdf, or .xlsx file"
+                                            AutomationProperties.Name="Import document"
+                                            Command="{Binding DeploymentVault.KeyForge.ImportFileCommand}" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="1" Margin="8"
+                                    Background="{DynamicResource SurfaceRaised}"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBox Text="{Binding DeploymentVault.KeyForge.OriginalText, Mode=TwoWay}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="NoWrap"
+                                         FontFamily="Consolas, Courier New, monospace"
+                                         FontSize="11"
+                                         Padding="10"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         VerticalContentAlignment="Top"
+                                         Foreground="{DynamicResource TextPrimary}"
+                                         Watermark="Paste or type content with keys here…"
+                                         AutomationProperties.Name="Original content" />
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- SPLITTER -->
+                    <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch"
+                                  Background="{DynamicResource BorderSubtle}" ShowsPreview="True" />
+
+                    <!-- FORGED CARD -->
+                    <Border Grid.Column="2"
+                            Background="{DynamicResource SurfaceSubtle}"
+                            BorderBrush="{DynamicResource BorderSubtle}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource RadiusMd}">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Padding="14,10"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="0,0,0,1">
+                                <StackPanel>
+                                    <TextBlock Text="Forged"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimary}" />
+                                    <TextBlock Text="Shape-identical fakes"
+                                               FontSize="11"
+                                               TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                            </Border>
+                            <Grid Grid.Row="1">
+                                <!-- empty state -->
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                            Spacing="6" IsVisible="{Binding !DeploymentVault.KeyForge.HasOutput}">
+                                    <TextBlock Text="No result yet"
+                                               FontSize="12"
+                                               TextAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="Convert to see the forged output"
+                                               FontSize="11"
+                                               TextAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                                <!-- editable preview -->
+                                <Border Margin="8"
+                                        Background="{DynamicResource SurfaceRaised}"
+                                        BorderBrush="{DynamicResource BorderSubtle}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        IsVisible="{Binding DeploymentVault.KeyForge.HasOutput}">
+                                    <TextBox Text="{Binding DeploymentVault.KeyForge.ForgedText, Mode=TwoWay}"
+                                             AcceptsReturn="True"
+                                             TextWrapping="NoWrap"
+                                             FontFamily="Consolas, Courier New, monospace"
+                                             FontSize="11"
+                                             Padding="10"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             VerticalContentAlignment="Top"
+                                             Foreground="{DynamicResource TextPrimary}"
+                                             IsReadOnly="False"
+                                             Watermark="Forged output appears here…"
+                                             AutomationProperties.Name="Forged content" />
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- RIGHT SIDEBAR: form fields, divider, buttons, detected keys -->
+                <Border Grid.Column="2"
+                        Width="260"
+                        Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="12">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="10">
+
+                            <!-- FORM FIELDS (vertical) -->
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Fake policy" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <ComboBox
+                                          ItemsSource="{Binding DeploymentVault.KeyForge.FakePolicies}"
+                                          SelectedItem="{Binding DeploymentVault.KeyForge.FakePolicy, Mode=TwoWay}"
+                                          AutomationProperties.Name="Fake policy" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="File name" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBox
+                                         Text="{Binding DeploymentVault.KeyForge.SaveFileName, Mode=TwoWay}"
+                                         FontSize="11"
+                                         Watermark="keyforge-{timestamp}.txt"
+                                         AutomationProperties.Name="Output file name" />
+                            </StackPanel>
+
+                            <!-- HORIZONTAL DIVIDER -->
+                            <Border Height="1" Background="{DynamicResource BorderSubtle}" />
+
+                            <!-- ACTION BUTTONS (vertical) -->
+                            <Button Content="Convert"
+                                    Height="34"
+                                    FontWeight="SemiBold"
+                                    Foreground="White"
+                                    Background="#2E9E5B"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    IsEnabled="{Binding DeploymentVault.KeyForge.CanConvert}"
+                                    ToolTip.Tip="Extract keys and forge shape-identical fakes"
+                                    AutomationProperties.Name="Convert"
+                                    Command="{Binding DeploymentVault.KeyForge.ConvertCommand}" />
+                            <Button Content="Regenerate"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#16A085"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Re-forge with new random fakes"
+                                    AutomationProperties.Name="Regenerate"
+                                    Command="{Binding DeploymentVault.KeyForge.RegenerateCommand}" />
+                            <Button Content="Save Forged"
+                                    Height="34"
+                                    FontWeight="SemiBold"
+                                    Foreground="White"
+                                    Background="#8E44AD"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Save the forged output (default: Desktop/keyforge-{timestamp}.txt)"
+                                    AutomationProperties.Name="Save forged"
+                                    Command="{Binding DeploymentVault.KeyForge.SaveForgedCommand}" />
+                            <Button Content="Copy Forged"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#2D6CDF"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Copy the forged output to the clipboard"
+                                    AutomationProperties.Name="Copy forged"
+                                    Command="{Binding DeploymentVault.KeyForge.CopyForgedCommand}" />
+                            <Button Content="Clear"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#E67E22"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Clear both panes"
+                                    AutomationProperties.Name="Clear"
+                                    Command="{Binding DeploymentVault.KeyForge.ClearCommand}" />
+                            <Button Content="Reset"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#C0392B"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Clear everything and restore defaults"
+                                    AutomationProperties.Name="Reset"
+                                    Command="{Binding DeploymentVault.KeyForge.ResetCommand}" />
+
+                            <!-- HORIZONTAL DIVIDER -->
+                            <Border Height="1" Background="{DynamicResource BorderSubtle}" />
+
+                            <!-- SUMMARY -->
+                            <TextBlock Text="{Binding DeploymentVault.KeyForge.SummaryText, FallbackValue=''}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondary}" />
+
+                            <!-- DETECTED KEYS PANEL -->
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Detected keys"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                                <ItemsControl ItemsSource="{Binding DeploymentVault.KeyForge.DetectedKeys}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="8"
+                                                    Margin="0,0,0,6"
+                                                    CornerRadius="6"
+                                                    Background="{DynamicResource SurfaceOverlay}"
+                                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                                    BorderThickness="1">
+                                                <StackPanel Spacing="4">
+                                                    <Grid ColumnDefinitions="Auto,*">
+                                                        <Border Grid.Column="0"
+                                                                Padding="6,2"
+                                                                CornerRadius="4"
+                                                                Background="#8E44AD">
+                                                            <TextBlock Text="{Binding FamilyLabel}"
+                                                                       FontSize="9"
+                                                                       Foreground="White"
+                                                                       FontWeight="SemiBold" />
+                                                        </Border>
+                                                        <Button Grid.Column="1"
+                                                                Content="Copy"
+                                                                FontSize="9"
+                                                                Padding="6,2"
+                                                                HorizontalAlignment="Right"
+                                                                VerticalAlignment="Center"
+                                                                Background="#2D6CDF"
+                                                                Foreground="White"
+                                                                CornerRadius="4"
+                                                                ToolTip.Tip="Copy this fake key"
+                                                                Command="{Binding CopyCommand}" />
+                                                    </Grid>
+                                                    <TextBlock Text="{Binding OriginalMasked}"
+                                                               FontSize="10"
+                                                               FontFamily="Consolas, Courier New, monospace"
+                                                               Foreground="{DynamicResource TextSecondary}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Fake}"
+                                                               FontSize="10"
+                                                               FontFamily="Consolas, Courier New, monospace"
+                                                               Foreground="{DynamicResource TextPrimary}"
+                                                               TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

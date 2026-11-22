@@ -79,4 +79,10 @@ public enum AppPage
     /// The text-to-speech workspace. Appended; existing values are unchanged.
     /// </summary>
     TextToSpeech = 11,
+
+    /// <summary>
+    /// The Deployment Vault workspace: a local registry of deployed applications
+    /// and their infrastructure records. Appended; existing values are unchanged.
+    /// </summary>
+    DeploymentVault = 12,
 }

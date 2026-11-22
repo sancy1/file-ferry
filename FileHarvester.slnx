@@ -14,5 +14,7 @@
     <!-- <Project Path="src/Prompt.Platform/Prompt.Platform.csproj" /> -->
     <Project Path="src/CodeViewer.Core/CodeViewer.Core.csproj" />
     <Project Path="src/CodeViewer.Platform/CodeViewer.Platform.csproj" />
+    <Project Path="src/DeploymentVault.Core/DeploymentVault.Core.csproj" />
+    <Project Path="src/DeploymentVault.Platform/DeploymentVault.Platform.csproj" />
   </Folder>
 </Solution>

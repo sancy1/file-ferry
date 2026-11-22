@@ -1,0 +1,483 @@
+<!--
+filepath: src/FileHarvester.App/Views/DeploymentVaultPage.axaml
+layer:    App / Views
+module:   FileHarvester.App.Views
+since:    Phase A (Deployment Vault registry)
+purpose:  The Deployment Vault workspace page. Header (title + subtitle on
+          left, five action buttons + right-aligned status text on right),
+          filter row, a full-width three-view swap area (application list |
+          application detail | record detail), and a right-side sub-app
+          rail (EnvSafe, KeyForge).
+RELATIONSHIPS
+  Implements : n/a (Avalonia UserControl)
+  Depends on : MainWindowViewModel.DeploymentVault (DeploymentVaultViewModel)
+  Used by    : MainWindow.axaml.cs AssignPage via AppPage.DeploymentVault
+  See also   : ImageTextifyPage.axaml (right-rail pattern reference),
+               ConversionPage.axaml (two-panel layout reference)
+NOTES
+  - LAYOUT v8: three-view master/detail swap. The body is one full-width
+    region (Grid.Column 0) whose content is driven by
+    DeploymentVault.CurrentView / IsApplicationsView /
+    IsApplicationDetailView / IsRecordDetailView. Header, filter row, and
+    the EnvSafe/KeyForge rail are unchanged.
+  - VIEW 1 (Applications): a DataGrid (Name | Status | Records | Created |
+    Updated). Double-click a row opens VIEW 2 (code-behind
+    ApplicationsGrid_DoubleTapped -> OpenApplicationCommand).
+  - VIEW 2 (Application detail): back arrow, the application edit form,
+    then the records DataGrid (Name | Provider | Category | Environment |
+    Status | Created | x delete). Double-click a record row opens VIEW 3;
+    the x button soft-deletes the row without opening it.
+  - VIEW 3 (Record detail): back arrow, the record edit form with
+    Save / Delete / Restore.
+  - Both DataGrids set x:CompileBindings="False" so column bindings and
+    cell-template bindings resolve at runtime against the row view models.
+  - The status/category/environment ComboBoxes use SelectedValueBinding on
+    ComboBoxItem.Tag with x:Static enum values (same pattern as v6).
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             xmlns:views="using:FileHarvester.App.Views"
+             xmlns:data="using:Avalonia.Controls"
+             xmlns:deploymentvault="using:DeploymentVault.Core.Domain"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="720"
+             x:Class="FileHarvester.App.Views.DeploymentVaultPage"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid Margin="12">
+        <Grid RowDefinitions="Auto,Auto,*">
+
+            <!-- HEADER -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12"
+                  IsVisible="{Binding !DeploymentVault.IsAnySubAppActive}">
+                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Top">
+                    <TextBlock Text="Deployment Vault"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Text="A local registry of deployed applications and their infrastructure records."
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1"
+                            Orientation="Vertical"
+                            Spacing="6"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top">
+                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                        <Button Name="CreateApplicationButton"
+                                Content="Create" Width="70" Height="30"
+                                CornerRadius="8" FontSize="11" Foreground="White"
+                                Background="#2E9E5B"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                ToolTip.Tip="Create a new application"
+                                Command="{Binding DeploymentVault.CreateApplicationCommand}" />
+                        <Button Name="RefreshButton"
+                                Content="Refresh" Width="70" Height="30"
+                                CornerRadius="8" FontSize="11" Foreground="White"
+                                Background="#2D6CDF"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                ToolTip.Tip="Reload the application and record lists"
+                                Command="{Binding DeploymentVault.LoadCommand}" />
+                        <Button Name="DeleteApplicationButton"
+                                Content="Delete" Width="70" Height="30"
+                                CornerRadius="8" FontSize="11" Foreground="White"
+                                Background="#C0392B"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                ToolTip.Tip="Soft-delete the selected application"
+                                Command="{Binding DeploymentVault.DeleteApplicationCommand}" />
+                        <Button Name="RestoreApplicationButton"
+                                Content="Restore" Width="70" Height="30"
+                                CornerRadius="8" FontSize="11" Foreground="White"
+                                Background="#16A085"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                ToolTip.Tip="Restore a soft-deleted application"
+                                Command="{Binding DeploymentVault.RestoreApplicationCommand}" />
+                        <Button Name="ExportButton"
+                                Content="Export" Width="70" Height="30"
+                                CornerRadius="8" FontSize="11" Foreground="White"
+                                Background="#8E44AD"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                ToolTip.Tip="Export the whole vault (all applications and records) as a ZIP archive"
+                                Command="{Binding DeploymentVault.ExportCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding DeploymentVault.StatusText, FallbackValue='Ready.'}"
+                               FontSize="11"
+                               HorizontalAlignment="Right"
+                               Foreground="{DynamicResource TextSecondary}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- FILTER ROW -->
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,0,0,12"
+                  IsVisible="{Binding !DeploymentVault.IsAnySubAppActive}">
+                <TextBox Grid.Column="0"
+                         Text="{Binding DeploymentVault.SearchText, Mode=TwoWay}"
+                         PlaceholderText="Search applications and records…"
+                         FontSize="12"
+                         Margin="0,0,8,0" />
+                <CheckBox Grid.Column="1"
+                          Content="Show deleted"
+                          IsChecked="{Binding DeploymentVault.IncludeDeleted, Mode=TwoWay}"
+                          FontSize="12"
+                          VerticalAlignment="Center" />
+            </Grid>
+
+            <!-- BODY: full-width view swap | sub-app rail -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,12,Auto">
+
+                <!-- MAIN CONTENT: three views, one visible at a time -->
+                <Grid Grid.Column="0">
+
+                    <!-- ENVSFE SUB-APP -->
+                    <views:EnvSafePage IsVisible="{Binding DeploymentVault.IsEnvSafeActive}" />
+
+                    <!-- KEYFORGE SUB-APP -->
+                    <views:KeyForgePage IsVisible="{Binding DeploymentVault.IsKeyForgeActive}" />
+
+                    <!-- VAULT VIEWS (hidden while a sub-app is active) -->
+                    <Grid IsVisible="{Binding !DeploymentVault.IsAnySubAppActive}">
+
+                    <!-- VIEW 1: APPLICATION LIST -->
+                    <Border Background="{DynamicResource SurfaceRaised}"
+                            BorderBrush="{DynamicResource BorderSubtle}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource RadiusMd}"
+                            IsVisible="{Binding DeploymentVault.IsApplicationsView}">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Padding="12,10"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="0,0,0,1">
+                                <TextBlock Text="Applications" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                            </Border>
+                            <data:DataGrid Grid.Row="1"
+                                          Name="ApplicationsGrid"
+                                          ItemsSource="{Binding DeploymentVault.Applications}"
+                                          SelectedItem="{Binding DeploymentVault.SelectedApplication, Mode=TwoWay}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          SelectionMode="Single"
+                                          CanUserResizeColumns="True"
+                                          CanUserReorderColumns="False"
+                                          CanUserSortColumns="False"
+                                          GridLinesVisibility="All"
+                                          HeadersVisibility="All"
+                                          RowHeight="32"
+                                          x:CompileBindings="False"
+                                          DoubleTapped="ApplicationsGrid_DoubleTapped"
+                                          AutomationProperties.Name="Applications table" Margin="4">
+                                <data:DataGrid.Columns>
+                                    <data:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                                    <data:DataGridTextColumn Header="Status" Binding="{Binding StatusLabel}" Width="90" />
+                                    <data:DataGridTextColumn Header="Records" Binding="{Binding RecordCountText}" Width="90" />
+                                    <data:DataGridTextColumn Header="Created" Binding="{Binding CreatedAtUtcText}" Width="130" />
+                                    <data:DataGridTextColumn Header="Updated" Binding="{Binding UpdatedAtUtcText}" Width="130" />
+                                </data:DataGrid.Columns>
+                            </data:DataGrid>
+                        </Grid>
+                    </Border>
+
+                    <!-- VIEW 2: APPLICATION DETAIL -->
+                    <Border Background="{DynamicResource SurfaceRaised}"
+                            BorderBrush="{DynamicResource BorderSubtle}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource RadiusMd}"
+                            IsVisible="{Binding DeploymentVault.IsApplicationDetailView}">
+                        <Grid RowDefinitions="Auto,*,Auto,*">
+
+                            <!-- Back + title -->
+                            <Border Grid.Row="0" Padding="12,10"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="0,0,0,1">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Button Content="← Applications"
+                                            Width="120" Height="28"
+                                            CornerRadius="8" FontSize="11" Foreground="White"
+                                            Background="#5D6D7E"
+                                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                            ToolTip.Tip="Back to the application list"
+                                            Command="{Binding DeploymentVault.BackToApplicationsCommand}" />
+                                    <TextBlock Text="Application Details" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimary}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Application edit form -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="8" Margin="12">
+                                    <TextBox Text="{Binding DeploymentVault.EditName, Mode=TwoWay}"
+                                             PlaceholderText="Name" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditDescription, Mode=TwoWay}"
+                                             PlaceholderText="Description" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditOwner, Mode=TwoWay}"
+                                             PlaceholderText="Owner" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditRepositoryUrl, Mode=TwoWay}"
+                                             PlaceholderText="Repository URL" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditApplicationUrl, Mode=TwoWay}"
+                                             PlaceholderText="Application URL" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditTags, Mode=TwoWay}"
+                                             PlaceholderText="Tags (comma-separated)" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditNotes, Mode=TwoWay}"
+                                             PlaceholderText="Notes" FontSize="12"
+                                             AcceptsReturn="True" Height="60" TextWrapping="Wrap" />
+                                    <ComboBox SelectedValue="{Binding DeploymentVault.EditStatus, Mode=TwoWay}"
+                                              SelectedValueBinding="{Binding Tag}"
+                                              x:CompileBindings="False"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="Active" Tag="{x:Static deploymentvault:RecordStatus.Active}" />
+                                        <ComboBoxItem Content="Archived" Tag="{x:Static deploymentvault:RecordStatus.Archived}" />
+                                        <ComboBoxItem Content="Deleted" Tag="{x:Static deploymentvault:RecordStatus.Deleted}" />
+                                    </ComboBox>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Content="Save"
+                                                Width="80" Height="30"
+                                                CornerRadius="8" FontSize="11" Foreground="White"
+                                                Background="#E67E22"
+                                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                ToolTip.Tip="Save changes to the selected application"
+                                                Command="{Binding DeploymentVault.UpdateApplicationCommand}" />
+                                        <Button Content="Export"
+                                                Width="80" Height="30"
+                                                CornerRadius="8" FontSize="11" Foreground="White"
+                                                Background="#8E44AD"
+                                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                ToolTip.Tip="Export this application and all its records as a ZIP archive"
+                                                Command="{Binding DeploymentVault.ExportApplicationCommand}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!-- Records header -->
+                            <Border Grid.Row="2" Padding="12,10"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="0,0,0,1">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" Text="Infrastructure Records" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimary}" />
+                                    <Button Grid.Column="1"
+                                            Content="+ Record"
+                                            Width="80" Height="26"
+                                            CornerRadius="8" FontSize="11" Foreground="White"
+                                            Background="#2E9E5B"
+                                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                            ToolTip.Tip="Create a new infrastructure record under the selected application"
+                                            IsEnabled="{Binding DeploymentVault.HasSelectedApplication}"
+                                            Command="{Binding DeploymentVault.CreateRecordCommand}" />
+                                </Grid>
+                            </Border>
+
+                            <!-- Records table -->
+                            <data:DataGrid Grid.Row="3"
+                                          Name="RecordsGrid"
+                                          ItemsSource="{Binding DeploymentVault.Records}"
+                                          SelectedItem="{Binding DeploymentVault.SelectedRecord, Mode=TwoWay}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          SelectionMode="Single"
+                                          CanUserResizeColumns="True"
+                                          CanUserReorderColumns="False"
+                                          CanUserSortColumns="False"
+                                          GridLinesVisibility="All"
+                                          HeadersVisibility="All"
+                                          RowHeight="32"
+                                          x:CompileBindings="False"
+                                          DoubleTapped="RecordsGrid_DoubleTapped"
+                                          AutomationProperties.Name="Infrastructure records table" Margin="4">
+                                <data:DataGrid.Columns>
+                                    <data:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                                    <data:DataGridTextColumn Header="Provider" Binding="{Binding Provider}" Width="110" />
+                                    <data:DataGridTextColumn Header="Category" Binding="{Binding CategoryLabel}" Width="110" />
+                                    <data:DataGridTextColumn Header="Environment" Binding="{Binding EnvironmentLabel}" Width="110" />
+                                    <data:DataGridTextColumn Header="Status" Binding="{Binding StatusLabel}" Width="90" />
+                                    <data:DataGridTextColumn Header="Created" Binding="{Binding CreatedAtUtcText}" Width="130" />
+                                    <data:DataGridTemplateColumn Header="" Width="40">
+                                        <data:DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="×"
+                                                        Width="26" Height="24"
+                                                        CornerRadius="6" FontSize="12" Foreground="White"
+                                                        Background="#C0392B"
+                                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                        ToolTip.Tip="Delete this record"
+                                                        x:CompileBindings="False"
+                                                        Tag="{Binding}"
+                                                        Click="RecordRowDeleteButton_Click" />
+                                            </DataTemplate>
+                                        </data:DataGridTemplateColumn.CellTemplate>
+                                    </data:DataGridTemplateColumn>
+                                </data:DataGrid.Columns>
+                            </data:DataGrid>
+                        </Grid>
+                    </Border>
+
+                    <!-- VIEW 3: RECORD DETAIL -->
+                    <Border Background="{DynamicResource SurfaceRaised}"
+                            BorderBrush="{DynamicResource BorderSubtle}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource RadiusMd}"
+                            IsVisible="{Binding DeploymentVault.IsRecordDetailView}">
+                        <Grid RowDefinitions="Auto,*">
+
+                            <!-- Back + title -->
+                            <Border Grid.Row="0" Padding="12,10"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="0,0,0,1">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Button Content="← Application"
+                                            Width="130" Height="28"
+                                            CornerRadius="8" FontSize="11" Foreground="White"
+                                            Background="#5D6D7E"
+                                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                            ToolTip.Tip="Back to the application detail"
+                                            Command="{Binding DeploymentVault.BackToApplicationCommand}" />
+                                    <TextBlock Text="Record Details" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimary}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Record edit form -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="8" Margin="12">
+                                    <TextBox Text="{Binding DeploymentVault.EditRecordName, Mode=TwoWay}"
+                                             PlaceholderText="Name" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditRecordProvider, Mode=TwoWay}"
+                                             PlaceholderText="Provider (Render, Vercel, AWS…)" FontSize="12" />
+                                    <ComboBox SelectedValue="{Binding DeploymentVault.EditRecordCategory, Mode=TwoWay}"
+                                              SelectedValueBinding="{Binding Tag}"
+                                              x:CompileBindings="False"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="Hosting" Tag="{x:Static deploymentvault:ServiceCategory.Hosting}" />
+                                        <ComboBoxItem Content="Database" Tag="{x:Static deploymentvault:ServiceCategory.Database}" />
+                                        <ComboBoxItem Content="Storage" Tag="{x:Static deploymentvault:ServiceCategory.Storage}" />
+                                        <ComboBoxItem Content="Secrets" Tag="{x:Static deploymentvault:ServiceCategory.Secrets}" />
+                                        <ComboBoxItem Content="SourceControl" Tag="{x:Static deploymentvault:ServiceCategory.SourceControl}" />
+                                        <ComboBoxItem Content="Monitoring" Tag="{x:Static deploymentvault:ServiceCategory.Monitoring}" />
+                                        <ComboBoxItem Content="Dns" Tag="{x:Static deploymentvault:ServiceCategory.Dns}" />
+                                        <ComboBoxItem Content="Other" Tag="{x:Static deploymentvault:ServiceCategory.Other}" />
+                                    </ComboBox>
+                                    <ComboBox SelectedValue="{Binding DeploymentVault.EditRecordEnvironment, Mode=TwoWay}"
+                                              SelectedValueBinding="{Binding Tag}"
+                                              x:CompileBindings="False"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="Production" Tag="{x:Static deploymentvault:EnvironmentKind.Production}" />
+                                        <ComboBoxItem Content="Staging" Tag="{x:Static deploymentvault:EnvironmentKind.Staging}" />
+                                        <ComboBoxItem Content="Development" Tag="{x:Static deploymentvault:EnvironmentKind.Development}" />
+                                        <ComboBoxItem Content="Other" Tag="{x:Static deploymentvault:EnvironmentKind.Other}" />
+                                    </ComboBox>
+                                    <TextBox Text="{Binding DeploymentVault.EditRecordDashboardUrl, Mode=TwoWay}"
+                                             PlaceholderText="Dashboard URL" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditRecordLoginEmail, Mode=TwoWay}"
+                                             PlaceholderText="Login email" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditRecordRegion, Mode=TwoWay}"
+                                             PlaceholderText="Region" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditRecordResourceId, Mode=TwoWay}"
+                                             PlaceholderText="Resource ID" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditRecordTags, Mode=TwoWay}"
+                                             PlaceholderText="Tags (comma-separated)" FontSize="12" />
+                                    <TextBox Text="{Binding DeploymentVault.EditRecordNotes, Mode=TwoWay}"
+                                             PlaceholderText="Notes" FontSize="12"
+                                             AcceptsReturn="True" Height="50" TextWrapping="Wrap" />
+                                    <ComboBox SelectedValue="{Binding DeploymentVault.EditRecordStatus, Mode=TwoWay}"
+                                              SelectedValueBinding="{Binding Tag}"
+                                              x:CompileBindings="False"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="Active" Tag="{x:Static deploymentvault:RecordStatus.Active}" />
+                                        <ComboBoxItem Content="Archived" Tag="{x:Static deploymentvault:RecordStatus.Archived}" />
+                                        <ComboBoxItem Content="Deleted" Tag="{x:Static deploymentvault:RecordStatus.Deleted}" />
+                                    </ComboBox>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <ComboBox Width="90" Height="30"
+                                                  SelectedValue="{Binding DeploymentVault.ExportRecordFormat, Mode=TwoWay}"
+                                                  SelectedValueBinding="{Binding Tag}"
+                                                  x:CompileBindings="False"
+                                                  VerticalAlignment="Center"
+                                                  ToolTip.Tip="Export format">
+                                            <ComboBoxItem Content=".md" Tag=".md" />
+                                            <ComboBoxItem Content=".txt" Tag=".txt" />
+                                            <ComboBoxItem Content=".json" Tag=".json" />
+                                            <ComboBoxItem Content=".csv" Tag=".csv" />
+                                            <ComboBoxItem Content=".pdf" Tag=".pdf" />
+                                            <ComboBoxItem Content=".zip" Tag=".zip" />
+                                        </ComboBox>
+                                        <Button Content="Export"
+                                                Width="80" Height="30"
+                                                CornerRadius="8" FontSize="11" Foreground="White"
+                                                Background="#8E44AD"
+                                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                ToolTip.Tip="Export this record in the chosen format"
+                                                Command="{Binding DeploymentVault.ExportRecordCommand}" />
+                                        <Button Content="Save"
+                                                Width="80" Height="30"
+                                                CornerRadius="8" FontSize="11" Foreground="White"
+                                                Background="#E67E22"
+                                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                ToolTip.Tip="Save changes to the selected record"
+                                                Command="{Binding DeploymentVault.UpdateRecordCommand}" />
+                                        <Button Content="Delete"
+                                                Width="80" Height="30"
+                                                CornerRadius="8" FontSize="11" Foreground="White"
+                                                Background="#C0392B"
+                                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                ToolTip.Tip="Soft-delete the selected record"
+                                                Command="{Binding DeploymentVault.DeleteRecordCommand}" />
+                                        <Button Content="Restore"
+                                                Width="80" Height="30"
+                                                CornerRadius="8" FontSize="11" Foreground="White"
+                                                Background="#16A085"
+                                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                ToolTip.Tip="Restore a soft-deleted record"
+                                                Command="{Binding DeploymentVault.RestoreRecordCommand}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                    </Grid>
+                </Grid>
+
+                <GridSplitter Grid.Column="1" Width="12" Background="Transparent" HorizontalAlignment="Stretch" />
+
+                <!-- SUB-APP RAIL (EnvSafe, KeyForge) — hidden while a sub-app is active -->
+                <Border Grid.Column="2"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1,0,0,0"
+                        Padding="8,0,0,0"
+                        Margin="0,0,0,0"
+                        IsVisible="{Binding !DeploymentVault.IsAnySubAppActive}">
+                    <StackPanel Spacing="8" VerticalAlignment="Top">
+                        <Button Name="EnvSafeRailButton"
+                                Content="EnvSafe"
+                                Width="70" Height="30"
+                                CornerRadius="8"
+                                FontSize="11"
+                                Foreground="White"
+                                Background="#8E44AD"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                ToolTip.Tip="EnvSafe — convert .env content to a safe .env.example"
+                                AutomationProperties.Name="EnvSafe"
+                                Command="{Binding DeploymentVault.OpenEnvSafeCommand}" />
+                        <Button Name="KeyForgeRailButton"
+                                Content="KeyForge"
+                                Width="70" Height="30"
+                                CornerRadius="8"
+                                FontSize="11"
+                                Foreground="White"
+                                Background="#8E44AD"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                ToolTip.Tip="KeyForge — forge shape-identical fake keys"
+                                AutomationProperties.Name="KeyForge"
+                                Command="{Binding DeploymentVault.OpenKeyForgeCommand}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

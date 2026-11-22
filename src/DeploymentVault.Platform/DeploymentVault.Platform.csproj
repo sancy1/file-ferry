@@ -1,0 +1,26 @@
+<!--
+filepath: src/DeploymentVault.Platform/DeploymentVault.Platform.csproj
+layer:    Build
+module:   DeploymentVault.Platform
+since:    Phase A (Deployment Vault registry)
+purpose:  Project file for the Deployment Vault SQLite implementation. Depends on DeploymentVault.Core and Microsoft.Data.Sqlite (version pinned in Directory.Packages.props).
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>DeploymentVault.Platform</RootNamespace>
+    <AssemblyName>DeploymentVault.Platform</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="DocumentFormat.OpenXml" />
+    <PackageReference Include="PdfPig" />
+    <PackageReference Include="ClosedXML" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DeploymentVault.Core\DeploymentVault.Core.csproj" />
+    <ProjectReference Include="..\FileHarvester.Core\FileHarvester.Core.csproj" />
+  </ItemGroup>
+</Project>

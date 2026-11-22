@@ -4,6 +4,56 @@ All notable changes to File-Ferry are documented in this file.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-22
+
+### Deployment Vault
+
+- New **Deployment Vault** workspace: a local registry of deployed
+  applications and their infrastructure records, with an applications
+  list, per-application record detail, search, soft-delete with restore,
+  and permanent delete behind a confirmation dialog.
+- Record export to Markdown and other registered formats through the
+  shared vault exporter.
+- Projects: `DeploymentVault.Core` (domain models, store contracts,
+  EnvSafe and KeyForge contracts) and `DeploymentVault.Platform`
+  (SQLite store, EnvSafe converters/readers, KeyForge extraction,
+  forgery, and document readers, vault exporter). The workspace UI
+  lives in `FileHarvester.App`.
+
+### EnvSafe (Deployment Vault sub-app)
+
+- Convert `.env` content into a safe `.env.example` template: real
+  values are replaced with placeholders while keys, comments, and
+  structure are preserved.
+- Import `.env`, `.txt`, `.md`, and `.docx` files; paste or type
+  directly. Two-pane preview (original | converted) with an editable
+  output pane, save-to-disk, and copy-to-clipboard.
+- Safety scan reports suspicious values before conversion.
+
+### KeyForge (Deployment Vault sub-app)
+
+- Detect key-shaped strings in pasted text or imported documents
+  (`.txt`, `.md`, `.env`, `.json`, `.yaml`, `.yml`, `.docx`, `.pdf`,
+  `.xlsx`) across five families — prefixed tokens, JWTs, Base64 blobs,
+  UUIDs, and PEM blocks — plus a generic fallback, with URL, email,
+  date, and path exclusions.
+- Forge shape-identical fake keys that preserve prefix, length,
+  character classes, separators, and structure. Deterministic mode
+  (seeded from the original) is the default; Regenerate produces
+  random fakes.
+- Two-pane preview (original | forged), a detected-keys panel with
+  per-key masked original, visible fake, and copy, summary counts,
+  save-to-disk (`keyforge-{yyyyMMdd-HHmmss}.txt` on the Desktop by
+  default), and copy-to-clipboard.
+
+### Changed
+
+- Unified the preview-window design across the Convert, EnvSafe, and
+  KeyForge workspaces: same card chrome, inner bordered preview box,
+  monospace editor, and empty states.
+- Version reconciled to `1.3.0` across shared build settings, the app
+  project, the in-app footer, and the view-model version string.
+
 ## [1.2.0] - 2026-11-14
 ### Prompt App v1
 

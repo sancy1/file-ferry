@@ -2,7 +2,7 @@
 
 > Harvest files from anywhere on your PC. Copy them byte-for-byte. Deliver them in any format you choose.
 
-File-Ferry is a Windows desktop toolkit for working with local files, cloud storage, text, paths, images, audio, video, documents, and PostgreSQL data. Its original file-harvesting workflow is joined by Cloud, SchemaLence, ImageTextify, Prompt, Code Viewer, Link Joiner, and Extract workspaces.
+File-Ferry is a Windows desktop toolkit for working with local files, cloud storage, text, paths, images, audio, video, documents, and PostgreSQL data. Its original file-harvesting workflow is joined by Cloud, SchemaLence, ImageTextify, Prompt, Code Viewer, Deployment Vault, Link Joiner, and Extract workspaces.
 
 Built on **.NET 10**, **Avalonia UI 12**, and **Portfolio.Resilience 0.8.0**.
 
@@ -114,6 +114,24 @@ Built on **.NET 10**, **Avalonia UI 12**, and **Portfolio.Resilience 0.8.0**.
   classification) and `CodeViewer.Platform` (project scanning). The
   workspace UI lives in `FileHarvester.App`.
 
+### Deployment Vault — registry, EnvSafe, and KeyForge
+
+- **Deployment Vault:** a local registry of deployed applications and
+  their infrastructure records, with search, soft-delete and restore,
+  permanent delete behind confirmation, and record export.
+- **EnvSafe** (sub-app): convert `.env` content into a safe
+  `.env.example` template with a safety scan, importing `.env`, `.txt`,
+  `.md`, or `.docx` files or pasting directly.
+- **KeyForge** (sub-app): detect key-shaped strings (prefixed tokens,
+  JWTs, Base64 blobs, UUIDs, PEM blocks, and a generic fallback) in
+  pasted text or imported documents (`.txt`, `.md`, `.env`, `.json`,
+  `.yaml`, `.docx`, `.pdf`, `.xlsx`), and forge shape-identical fake
+  keys — deterministic by default, random on Regenerate — with a
+  detected-keys panel, per-key copy, and save-to-disk.
+- Projects: `DeploymentVault.Core` and `DeploymentVault.Platform`
+  (SQLite store, EnvSafe converters, KeyForge extraction/forgery, and
+  document readers). The workspace UI lives in `FileHarvester.App`.
+
 ### App-wide tools
 
 - Light/dark appearance, a responsive Avalonia interface, live operation
@@ -134,9 +152,10 @@ Built on **.NET 10**, **Avalonia UI 12**, and **Portfolio.Resilience 0.8.0**.
    required.
 4. Choose a workspace from the top bar: **Harvest File**, **Cloud**,
    **ImageTextify**, **Link Joiner**, **Extract**, **Prompt**,
-   **Code Viewer**, or **SchemaLence**. ImageTextify also opens the live
-   transcription, camera capture, conversion, and text-to-speech
-   sub-pages.
+   **Code Viewer**, **Deployment Vault**, or **SchemaLence**. ImageTextify
+   also opens the live transcription, camera capture, conversion, and
+   text-to-speech sub-pages. Deployment Vault opens the EnvSafe and
+   KeyForge sub-apps from its action rail.
 
 > **The published download is a self-contained Windows x64 build.** Cloud
 > services may require your own provider account, credentials, or OAuth app
@@ -165,7 +184,7 @@ dotnet publish src\FileHarvester.App -c Release -r win-x64 --self-contained `
     -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:EnableCompressionInSingleFile=true `
-    -o artifacts\FileFerry-v1.1.0-win-x64
+    -o artifacts\FileFerry-v1.3.0-win-x64
 ```
 
 Rename `FileHarvester.App.exe` to `FileFerry.exe` for the release package.
@@ -173,10 +192,15 @@ If the runtime package contains `LatoFont`, include it beside the executable.
 The published app requires Windows x64; database backup additionally requires
 the PostgreSQL client tool `pg_dump` to be installed and available on `PATH`.
 
-The first public release was `v1.0.0`. This repository is preparing the
-follow-up `v1.1.0`, which adds the workspaces and capabilities documented
-above. Check [GitHub Releases](https://github.com/sancy1/file-ferry/releases)
-for the currently published version and its release notes.
+The first public release was `v1.0.0`. `v1.1.0` added cloud connections
+and Google Drive downloads, PostgreSQL inspection and export, Link
+Joiner, Extract, and overwrite confirmation. `v1.2.0` added the Prompt
+and Code Viewer workspaces and the ImageTextify extraction suite (OCR,
+transcription, live capture, camera, conversion, and text-to-speech).
+`v1.3.0` adds the Deployment Vault workspace with the EnvSafe and
+KeyForge sub-apps. Check
+[GitHub Releases](https://github.com/sancy1/file-ferry/releases) for the
+currently published version and its release notes.
 
 ---
 
@@ -290,6 +314,8 @@ file-ferry/
 │   ├── Prompt.Platform/          Prompt stores, search, import/export
 │   ├── CodeViewer.Core/          Project tree and exclusion model
 │   ├── CodeViewer.Platform/      Project scanning
+│   ├── DeploymentVault.Core/     Vault, EnvSafe, and KeyForge contracts
+│   ├── DeploymentVault.Platform/ Vault store, EnvSafe, KeyForge engines
 │   └── FileHarvester.Tests/      xUnit test suite
 └── FileHarvester.slnx            Solution
 ```
@@ -321,14 +347,15 @@ The tests are in [`src/FileHarvester.Tests/`](src/FileHarvester.Tests/).
 
 ## Release Notes
 
-The first public release, [`v1.0.0`](https://github.com/sancy1/file-ferry/releases/tag/v1.0.0),
-focused on local file harvesting. The `v1.1.0` release added cloud
-connections and Google Drive downloads, PostgreSQL inspection and export,
-Link Joiner, Extract, overwrite confirmation, and related reliability and
-UI improvements. The unreleased work on `main` adds the Prompt and
-Code Viewer workspaces and the ImageTextify extraction suite (OCR,
-transcription, live capture, camera, conversion, and text-to-speech).
-See [`CHANGELOG.md`](CHANGELOG.md) and the
+The `v1.1.0` release added cloud connections and Google Drive downloads,
+PostgreSQL inspection and export, Link Joiner, Extract, overwrite
+confirmation, and related reliability and UI improvements. `v1.2.0`
+added the Prompt and Code Viewer workspaces and the ImageTextify
+extraction suite (OCR, transcription, live capture, camera, conversion,
+and text-to-speech). `v1.3.0` adds the Deployment Vault workspace with
+the EnvSafe and KeyForge sub-apps and unifies the preview-window design
+across the Convert, EnvSafe, and KeyForge workspaces. See
+[`CHANGELOG.md`](CHANGELOG.md) and the
 [release page](https://github.com/sancy1/file-ferry/releases) for the
 versioned change history.
 

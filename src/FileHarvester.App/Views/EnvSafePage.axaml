@@ -1,0 +1,347 @@
+<!--
+filepath: src/FileHarvester.App/Views/EnvSafePage.axaml
+layer:    App / Views
+module:   FileHarvester.App.Views
+since:    Phase A (EnvSafe)
+purpose:  The EnvSafe tool page: a two-panel .env -> .env.example converter.
+          Left = Original (editable), right = Converted .env.example
+          (editable). The two view windows fill the vertical space top to
+          bottom. A right sidebar holds the three form fields, a horizontal
+          divider, the six action buttons (vertical), and the summary /
+          safety warnings.
+RELATIONSHIPS
+  Implements : n/a (Avalonia UserControl)
+  Depends on : MainWindowViewModel.DeploymentVault.EnvSafe (EnvSafeViewModel),
+               MainWindowViewModel.DeploymentVault.CloseEnvSafeCommand
+  Used by    : DeploymentVaultPage.axaml (swapped in when IsEnvSafeActive)
+  See also   : ConversionPage.axaml (two-card layout reference)
+NOTES
+  - x:CompileBindings="False": the EnvSafe property is nullable on the parent
+    VM, so runtime bindings are used to stay null-safe.
+  - Both panes are editable TextBoxes (monospace, AcceptsReturn). The output
+    pane can be hand-edited before saving.
+  - The safety warnings list shows line number, kind, and detail for each
+    finding from the last scan.
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="720"
+             x:Class="FileHarvester.App.Views.EnvSafePage"
+             x:DataType="vm:MainWindowViewModel"
+             x:CompileBindings="False">
+
+    <Grid Margin="12">
+        <Grid RowDefinitions="Auto,*">
+
+            <!-- TOP BAR -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Button Content="&#x2190; Back to Deployment Vault"
+                            Padding="8,4"
+                            FontSize="11"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#7F8C8D"
+                            ToolTip.Tip="Return to the Deployment Vault"
+                            AutomationProperties.Name="Back to Deployment Vault"
+                            Command="{Binding DeploymentVault.CloseEnvSafeCommand}" />
+                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="EnvSafe"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="Local. Offline. Your .env never leaves this machine."
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+                </StackPanel>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding DeploymentVault.EnvSafe.StatusText, FallbackValue='Paste or import .env content to begin.'}"
+                           FontSize="11"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondary}" />
+            </Grid>
+
+            <!-- MAIN AREA: two view windows (fill vertical) | right sidebar -->
+            <Grid Grid.Row="1" ColumnDefinitions="*,10,Auto">
+
+                <!-- TWO VIEW WINDOWS: fill vertical top to bottom -->
+                <Grid Grid.Column="0" ColumnDefinitions="*,8,1.2*">
+
+                    <!-- ORIGINAL CARD -->
+                    <Border Grid.Column="0"
+                            Background="{DynamicResource SurfaceSubtle}"
+                            BorderBrush="{DynamicResource BorderSubtle}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource RadiusMd}">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Padding="14,10"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="0,0,0,1">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Original"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock Text="{Binding DeploymentVault.EnvSafe.SourceLabel, FallbackValue='Pasted'}"
+                                                   FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Content="Import file…"
+                                            Padding="10,4"
+                                            FontSize="11"
+                                            Foreground="White"
+                                            Background="#2D6CDF"
+                                            CornerRadius="6"
+                                            VerticalAlignment="Center"
+                                            ToolTip.Tip="Import a .env, .txt, .md, or .docx file"
+                                            AutomationProperties.Name="Import .env file"
+                                            Command="{Binding DeploymentVault.EnvSafe.ImportFileCommand}" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="1" Margin="8"
+                                    Background="{DynamicResource SurfaceRaised}"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBox Text="{Binding DeploymentVault.EnvSafe.OriginalText, Mode=TwoWay}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="NoWrap"
+                                         FontFamily="Consolas, Courier New, monospace"
+                                         FontSize="11"
+                                         Padding="10"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         VerticalContentAlignment="Top"
+                                         Foreground="{DynamicResource TextPrimary}"
+                                         Watermark="Paste or type your .env content here…"
+                                         AutomationProperties.Name="Original .env content" />
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- SPLITTER -->
+                    <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch"
+                                  Background="{DynamicResource BorderSubtle}" ShowsPreview="True" />
+
+                    <!-- CONVERTED CARD -->
+                    <Border Grid.Column="2"
+                            Background="{DynamicResource SurfaceSubtle}"
+                            BorderBrush="{DynamicResource BorderSubtle}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource RadiusMd}">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Padding="14,10"
+                                    BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="0,0,0,1">
+                                <StackPanel>
+                                    <TextBlock Text="Converted .env.example"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimary}" />
+                                    <TextBlock Text="{Binding DeploymentVault.EnvSafe.OutputFormat, FallbackValue='.env.example'}"
+                                               FontSize="11"
+                                               TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                            </Border>
+                            <Grid Grid.Row="1">
+                                <!-- empty state -->
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                            Spacing="6" IsVisible="{Binding !DeploymentVault.EnvSafe.HasOutput}">
+                                    <TextBlock Text="No result yet"
+                                               FontSize="12"
+                                               TextAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="Convert to see the .env.example output"
+                                               FontSize="11"
+                                               TextAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                                <!-- editable preview -->
+                                <Border Margin="8"
+                                        Background="{DynamicResource SurfaceRaised}"
+                                        BorderBrush="{DynamicResource BorderSubtle}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        IsVisible="{Binding DeploymentVault.EnvSafe.HasOutput}">
+                                    <TextBox Text="{Binding DeploymentVault.EnvSafe.ConvertedText, Mode=TwoWay}"
+                                             AcceptsReturn="True"
+                                             TextWrapping="NoWrap"
+                                             FontFamily="Consolas, Courier New, monospace"
+                                             FontSize="11"
+                                             Padding="10"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             VerticalContentAlignment="Top"
+                                             Foreground="{DynamicResource TextPrimary}"
+                                             IsReadOnly="False"
+                                             Watermark="Converted output appears here…"
+                                             AutomationProperties.Name="Converted .env.example content" />
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- RIGHT SIDEBAR: form fields, divider, buttons, summary/warnings -->
+                <Border Grid.Column="2"
+                        Width="220"
+                        Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="12">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="10">
+
+                            <!-- VALIDATION MESSAGE -->
+                            <Border Padding="10,8"
+                                    CornerRadius="8"
+                                    Background="#FDF2F2"
+                                    BorderBrush="#E74C3C"
+                                    BorderThickness="1"
+                                    IsVisible="{Binding DeploymentVault.EnvSafe.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Text="{Binding DeploymentVault.EnvSafe.ValidationMessage}"
+                                           FontSize="11"
+                                           TextWrapping="Wrap"
+                                           Foreground="#C0392B" />
+                            </Border>
+
+                            <!-- FORM FIELDS (vertical) -->
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Placeholder style" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <ComboBox
+                                          ItemsSource="{Binding DeploymentVault.EnvSafe.PlaceholderStyles}"
+                                          SelectedItem="{Binding DeploymentVault.EnvSafe.PlaceholderStyle, Mode=TwoWay}"
+                                          AutomationProperties.Name="Placeholder style" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Output format" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <ComboBox
+                                          ItemsSource="{Binding DeploymentVault.EnvSafe.OutputFormats}"
+                                          SelectedItem="{Binding DeploymentVault.EnvSafe.OutputFormat, Mode=TwoWay}"
+                                          AutomationProperties.Name="Output format" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="File name" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBox
+                                         Text="{Binding DeploymentVault.EnvSafe.SaveFileName, Mode=TwoWay}"
+                                         FontSize="11"
+                                         AutomationProperties.Name="Output file name" />
+                            </StackPanel>
+
+                            <!-- HORIZONTAL DIVIDER -->
+                            <Border Height="1" Background="{DynamicResource BorderSubtle}" />
+
+                            <!-- ACTION BUTTONS (vertical) -->
+                            <Button Content="Convert"
+                                    Height="34"
+                                    FontWeight="SemiBold"
+                                    Foreground="White"
+                                    Background="#2E9E5B"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    IsEnabled="{Binding DeploymentVault.EnvSafe.CanConvert}"
+                                    ToolTip.Tip="Convert .env content to .env.example"
+                                    AutomationProperties.Name="Convert"
+                                    Command="{Binding DeploymentVault.EnvSafe.ConvertCommand}" />
+                            <Button Content="Safety Scan"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#16A085"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Scan the output for remaining sensitive values"
+                                    AutomationProperties.Name="Safety scan"
+                                    Command="{Binding DeploymentVault.EnvSafe.SafetyScanCommand}" />
+                            <Button Content="Download"
+                                    Height="34"
+                                    FontWeight="SemiBold"
+                                    Foreground="White"
+                                    Background="#8E44AD"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Save the converted output (default: Desktop/.env.example)"
+                                    AutomationProperties.Name="Download"
+                                    Command="{Binding DeploymentVault.EnvSafe.DownloadCommand}" />
+                            <Button Content="Copy Output"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#2D6CDF"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Copy the converted output to the clipboard"
+                                    AutomationProperties.Name="Copy output"
+                                    Command="{Binding DeploymentVault.EnvSafe.CopyOutputCommand}" />
+                            <Button Content="Clear"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#E67E22"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Clear both panes"
+                                    AutomationProperties.Name="Clear"
+                                    Command="{Binding DeploymentVault.EnvSafe.ClearCommand}" />
+                            <Button Content="Reset"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#C0392B"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Clear everything and restore defaults"
+                                    AutomationProperties.Name="Reset"
+                                    Command="{Binding DeploymentVault.EnvSafe.ResetCommand}" />
+
+                            <!-- HORIZONTAL DIVIDER -->
+                            <Border Height="1" Background="{DynamicResource BorderSubtle}" />
+
+                            <!-- SUMMARY -->
+                            <TextBlock Text="{Binding DeploymentVault.EnvSafe.SummaryText, FallbackValue=''}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondary}" />
+
+                            <!-- WARNINGS -->
+                            <Border Padding="10"
+                                    CornerRadius="8"
+                                    Background="#FDF6E3"
+                                    BorderBrush="#F1C40F"
+                                    BorderThickness="1"
+                                    IsVisible="{Binding DeploymentVault.EnvSafe.HasWarnings}">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Safety warnings — review before saving:"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="#B7950B" />
+                                    <ItemsControl ItemsSource="{Binding DeploymentVault.EnvSafe.Warnings}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock FontSize="10"
+                                                           FontFamily="Consolas, Courier New, monospace"
+                                                           Foreground="#7D6608"
+                                                           TextWrapping="Wrap">
+                                                    <Run Text="{Binding LineNumber, StringFormat='Line {0}: '}" />
+                                                    <Run Text="{Binding Kind, StringFormat='[{0}] '}" />
+                                                    <Run Text="{Binding Detail}" />
+                                                </TextBlock>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

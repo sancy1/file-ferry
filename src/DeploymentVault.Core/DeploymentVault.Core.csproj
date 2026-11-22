@@ -1,0 +1,15 @@
+<!--
+filepath: src/DeploymentVault.Core/DeploymentVault.Core.csproj
+layer:    Build
+module:   DeploymentVault.Core
+since:    Phase A (Deployment Vault registry)
+purpose:  Project file for the Deployment Vault domain and abstraction layer; zero package dependencies.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>DeploymentVault.Core</RootNamespace>
+    <AssemblyName>DeploymentVault.Core</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

@@ -36,6 +36,8 @@
     <ProjectReference Include="..\Prompt.Platform\Prompt.Platform.csproj" />
     <ProjectReference Include="..\CodeViewer.Core\CodeViewer.Core.csproj" />
     <ProjectReference Include="..\CodeViewer.Platform\CodeViewer.Platform.csproj" />
+    <ProjectReference Include="..\DeploymentVault.Core\DeploymentVault.Core.csproj" />
+    <ProjectReference Include="..\DeploymentVault.Platform\DeploymentVault.Platform.csproj" />
   </ItemGroup>
 
 </Project>
