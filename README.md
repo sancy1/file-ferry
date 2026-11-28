@@ -184,7 +184,7 @@ dotnet publish src\FileHarvester.App -c Release -r win-x64 --self-contained `
     -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:EnableCompressionInSingleFile=true `
-    -o artifacts\FileFerry-v1.3.0-win-x64
+    -o artifacts\FileFerry-v1.4.0-win-x64
 ```
 
 Rename `FileHarvester.App.exe` to `FileFerry.exe` for the release package.
@@ -198,7 +198,10 @@ Joiner, Extract, and overwrite confirmation. `v1.2.0` added the Prompt
 and Code Viewer workspaces and the ImageTextify extraction suite (OCR,
 transcription, live capture, camera, conversion, and text-to-speech).
 `v1.3.0` adds the Deployment Vault workspace with the EnvSafe and
-KeyForge sub-apps. Check
+KeyForge sub-apps. `v1.4.0` adds the KeyMaster sub-app to Deployment
+Vault: framework-aware cryptographic key generation (JWT, Django,
+FastAPI, Flask, ASP.NET Core, Go, Java) with guardrails, entropy
+metering, and batch generation. Check
 [GitHub Releases](https://github.com/sancy1/file-ferry/releases) for the
 currently published version and its release notes.
 
@@ -354,7 +357,10 @@ added the Prompt and Code Viewer workspaces and the ImageTextify
 extraction suite (OCR, transcription, live capture, camera, conversion,
 and text-to-speech). `v1.3.0` adds the Deployment Vault workspace with
 the EnvSafe and KeyForge sub-apps and unifies the preview-window design
-across the Convert, EnvSafe, and KeyForge workspaces. See
+across the Convert, EnvSafe, and KeyForge workspaces. `v1.4.0` adds the
+KeyMaster sub-app to Deployment Vault: framework-aware cryptographic
+key generation with guardrails, entropy metering, and batch generation.
+See
 [`CHANGELOG.md`](CHANGELOG.md) and the
 [release page](https://github.com/sancy1/file-ferry/releases) for the
 versioned change history.

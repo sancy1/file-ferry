@@ -138,6 +138,9 @@ NOTES
                     <!-- KEYFORGE SUB-APP -->
                     <views:KeyForgePage IsVisible="{Binding DeploymentVault.IsKeyForgeActive}" />
 
+                    <!-- KEYMASTER SUB-APP -->
+                    <views:KeyMasterPage IsVisible="{Binding DeploymentVault.IsKeyMasterActive}" />
+
                     <!-- VAULT VIEWS (hidden while a sub-app is active) -->
                     <Grid IsVisible="{Binding !DeploymentVault.IsAnySubAppActive}">
 
@@ -475,6 +478,18 @@ NOTES
                                 ToolTip.Tip="KeyForge — forge shape-identical fake keys"
                                 AutomationProperties.Name="KeyForge"
                                 Command="{Binding DeploymentVault.OpenKeyForgeCommand}" />
+                        <Button Name="KeyMasterRailButton"
+                                Content="KeyMaster"
+                                Width="70" Height="30"
+                                CornerRadius="8"
+                                FontSize="11"
+                                Foreground="White"
+                                Background="#8E44AD"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                ToolTip.Tip="KeyMaster — generate framework-correct keys locally"
+                                AutomationProperties.Name="KeyMaster"
+                                Command="{Binding DeploymentVault.OpenKeyMasterCommand}" />
                     </StackPanel>
                 </Border>
             </Grid>

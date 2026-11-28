@@ -139,13 +139,19 @@ public sealed class MainWindowViewModel : ViewModelBase
             PickKeyForgeDocumentAsync,
             CopyToClipboardAsync);
 
+        var keyMaster = new KeyMasterViewModel(
+            App.Services.GetRequiredService<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGeneratorRegistry>(),
+            App.Services.GetRequiredService<DeploymentVault.Core.KeyMaster.Abstractions.IKeyMasterStore>(),
+            CopyToClipboardAsync);
+
         DeploymentVault = new DeploymentVaultViewModel(
             App.Services.GetRequiredService<IDeploymentVaultStore>(),
             ConfirmDeletionAsync,
             SaveVaultExportAsync,
             App.Services.GetRequiredService<DeploymentVault.Platform.Export.IVaultExporter>(),
             envSafe,
-            keyForge);
+            keyForge,
+            keyMaster);
 
         InputPanel.FilesChanged += OnInputFilesChanged;
         LinkJoiner.SendToHarvestRequested += (_, text) =>
@@ -352,7 +358,7 @@ public sealed class MainWindowViewModel : ViewModelBase
     public Uri? LogoUri => LogoService.CurrentUri;
     public bool HasLogo => LogoService.HasLogo;
     public string AppName => "File-Ferry";
-    public string Version => "1.3.0";
+    public string Version => "1.4.0";
 
 #pragma warning restore CA1822
 

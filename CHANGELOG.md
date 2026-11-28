@@ -4,6 +4,32 @@ All notable changes to File-Ferry are documented in this file.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-28
+
+### KeyMaster (Deployment Vault sub-app)
+
+- New **KeyMaster** workspace: framework-aware cryptographic key
+  generation for JWT HMAC/RSA/ECDSA, Django, FastAPI, Flask, ASP.NET
+  Core, Go (HMAC, AES-GCM, Ed25519, ECDSA), and Java HMAC, plus a
+  universal Pro mode with charset toggles, exclusions, prefix/suffix,
+  and sample-key matching.
+- Output formats: Raw, Hex, Base64, Base64URL, PEM, and JWK JSON.
+  Per-kind format options are enforced in the UI; unsupported formats
+  are blocked with an error banner.
+- Guardrail panel per kind (RFC 7518 minimums, curve/modulus rules,
+  common-error hints), live entropy meter, masked-by-default display
+  with per-key reveal/copy, session-only history (last 5 keys), and
+  batch generation (1-100).
+- Security audit fixes: EC JWK coordinates padded to curve size per
+  RFC 7518, Pro-mode JSON output via `System.Text.Json`, effective
+  format recorded in metadata, max-length clamping for Django/
+  FastAPI/Flask, and store history snapshot isolation.
+
+### Changed
+
+- Version reconciled to `1.4.0` across shared build settings, the app
+  project, the in-app footer, and the view-model version string.
+
 ## [1.3.0] - 2026-11-22
 
 ### Deployment Vault

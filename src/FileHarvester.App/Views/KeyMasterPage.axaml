@@ -1,0 +1,507 @@
+<!--
+filepath: src/FileHarvester.App/Views/KeyMasterPage.axaml
+layer:    App / Views
+module:   FileHarvester.App.Views
+since:    KeyMaster (Deployment Vault sub-app)
+purpose:  The KeyMaster tool page: framework/kind selection on the left,
+          generation controls in the middle, and the masked output +
+          session history on the right.
+RELATIONSHIPS
+  Implements : n/a (Avalonia UserControl)
+  Depends on : MainWindowViewModel.DeploymentVault.KeyMaster (KeyMasterViewModel),
+               MainWindowViewModel.DeploymentVault.CloseKeyMasterCommand
+  Used by    : DeploymentVaultPage.axaml (swapped in when IsKeyMasterActive)
+  See also   : KeyForgePage.axaml (sibling sub-app layout)
+NOTES
+  - x:CompileBindings="False": the KeyMaster property is nullable on the
+    parent VM, so runtime bindings are used to stay null-safe.
+  - The output value is masked by default; Reveal toggles the raw value.
+  - History shows the last 5 generated keys (session-only, masked).
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FileHarvester.App.ViewModels"
+             xmlns:keymaster="using:DeploymentVault.Core.KeyMaster.Domain"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="720"
+             x:Class="FileHarvester.App.Views.KeyMasterPage"
+             x:DataType="vm:MainWindowViewModel"
+             x:CompileBindings="False">
+
+    <Grid Margin="12">
+        <Grid RowDefinitions="Auto,*">
+
+            <!-- TOP BAR -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Button Content="&#x2190; Back to Deployment Vault"
+                            Padding="8,4"
+                            FontSize="11"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#7F8C8D"
+                            ToolTip.Tip="Return to the Deployment Vault"
+                            AutomationProperties.Name="Back to Deployment Vault"
+                            Command="{Binding DeploymentVault.CloseKeyMasterCommand}" />
+                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="KeyMaster"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="Framework-correct keys. Local CSPRNG. Nothing leaves this machine."
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+                </StackPanel>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding DeploymentVault.KeyMaster.StatusText, FallbackValue='Select a framework and generate.'}"
+                           FontSize="11"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondary}" />
+            </Grid>
+
+            <!-- MAIN AREA: kind nav | controls | output+history -->
+            <Grid Grid.Row="1" ColumnDefinitions="180,10,370,10,*">
+
+                <!-- LEFT: category + kind nav -->
+                <Border Grid.Column="0"
+                        Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="8">
+                    <Grid RowDefinitions="Auto,*">
+                        <ComboBox Grid.Row="0"
+                                  ItemsSource="{Binding DeploymentVault.KeyMaster.Categories}"
+                                  SelectedItem="{Binding DeploymentVault.KeyMaster.SelectedCategory, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch"
+                                  Margin="0,0,0,8"
+                                  AutomationProperties.Name="Category" />
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding DeploymentVault.KeyMaster.Profiles}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding ShortName}"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Left"
+                                                Padding="8,6"
+                                                Margin="0,0,0,4"
+                                                FontSize="11"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                CornerRadius="6"
+                                                ToolTip.Tip="{Binding DisplayName}"
+                                                Command="{Binding DeploymentVault.KeyMaster.SelectProfileCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- MIDDLE: generation controls -->
+                <Border Grid.Column="2"
+                        Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="12">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="10">
+
+                            <StackPanel Spacing="2" IsVisible="{Binding DeploymentVault.KeyMaster.ShowAlgorithm}">
+                                <TextBlock Text="Algorithm" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <ComboBox ItemsSource="{Binding DeploymentVault.KeyMaster.AlgorithmOptions}"
+                                          SelectedItem="{Binding DeploymentVault.KeyMaster.Algorithm, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          AutomationProperties.Name="Algorithm" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2" IsVisible="{Binding DeploymentVault.KeyMaster.ShowCurve}">
+                                <TextBlock Text="Curve" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <ComboBox ItemsSource="{Binding DeploymentVault.KeyMaster.CurveOptions}"
+                                          SelectedItem="{Binding DeploymentVault.KeyMaster.Curve, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          AutomationProperties.Name="Curve" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2" IsVisible="{Binding DeploymentVault.KeyMaster.ShowModulus}">
+                                <TextBlock Text="Modulus" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <ComboBox ItemsSource="{Binding DeploymentVault.KeyMaster.ModulusOptions}"
+                                          SelectedItem="{Binding DeploymentVault.KeyMaster.ModulusBits, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          AutomationProperties.Name="Modulus" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2" IsVisible="{Binding DeploymentVault.KeyMaster.ShowLength}">
+                                <TextBlock Text="Length" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <Slider Minimum="8" Maximum="256"
+                                        Value="{Binding DeploymentVault.KeyMaster.Length, Mode=TwoWay}"
+                                        IsVisible="{Binding !DeploymentVault.KeyMaster.ShowLengthOptions}" />
+                                <ComboBox ItemsSource="{Binding DeploymentVault.KeyMaster.LengthOptions}"
+                                          SelectedItem="{Binding DeploymentVault.KeyMaster.Length, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          IsVisible="{Binding DeploymentVault.KeyMaster.ShowLengthOptions}"
+                                          AutomationProperties.Name="Length" />
+                                <TextBlock Text="{Binding DeploymentVault.KeyMaster.Length}"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Format" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <ComboBox ItemsSource="{Binding DeploymentVault.KeyMaster.FormatOptions}"
+                                          SelectedItem="{Binding DeploymentVault.KeyMaster.Format, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          AutomationProperties.Name="Format" />
+                            </StackPanel>
+
+                            <!-- PRO CONTROLS -->
+                            <StackPanel Spacing="6" IsVisible="{Binding DeploymentVault.KeyMaster.ShowProControls}">
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}" />
+                                <TextBlock Text="Pro charset" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                                <CheckBox Content="Uppercase A-Z"
+                                          IsChecked="{Binding DeploymentVault.KeyMaster.UseUpper, Mode=TwoWay}"
+                                          FontSize="11" />
+                                <CheckBox Content="Lowercase a-z"
+                                          IsChecked="{Binding DeploymentVault.KeyMaster.UseLower, Mode=TwoWay}"
+                                          FontSize="11" />
+                                <CheckBox Content="Digits 0-9"
+                                          IsChecked="{Binding DeploymentVault.KeyMaster.UseDigits, Mode=TwoWay}"
+                                          FontSize="11" />
+                                <CheckBox Content="Symbols"
+                                          IsChecked="{Binding DeploymentVault.KeyMaster.UseSymbols, Mode=TwoWay}"
+                                          FontSize="11" />
+                                <TextBox Text="{Binding DeploymentVault.KeyMaster.Exclusions, Mode=TwoWay}"
+                                         PlaceholderText="Exclude chars (e.g. 0O1lI)"
+                                         FontSize="11" />
+                                <TextBox Text="{Binding DeploymentVault.KeyMaster.Prefix, Mode=TwoWay}"
+                                         PlaceholderText="Prefix (e.g. sk_live_)"
+                                         FontSize="11" />
+                                <TextBox Text="{Binding DeploymentVault.KeyMaster.Suffix, Mode=TwoWay}"
+                                         PlaceholderText="Suffix (e.g. _prod)"
+                                         FontSize="11" />
+                            </StackPanel>
+
+                            <!-- SAMPLE MATCH (Pro) -->
+                            <StackPanel Spacing="6" IsVisible="{Binding DeploymentVault.KeyMaster.ShowSampleMatch}">
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}" />
+                                <TextBlock Text="Match sample" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                                <TextBox Text="{Binding DeploymentVault.KeyMaster.SampleText, Mode=TwoWay}"
+                                         PlaceholderText="Paste a sample key to analyze…"
+                                         FontSize="11"
+                                         AcceptsReturn="True"
+                                         Height="50"
+                                         TextWrapping="Wrap" />
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Button Content="Analyze"
+                                            Padding="10,4" FontSize="11"
+                                            Background="#2D6CDF" Foreground="White" CornerRadius="6"
+                                            Command="{Binding DeploymentVault.KeyMaster.AnalyzeSampleCommand}" />
+                                    <Button Content="Match"
+                                            Padding="10,4" FontSize="11"
+                                            Background="#16A085" Foreground="White" CornerRadius="6"
+                                            ToolTip.Tip="Apply the sample's charset and length"
+                                            Command="{Binding DeploymentVault.KeyMaster.MatchSampleCommand}" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding DeploymentVault.KeyMaster.SampleProfileText, FallbackValue=''}"
+                                           FontSize="10"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+
+                            <!-- ENTROPY METER -->
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Entropy" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <ProgressBar Minimum="0" Maximum="256"
+                                             Value="{Binding DeploymentVault.KeyMaster.EntropyBits}"
+                                             Height="8" CornerRadius="4" />
+                                <TextBlock Text="{Binding DeploymentVault.KeyMaster.EntropyLabel, FallbackValue='—'}"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+
+                            <!-- BATCH -->
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Batch" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                <ComboBox ItemsSource="{Binding DeploymentVault.KeyMaster.BatchOptions}"
+                                          SelectedItem="{Binding DeploymentVault.KeyMaster.BatchCount, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          AutomationProperties.Name="Batch size" />
+                            </StackPanel>
+
+                            <!-- ACTIONS -->
+                            <Button Content="Generate"
+                                    Height="34"
+                                    FontWeight="SemiBold"
+                                    Foreground="White"
+                                    Background="#2E9E5B"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Generate one key"
+                                    AutomationProperties.Name="Generate"
+                                    Command="{Binding DeploymentVault.KeyMaster.GenerateCommand}" />
+                            <Button Content="Generate batch"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#16A085"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Generate the selected batch size"
+                                    AutomationProperties.Name="Generate batch"
+                                    Command="{Binding DeploymentVault.KeyMaster.GenerateBatchCommand}" />
+                            <Button Content="Regenerate"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#2D6CDF"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Generate a fresh key with the same settings"
+                                    AutomationProperties.Name="Regenerate"
+                                    Command="{Binding DeploymentVault.KeyMaster.RegenerateCommand}" />
+                            <Button Content="Clear"
+                                    Height="34"
+                                    Foreground="White"
+                                    Background="#E67E22"
+                                    CornerRadius="6"
+                                    HorizontalContentAlignment="Center"
+                                    ToolTip.Tip="Clear output and session history"
+                                    AutomationProperties.Name="Clear"
+                                    Command="{Binding DeploymentVault.KeyMaster.ClearCommand}" />
+
+                            <!-- ERROR BANNER -->
+                            <Border Padding="8"
+                                    CornerRadius="6"
+                                    Background="#C0392B"
+                                    IsVisible="{Binding DeploymentVault.KeyMaster.HasError}">
+                                <TextBlock Text="{Binding DeploymentVault.KeyMaster.ErrorText}"
+                                           FontSize="11"
+                                           Foreground="White"
+                                           TextWrapping="Wrap" />
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- RIGHT: output + history -->
+                <Border Grid.Column="4"
+                        Background="{DynamicResource SurfaceRaised}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMd}"
+                        Padding="12">
+                    <Grid RowDefinitions="Auto,*,Auto">
+
+                        <!-- OUTPUT CARD -->
+                        <Border Grid.Row="0"
+                                Background="{DynamicResource SurfaceSubtle}"
+                                BorderBrush="{DynamicResource BorderSubtle}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource RadiusMd}"
+                                Padding="12"
+                                Margin="0,0,0,10">
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                                <TextBlock Grid.Row="0"
+                                           Text="Output"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Grid.Row="1"
+                                           Text="{Binding DeploymentVault.KeyMaster.CurrentKey.ProfileLabel, FallbackValue=''}"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource TextSecondary}"
+                                           Margin="0,2,0,6" />
+                                <Border Grid.Row="2"
+                                        Background="{DynamicResource SurfaceRaised}"
+                                        BorderBrush="{DynamicResource BorderSubtle}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="10"
+                                        MinHeight="60">
+                                    <TextBox Text="{Binding DeploymentVault.KeyMaster.DisplayValue}"
+                                             IsReadOnly="True"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             FontFamily="Consolas, Courier New, monospace"
+                                             FontSize="11"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             VerticalContentAlignment="Top"
+                                             Foreground="{DynamicResource TextPrimary}"
+                                             Watermark="Generate a key to see it here…"
+                                             AutomationProperties.Name="Generated key" />
+                                </Border>
+                                <Border Grid.Row="3"
+                                        Background="{DynamicResource SurfaceRaised}"
+                                        BorderBrush="{DynamicResource BorderSubtle}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="10"
+                                        MinHeight="50"
+                                        Margin="0,6,0,0"
+                                        IsVisible="{Binding DeploymentVault.KeyMaster.IsKeyPair}">
+                                    <StackPanel>
+                                        <TextBlock Text="Public key"
+                                                   FontSize="10"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBox Text="{Binding DeploymentVault.KeyMaster.DisplayPublicValue}"
+                                                 IsReadOnly="True"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 FontFamily="Consolas, Courier New, monospace"
+                                                 FontSize="10"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 VerticalContentAlignment="Top"
+                                                 Foreground="{DynamicResource TextPrimary}"
+                                                 AutomationProperties.Name="Public key" />
+                                    </StackPanel>
+                                </Border>
+                                <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+                                    <Button Content="Reveal"
+                                            Padding="10,4" FontSize="11"
+                                            Background="#5D6D7E" Foreground="White" CornerRadius="6"
+                                            ToolTip.Tip="Toggle masked/raw display"
+                                            Command="{Binding DeploymentVault.KeyMaster.RevealCommand}" />
+                                    <Button Content="Copy"
+                                            Padding="10,4" FontSize="11"
+                                            Background="#2D6CDF" Foreground="White" CornerRadius="6"
+                                            ToolTip.Tip="Copy the key to the clipboard"
+                                            Command="{Binding DeploymentVault.KeyMaster.CopyCommand}" />
+                                    <Button Content="Copy public"
+                                            Padding="10,4" FontSize="11"
+                                            Background="#8E44AD" Foreground="White" CornerRadius="6"
+                                            IsVisible="{Binding DeploymentVault.KeyMaster.IsKeyPair}"
+                                            ToolTip.Tip="Copy the public key to the clipboard"
+                                            Command="{Binding DeploymentVault.KeyMaster.CopyPublicCommand}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- HISTORY -->
+                        <Border Grid.Row="1"
+                                Background="{DynamicResource SurfaceSubtle}"
+                                BorderBrush="{DynamicResource BorderSubtle}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource RadiusMd}"
+                                Padding="12">
+                            <Grid RowDefinitions="Auto,*">
+                                <TextBlock Grid.Row="0"
+                                           Text="Session history (last 5)"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}"
+                                           Margin="0,0,0,8" />
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding DeploymentVault.KeyMaster.History}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Padding="8"
+                                                        Margin="0,0,0,6"
+                                                        CornerRadius="6"
+                                                        Background="{DynamicResource SurfaceOverlay}"
+                                                        BorderBrush="{DynamicResource BorderSubtle}"
+                                                        BorderThickness="1">
+                                                    <StackPanel Spacing="3">
+                                                        <Grid ColumnDefinitions="Auto,*">
+                                                            <Border Grid.Column="0"
+                                                                    Padding="6,2"
+                                                                    CornerRadius="4"
+                                                                    Background="#2D6CDF">
+                                                                <TextBlock Text="{Binding Kind}"
+                                                                           FontSize="9"
+                                                                           Foreground="White"
+                                                                           FontWeight="SemiBold" />
+                                                            </Border>
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding ProfileLabel}"
+                                                                       FontSize="9"
+                                                                       Foreground="{DynamicResource TextSecondary}"
+                                                                       HorizontalAlignment="Right"
+                                                                       VerticalAlignment="Center" />
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding DisplayValue}"
+                                                                   FontSize="10"
+                                                                   FontFamily="Consolas, Courier New, monospace"
+                                                                   Foreground="{DynamicResource TextPrimary}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding GeneratedAtUtc, StringFormat='{}{0:HH:mm:ss}'}"
+                                                                   FontSize="9"
+                                                                   Foreground="{DynamicResource TextSecondary}" />
+                                                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
+                                                            <Button Content="{Binding RevealLabel}"
+                                                                    FontSize="9"
+                                                                    Padding="8,2"
+                                                                    Background="#5D6D7E"
+                                                                    Foreground="White"
+                                                                    CornerRadius="4"
+                                                                    ToolTip.Tip="Toggle masked/raw display"
+                                                                    Command="{Binding RevealCommand}" />
+                                                            <Button Content="Copy"
+                                                                    FontSize="9"
+                                                                    Padding="8,2"
+                                                                    Background="#2D6CDF"
+                                                                    Foreground="White"
+                                                                    CornerRadius="4"
+                                                                    ToolTip.Tip="Copy this key to the clipboard"
+                                                                    Command="{Binding CopyCommand}" />
+                                                            <Button Content="Copy pub"
+                                                                    FontSize="9"
+                                                                    Padding="8,2"
+                                                                    Background="#8E44AD"
+                                                                    Foreground="White"
+                                                                    CornerRadius="4"
+                                                                    IsVisible="{Binding IsKeyPair}"
+                                                                    ToolTip.Tip="Copy the public key to the clipboard"
+                                                                    Command="{Binding CopyPublicCommand}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+
+                        <!-- BATCH RESULTS -->
+                        <Border Grid.Row="2"
+                                Background="{DynamicResource SurfaceSubtle}"
+                                BorderBrush="{DynamicResource BorderSubtle}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource RadiusMd}"
+                                Padding="12"
+                                Margin="0,10,0,0"
+                                IsVisible="{Binding DeploymentVault.KeyMaster.HasBatchResults}">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Batch results"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimary}" />
+                                <ItemsControl ItemsSource="{Binding DeploymentVault.KeyMaster.BatchResults}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Masked}"
+                                                       FontSize="10"
+                                                       FontFamily="Consolas, Courier New, monospace"
+                                                       Foreground="{DynamicResource TextSecondary}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Margin="0,1" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

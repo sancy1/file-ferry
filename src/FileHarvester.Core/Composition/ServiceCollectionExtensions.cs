@@ -36,7 +36,8 @@ public static class ServiceCollectionExtensions
             config,
             extraSink,
             configureImageTextifyPolicies,
-            configureCodeViewerPolicies: null);
+            configureCodeViewerPolicies: null,
+            configureDeploymentVaultPolicies: null);
 
     // ------------------------------------------------------------------
     // Additive overload adding the CodeViewer policy callback. Each
@@ -49,7 +50,8 @@ public static class ServiceCollectionExtensions
         ResilienceConfig config,
         ILogSink? extraSink,
         Action<ResilienceBuilder>? configureImageTextifyPolicies,
-        Action<ResilienceBuilder>? configureCodeViewerPolicies)
+        Action<ResilienceBuilder>? configureCodeViewerPolicies,
+        Action<ResilienceBuilder>? configureDeploymentVaultPolicies = null)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(config);
@@ -247,6 +249,7 @@ public static class ServiceCollectionExtensions
             // only the policies it owns through its own callback.
             configureImageTextifyPolicies?.Invoke(r);
             configureCodeViewerPolicies?.Invoke(r);
+            configureDeploymentVaultPolicies?.Invoke(r);
 
         });
 

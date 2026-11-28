@@ -87,6 +87,34 @@ public static class DeploymentVaultServiceCollectionExtensions
         services.AddSingleton<IKeyForger, ShapePreservingKeyForger>();
         services.AddSingleton<IDocumentTextReader, KeyForgeDocumentReader>();
 
+        // KeyMaster (sub-app of the vault): generators are stateless, the
+        // registry dispatches by kind through the resilience executor, and
+        // the store is session-only in-memory history.
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGenerator,
+            DeploymentVault.Platform.KeyMaster.Generation.SymmetricSecretGenerator>();
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGenerator,
+            DeploymentVault.Platform.KeyMaster.Generation.DjangoSecretGenerator>();
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGenerator,
+            DeploymentVault.Platform.KeyMaster.Generation.FastApiSecretGenerator>();
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGenerator,
+            DeploymentVault.Platform.KeyMaster.Generation.FlaskSecretGenerator>();
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGenerator,
+            DeploymentVault.Platform.KeyMaster.Generation.AesGcmKeyGenerator>();
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGenerator,
+            DeploymentVault.Platform.KeyMaster.Generation.RsaKeyPairGenerator>();
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGenerator,
+            DeploymentVault.Platform.KeyMaster.Generation.EcdsaKeyPairGenerator>();
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGenerator,
+            DeploymentVault.Platform.KeyMaster.Generation.Ed25519Generator>();
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGenerator,
+            DeploymentVault.Platform.KeyMaster.Generation.ProGenerator>();
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGeneratorRegistry>(sp =>
+            new DeploymentVault.Platform.KeyMaster.Generation.KeyGeneratorRegistry(
+                sp.GetServices<DeploymentVault.Core.KeyMaster.Abstractions.IKeyGenerator>(),
+                sp.GetRequiredService<Portfolio.Resilience.Abstractions.IResilienceExecutor>()));
+        services.AddSingleton<DeploymentVault.Core.KeyMaster.Abstractions.IKeyMasterStore,
+            DeploymentVault.Platform.KeyMaster.Storage.InMemoryKeyMasterStore>();
+
         return services;
     }
 }

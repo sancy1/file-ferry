@@ -98,8 +98,10 @@ public sealed class DeploymentVaultViewModel : ViewModelBase
     private string _exportRecordFormat = ".md";
     private bool _isEnvSafeActive;
     private bool _isKeyForgeActive;
+    private bool _isKeyMasterActive;
     private readonly EnvSafeViewModel? _envSafe;
     private readonly KeyForgeViewModel? _keyForge;
+    private readonly KeyMasterViewModel? _keyMaster;
 
     /// <summary>Builds the sub-ViewModel.</summary>
     /// <param name="store">The persistence store. Not null.</param>
@@ -124,13 +126,18 @@ public sealed class DeploymentVaultViewModel : ViewModelBase
     /// The KeyForge sub-app view model. Optional; without it the KeyForge rail
     /// button reports unavailable.
     /// </param>
+    /// <param name="keyMaster">
+    /// The KeyMaster sub-app view model. Optional; without it the KeyMaster
+    /// rail button reports unavailable.
+    /// </param>
     public DeploymentVaultViewModel(
         IDeploymentVaultStore store,
         Func<string, string, Task<bool>> confirmDelete,
         Func<string, string, string, Task<string?>>? saveFile = null,
         IVaultExporter? vaultExporter = null,
         EnvSafeViewModel? envSafe = null,
-        KeyForgeViewModel? keyForge = null)
+        KeyForgeViewModel? keyForge = null,
+        KeyMasterViewModel? keyMaster = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(confirmDelete);
@@ -140,6 +147,7 @@ public sealed class DeploymentVaultViewModel : ViewModelBase
         _vaultExporter = vaultExporter;
         _envSafe = envSafe;
         _keyForge = keyForge;
+        _keyMaster = keyMaster;
 
         Applications = new ObservableCollection<ApplicationRowViewModel>();
         Records = new ObservableCollection<InfrastructureRecordRowViewModel>();
@@ -168,6 +176,8 @@ public sealed class DeploymentVaultViewModel : ViewModelBase
         CloseEnvSafeCommand = new RelayCommand(CloseEnvSafe);
         OpenKeyForgeCommand = new RelayCommand(OpenKeyForge);
         CloseKeyForgeCommand = new RelayCommand(CloseKeyForge);
+        OpenKeyMasterCommand = new RelayCommand(OpenKeyMaster);
+        CloseKeyMasterCommand = new RelayCommand(CloseKeyMaster);
     }
 
     /// <summary>The list of applications shown in the left pane.</summary>
@@ -436,11 +446,20 @@ public sealed class DeploymentVaultViewModel : ViewModelBase
     /// <summary>Closes the KeyForge sub-app and returns to the vault views.</summary>
     public ICommand CloseKeyForgeCommand { get; }
 
+    /// <summary>Opens the KeyMaster sub-app (hides the vault views).</summary>
+    public ICommand OpenKeyMasterCommand { get; }
+
+    /// <summary>Closes the KeyMaster sub-app and returns to the vault views.</summary>
+    public ICommand CloseKeyMasterCommand { get; }
+
     /// <summary>The EnvSafe sub-app view model, or null when unavailable.</summary>
     public EnvSafeViewModel? EnvSafe => _envSafe;
 
     /// <summary>The KeyForge sub-app view model, or null when unavailable.</summary>
     public KeyForgeViewModel? KeyForge => _keyForge;
+
+    /// <summary>The KeyMaster sub-app view model, or null when unavailable.</summary>
+    public KeyMasterViewModel? KeyMaster => _keyMaster;
 
     /// <summary>True when the EnvSafe sub-app is the active view.</summary>
     public bool IsEnvSafeActive
@@ -468,8 +487,21 @@ public sealed class DeploymentVaultViewModel : ViewModelBase
         }
     }
 
-    /// <summary>True when any sub-app (EnvSafe or KeyForge) is the active view.</summary>
-    public bool IsAnySubAppActive => _isEnvSafeActive || _isKeyForgeActive;
+    /// <summary>True when the KeyMaster sub-app is the active view.</summary>
+    public bool IsKeyMasterActive
+    {
+        get => _isKeyMasterActive;
+        private set
+        {
+            if (SetProperty(ref _isKeyMasterActive, value))
+            {
+                OnPropertyChanged(nameof(IsAnySubAppActive));
+            }
+        }
+    }
+
+    /// <summary>True when any sub-app (EnvSafe, KeyForge, or KeyMaster) is the active view.</summary>
+    public bool IsAnySubAppActive => _isEnvSafeActive || _isKeyForgeActive || _isKeyMasterActive;
 
     /// <summary>The currently shown view.</summary>
     public VaultView CurrentView
@@ -813,6 +845,22 @@ public sealed class DeploymentVaultViewModel : ViewModelBase
     private void CloseKeyForge()
     {
         IsKeyForgeActive = false;
+        StatusText = "Ready.";
+    }
+
+    private void OpenKeyMaster()
+    {
+        if (_keyMaster is null)
+        {
+            StatusText = "KeyMaster is not available in this build.";
+            return;
+        }
+        IsKeyMasterActive = true;
+    }
+
+    private void CloseKeyMaster()
+    {
+        IsKeyMasterActive = false;
         StatusText = "Ready.";
     }
 

@@ -19,9 +19,9 @@
     <Product>File-Ferry</Product>
     <AssemblyTitle>File-Ferry</AssemblyTitle>
     <Description>Harvest, bundle, and re-deliver file contents - anywhere, in any format.</Description>
-    <Version>1.3.0</Version>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>
-    <FileVersion>1.3.0.0</FileVersion>
+    <Version>1.4.0</Version>
+    <AssemblyVersion>1.4.0.0</AssemblyVersion>
+    <FileVersion>1.4.0.0</FileVersion>
     <Company>Alexander Sanchez Cyril</Company>
     <Copyright>Copyright (c) 2026 Alexander Sanchez Cyril</Copyright>
   </PropertyGroup>

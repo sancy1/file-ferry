@@ -109,7 +109,9 @@ public partial class App : Application
                 EnableFileSink: true),
             extraSink: logSink,
             configureImageTextifyPolicies: ImageTextifyComposition.RegisterResiliencePolicies,
-            configureCodeViewerPolicies: CodeViewerComposition.RegisterResiliencePolicies);
+            configureCodeViewerPolicies: CodeViewerComposition.RegisterResiliencePolicies,
+            configureDeploymentVaultPolicies:
+                DeploymentVault.Platform.KeyMaster.Composition.KeyMasterComposition.RegisterResiliencePolicies);
 
         services.AddFileHarvesterCloudCredentials();
         services.AddFileHarvesterCloudDispatch();
